@@ -69,3 +69,6 @@ git commit -m "feat: ログイン画面のUI作成"
 
 # GitHubへアップロード（自分のブランチ名に書き換えてください）
 git push origin dev-ito
+
+# ブランチ作成
+git checkout -b dev-sora
