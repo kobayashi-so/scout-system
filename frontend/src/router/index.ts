@@ -1,10 +1,25 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  type RouteRecordRaw,
+} from 'vue-router'
+
 import ScoutPage from '../components/ScoutPage.vue'
+import ScoutList from '../components/ScoutList.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'home',
+    redirect: '/list',
+  },
+  {
+    path: '/list',
+    name: 'scout-list',
+    component: ScoutList,
+  },
+  {
+    path: '/create',
+    name: 'scout-create',
     component: ScoutPage,
   },
 ]
