@@ -76,4 +76,6 @@ git checkout -b dev-sora
 # wslでのprojectsまでの移動コマンド（kobayashi-soは自分のユーザー名）
 cd /home/kobayashi-so/projects
 
+伸彦松本のすべらない話
+
 # 今日晩御飯なににしよう　鶏肉買うかあ、、、
