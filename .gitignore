@@ -4,3 +4,7 @@ dist/
 .env
 .env.*
 .DS_Store
+# Windows Zone.Identifier files
+*:Zone.Identifier
+desktop.ini
+Thumbs.db
