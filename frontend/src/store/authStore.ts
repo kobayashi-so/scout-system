@@ -1,109 +1,99 @@
 import { defineStore } from 'pinia'
+import { loginUser, registerUser } from '../api/authApi'
+import type { RegisterUserPayload, RoleType, UserResponse } from '../type/user'
 
-const AUTH_STORAGE_KEY = 'scout-auth-user'
-const REGISTERED_USER_KEY = 'scout-registered-user'
-const FALLBACK_KEYS = ['loggedInUser', 'authUser', 'user', 'registeredUser'] as const
-
-export interface AuthUser {
-  name: string
-  role: string
-  roleLevel: number
-}
-
-interface RawUserLike {
-  name?: unknown
-  fullName?: unknown
-  username?: unknown
-  creator?: unknown
-  role?: unknown
-  position?: unknown
-  roleLevel?: unknown
-}
-
+// 認証ストアの状態型。現在のログイン状態・メール・権限・初期化済みかを保持
 interface AuthState {
-  currentUser: AuthUser | null
+  isAuthenticated: boolean // ログイン済みか
+  currentUserEmail: string | null // 現在ログイン中のメールアドレス
+  currentUserRoleType: RoleType | null // 現在ログイン中ユーザーの権限
+  initialized: boolean // ストア初期化済みか
 }
 
-function toStringOrEmpty(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
+// 新規登録時に受け取るデータ型（usersテーブルのカラム名に合わせる）
+type RegisterPayload = RegisterUserPayload
 
-function toRoleLevel(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.max(1, Math.min(3, Math.floor(value)))
-  }
-  return 1
-}
+const AUTH_STORAGE_KEY = 'scout_auth_user'
 
-function normalizeUser(raw: RawUserLike | null): AuthUser | null {
-  if (!raw || typeof raw !== 'object') return null
-
-  const name =
-    toStringOrEmpty(raw.name) ||
-    toStringOrEmpty(raw.fullName) ||
-    toStringOrEmpty(raw.username) ||
-    toStringOrEmpty(raw.creator)
-
-  if (!name) return null
-
-  const role = toStringOrEmpty(raw.role) || toStringOrEmpty(raw.position) || '営業担当'
-  const roleLevel = toRoleLevel(raw.roleLevel)
-
-  return { name, role, roleLevel }
-}
-
-function readStorageUser(storageKey: string): AuthUser | null {
-  if (typeof window === 'undefined') return null
-
-  const raw = localStorage.getItem(storageKey)
-  if (!raw) return null
-
-  try {
-    const parsed = JSON.parse(raw) as RawUserLike
-    return normalizeUser(parsed)
-  } catch {
-    return null
-  }
+interface AuthSession {
+  email: string
+  roleType: RoleType
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
-    currentUser: null,
+    isAuthenticated: false,
+    currentUserEmail: null,
+    currentUserRoleType: null,
+    initialized: false,
   }),
 
   actions: {
-    hydrateCurrentUser() {
-      const fromAuth = readStorageUser(AUTH_STORAGE_KEY)
-      if (fromAuth) {
-        this.currentUser = fromAuth
-        return
-      }
+    // ページリロード時にlocalStorageからログイン状態・権限を復元
+    hydrateFromStorage() {
+      if (this.initialized) return
 
-      const fromRegistered = readStorageUser(REGISTERED_USER_KEY)
-      if (fromRegistered) {
-        this.currentUser = fromRegistered
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fromRegistered))
-        return
-      }
-
-      for (const key of FALLBACK_KEYS) {
-        const fallbackUser = readStorageUser(key)
-        if (fallbackUser) {
-          this.currentUser = fallbackUser
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallbackUser))
-          return
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+      if (raw) {
+        try {
+          // 既存セッションを復元
+          const session = JSON.parse(raw) as AuthSession
+          this.currentUserEmail = session.email
+          this.currentUserRoleType = session.roleType
+          this.isAuthenticated = true
+        } catch {
+          // 破損データがあれば未ログイン扱いで安全に継続
+          this.currentUserEmail = null
+          this.currentUserRoleType = null
+          this.isAuthenticated = false
         }
       }
+
+      this.initialized = true
     },
 
-    setCurrentUser(user: AuthUser) {
-      this.currentUser = user
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user))
+    // 新規ユーザーをAPI経由でusersテーブルに登録する。
+    async register(payload: RegisterPayload) {
+      const user = await registerUser({
+        ...payload,
+        email: payload.email.trim().toLowerCase(),
+      })
+
+      this.setSession(user)
     },
 
-    clearCurrentUser() {
-      this.currentUser = null
+    // メールアドレスとパスワードで認証し、権限もストアにセット
+    async login(email: string, password: string) {
+      const user = await loginUser({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+
+      this.setSession(user)
+    },
+
+    // ログアウト時は状態と保存済みセッションをクリアする。
+    logout() {
+      this.currentUserEmail = null
+      this.currentUserRoleType = null
+      this.isAuthenticated = false
+      this.initialized = true
       localStorage.removeItem(AUTH_STORAGE_KEY)
+    },
+
+    setSession(user: UserResponse) {
+      // 認証成功時の共通セッション反映処理
+      this.currentUserEmail = user.email
+      this.currentUserRoleType = user.roleType
+      this.isAuthenticated = true
+      this.initialized = true
+      localStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          email: user.email,
+          roleType: user.roleType,
+        }),
+      )
     },
   },
 })

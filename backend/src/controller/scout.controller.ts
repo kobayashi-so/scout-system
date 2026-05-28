@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ScoutService } from '../service/scout.service';
-import { ScoutEntity } from '../type/scout';
+import { CreateScoutInput } from '../type/scout';
 
 @Controller('api/scouts')
 export class ScoutController {
@@ -12,7 +12,7 @@ export class ScoutController {
   }
 
   @Post()
-  create(@Body() body: ScoutEntity) {
+  create(@Body() body: CreateScoutInput) {
     return this.scoutService.create(body);
   }
 }
