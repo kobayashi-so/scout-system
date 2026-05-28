@@ -311,6 +311,15 @@ onMounted(() => {
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: #05ad54;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .form-label {
@@ -325,6 +334,10 @@ onMounted(() => {
 
 .form-label.compact {
   flex: 1;
+.btn-secondary {
+  background: #fff;
+  color:  #05ad54;
+  border: 1px solid  #05ad54;
 }
 
 .form-label.full-height {

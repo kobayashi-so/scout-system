@@ -24,3 +24,37 @@ CREATE TABLE IF NOT EXISTS scout_job_requirements (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (scout_id) REFERENCES scouts(id) ON DELETE CASCADE
 );
+-- ユーザーテーブル（初回起動時に自動作成）
+CREATE TABLE IF NOT EXISTS users (
+  user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role_type VARCHAR(20) NOT NULL CHECK (role_type IN ('sales', 'leader', 'admin')),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 更新日時を自動付与するトリガー関数
+CREATE OR REPLACE FUNCTION set_users_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_set_users_updated_at ON users;
+
+CREATE TRIGGER trigger_set_users_updated_at
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION set_users_updated_at();
+
+-- 評価基準・チェック項目管理マスタテーブルの作成
+CREATE TABLE IF NOT EXISTS check_items (
+    id VARCHAR(36) PRIMARY KEY,               -- 項目ID (UUIDを想定)
+    checkTitle VARCHAR(255) NOT NULL,         -- チェック項目名 (nameから変更したもの)
+    display_order INT NOT NULL,               -- 表示順 (UIの並び順を制御)
+    deleted_at TIMESTAMP NULL                 -- 削除日時 (論理削除用、NULLなら有効データ)
+);
