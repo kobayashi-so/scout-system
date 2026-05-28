@@ -6,6 +6,7 @@ import {
 
 import ScoutPage from '../components/ScoutPage.vue'
 import ScoutList from '../components/ScoutList.vue'
+import SettingCheckItem from '../components/SettingCheckItem.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -22,6 +23,15 @@ const routes: RouteRecordRaw[] = [
     name: 'scout-create',
     component: ScoutPage,
   },
+  {
+    path: '/setting',
+    redirect: '/settings',
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: SettingCheckItem,
+  }
 ]
 
 export const router = createRouter({

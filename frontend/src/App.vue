@@ -7,6 +7,10 @@
         <RouterLink to="/create">
           新規作成
         </RouterLink>
+
+        <RouterLink to="/settings">
+         設定
+        </RouterLink>
       </nav>
     </header>
 
@@ -21,7 +25,7 @@
 
 <style scoped>
 .header {
-  background: #1a202c;
+  background: #035823;
   padding: 16px 24px;
 }
 
@@ -37,7 +41,7 @@
 }
 
 .nav a.router-link-active {
-  color: #90cdf4;
+  color: #d6f490;
 }
 
 .main {
