@@ -16,15 +16,19 @@ import { ScoutEntity } from './type/scout';
 import { UserEntity } from './type/user';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ScoutEntity, UserEntity])],
-  controllers: [ScoutController, AiGenerateController, UserController],
-  providers: [ScoutService, ScoutRepository, AiGenerateService, UserService, UserRepository],
-  imports: [TypeOrmModule.forFeature([ScoutEntity, CheckItemEntity])],
-  controllers: [ScoutController, AiGenerateController, CheckItemController],
+  imports: [TypeOrmModule.forFeature([ScoutEntity, UserEntity, CheckItemEntity])],
+  controllers: [
+    ScoutController,
+    AiGenerateController,
+    UserController,
+    CheckItemController,
+  ],
   providers: [
     ScoutService,
     ScoutRepository,
     AiGenerateService,
+    UserService,
+    UserRepository,
     CheckItemService,
     CheckItemRepository,
   ],
