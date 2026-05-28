@@ -1,4 +1,4 @@
-/** スカウト文（API の JSON と同じ形。新規作成時は id / createdAt は未送信） */
+/** APIから取得するスカウト本体 */
 export interface ScoutEntity {
   id?: string
   createdAt?: string
@@ -6,8 +6,29 @@ export interface ScoutEntity {
   title: string
   body: string
   status?: string
+  requirement?: ScoutJobRequirement
+  promptText?: string
 }
 
+/** 求人条件 */
+export interface ScoutJobRequirement {
+  companyName: string
+  jobCategory: string
+  salaryInfo: string
+  
+}
+
+/** 作成時の送信ペイロード */
+export interface CreateScoutPayload {
+  creator: string
+  title: string
+  body: string
+  status?: string
+  promptText: string
+  requirement: ScoutJobRequirement
+}
+
+/** 既存のサンプル生成APIレスポンス */
 export interface GeneratedScoutSample {
   body: string
 }

@@ -39,8 +39,4 @@
 .nav a.router-link-active {
   color: #90cdf4;
 }
-
-.main {
-  padding: 24px;
-}
 </style>
