@@ -1,4 +1,4 @@
--- スカウト文テーブル（初回起動時に自動作成）
+-- 1. スカウト文本体のテーブル
 CREATE TABLE IF NOT EXISTS scouts (
   id VARCHAR(50) PRIMARY KEY,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -8,6 +8,22 @@ CREATE TABLE IF NOT EXISTS scouts (
   status VARCHAR(20) NOT NULL DEFAULT 'DRAFT'
 );
 
+-- 2. 求人条件のテーブル
+CREATE TABLE IF NOT EXISTS scout_job_requirements (
+  id SERIAL PRIMARY KEY,
+  scout_id VARCHAR(50) NOT NULL UNIQUE,
+  company_name VARCHAR(255) NOT NULL,
+  job_category VARCHAR(255) NOT NULL,
+  job_description TEXT NOT NULL,
+  required_skills TEXT NOT NULL,
+  work_location VARCHAR(255) NOT NULL,
+  salary_info VARCHAR(255) NOT NULL,
+  job_appeal TEXT NOT NULL,
+  tone VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (scout_id) REFERENCES scouts(id) ON DELETE CASCADE
+);
 -- ユーザーテーブル（初回起動時に自動作成）
 CREATE TABLE IF NOT EXISTS users (
   user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

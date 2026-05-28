@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ScoutRepository } from '../repository/scout.repository';
-import { ScoutEntity } from '../type/scout';
+import { CreateScoutInput, ScoutEntity } from '../type/scout';
 
 @Injectable()
 export class ScoutService {
@@ -10,9 +10,13 @@ export class ScoutService {
     return this.scoutRepository.findAll();
   }
 
-  async create(input: ScoutEntity): Promise<ScoutEntity> {
+  async create(input: CreateScoutInput): Promise<ScoutEntity> {
     if (!input.creator?.trim() || !input.title?.trim() || !input.body?.trim()) {
       throw new BadRequestException('作成者・タイトル・本文は必須です');
+    }
+
+    if (!input.requirement) {
+      throw new BadRequestException('求人情報が不足しています');
     }
 
     const scout = new ScoutEntity();
@@ -22,7 +26,7 @@ export class ScoutService {
     scout.body = input.body.trim();
     scout.status = input.status?.trim() || 'DRAFT';
 
-    return this.scoutRepository.save(scout);
+    return this.scoutRepository.saveWithRequirement(scout, input);
   }
 
   private generateId(): string {

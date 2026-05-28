@@ -73,8 +73,4 @@ async function handleLogout() {
   cursor: pointer;
   font-weight: 600;
 }
-
-.main {
-  padding: 24px;
-}
 </style>

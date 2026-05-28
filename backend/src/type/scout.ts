@@ -20,3 +20,22 @@ export class ScoutEntity {
   @Column({ name: 'status', type: 'varchar', length: 20, default: 'DRAFT' })
   status: string;
 }
+
+export interface ScoutJobRequirementInput {
+  companyName: string;
+  jobCategory: string;
+  jobDescription: string;
+  requiredSkills: string;
+  workLocation: string;
+  salaryInfo: string;
+  jobAppeal: string;
+}
+
+export interface CreateScoutInput {
+  creator: string;
+  title: string;
+  body: string;
+  status?: string;
+  tone: 'カジュアル' | '熱意' | 'プロフェッショナル';
+  requirement: ScoutJobRequirementInput;
+}
