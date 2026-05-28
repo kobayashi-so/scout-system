@@ -22,13 +22,13 @@
               スカウト文新規作成
             </RouterLink>
 
-            <button
-              type="button"
+            <RouterLink
+              to="/settings"
               class="block w-full cursor-not-allowed rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-400"
               title="設定画面は後続実装"
             >
               設定
-            </button>
+            </RouterLink>
 
             <button
               type="button"
