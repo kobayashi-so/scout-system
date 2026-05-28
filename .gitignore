@@ -8,3 +8,4 @@ dist/
 *:Zone.Identifier
 desktop.ini
 Thumbs.db
+.vite/
