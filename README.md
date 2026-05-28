@@ -73,6 +73,9 @@ git push origin dev-ito
 # ブランチ作成
 git checkout -b dev-sora
 
+
+#nobu
+
 # wslでのprojectsまでの移動コマンド（kobayashi-soは自分のユーザー名）
 cd /home/kobayashi-so/projects
 
