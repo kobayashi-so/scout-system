@@ -311,6 +311,7 @@ onMounted(() => {
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+}
 button {
   align-self: flex-start;
   padding: 8px 16px;
@@ -334,6 +335,7 @@ button {
 
 .form-label.compact {
   flex: 1;
+}
 .btn-secondary {
   background: #fff;
   color:  #05ad54;
