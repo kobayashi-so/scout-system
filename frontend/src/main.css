@@ -98,14 +98,6 @@ aside h1 {
 	color: #fff;
 }
 
-aside h1::before {
-	content: 'Scout MANAGER';
-}
-
-aside h1 {
-	font-size: 0;
-}
-
 aside nav {
 	display: flex;
 	flex-direction: column;
@@ -226,6 +218,10 @@ section h2 {
 	font-size: 20px;
 	font-weight: 600;
 	color: #1f2937;
+}
+
+.mt-6 {
+	margin-top: 24px;
 }
 
 .mb-4 {

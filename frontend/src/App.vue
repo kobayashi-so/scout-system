@@ -3,7 +3,7 @@
     <template v-if="authStore.isAuthenticated">
       <div class="mx-auto flex min-h-screen max-w-[1440px]">
         <aside class="w-64 shrink-0 border-r border-slate-200 bg-white p-4">
-          <h1 class="mb-6 text-lg font-bold">Scout System</h1>
+          <h1 class="mt-6 mb-6 text-lg font-bold">Scout System</h1>
 
           <nav class="space-y-2">
             <RouterLink
