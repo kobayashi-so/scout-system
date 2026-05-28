@@ -12,6 +12,13 @@
           <RouterLink to="/login">ログイン</RouterLink>
           <RouterLink to="/register">ユーザー登録</RouterLink>
         </template>
+        <RouterLink to="/create">
+          新規作成
+        </RouterLink>
+
+        <RouterLink to="/settings">
+         設定
+        </RouterLink>
       </nav>
     </header>
 
@@ -54,7 +61,7 @@ async function handleLogout() {
 }
 
 .nav a.router-link-active {
-  color: #90cdf4;
+  color: #d6f490;
 }
 
 .logout-btn {

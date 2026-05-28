@@ -35,3 +35,10 @@ BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE FUNCTION set_users_updated_at();
 
+-- 評価基準・チェック項目管理マスタテーブルの作成
+CREATE TABLE IF NOT EXISTS check_items (
+    id VARCHAR(36) PRIMARY KEY,               -- 項目ID (UUIDを想定)
+    checkTitle VARCHAR(255) NOT NULL,         -- チェック項目名 (nameから変更したもの)
+    display_order INT NOT NULL,               -- 表示順 (UIの並び順を制御)
+    deleted_at TIMESTAMP NULL                 -- 削除日時 (論理削除用、NULLなら有効データ)
+);

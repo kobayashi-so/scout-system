@@ -9,6 +9,7 @@ import ScoutPage from '../components/ScoutPage.vue'
 import ScoutList from '../components/ScoutList.vue'
 import LoginPage from '../components/LoginPage.vue'
 import RegisterPage from '../components/RegisterPage.vue'
+import SettingCheckItem from '../components/SettingCheckItem.vue'
 
 // 認証導線: ルート初期表示はログイン画面。
 const routes: RouteRecordRaw[] = [
@@ -38,6 +39,15 @@ const routes: RouteRecordRaw[] = [
     component: ScoutPage,
     meta: { requiresAuth: true },
   },
+  {
+    path: '/setting',
+    redirect: '/settings',
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: SettingCheckItem,
+  }
 ]
 
 export const router = createRouter({
