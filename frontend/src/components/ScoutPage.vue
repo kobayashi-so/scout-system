@@ -163,7 +163,7 @@ textarea {
 button {
   align-self: flex-start;
   padding: 8px 16px;
-  background: #3182ce;
+  background: #05ad54;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -178,8 +178,8 @@ button:disabled {
 
 .btn-secondary {
   background: #fff;
-  color: #3182ce;
-  border: 1px solid #3182ce;
+  color:  #05ad54;
+  border: 1px solid  #05ad54;
 }
 
 .list-header {
