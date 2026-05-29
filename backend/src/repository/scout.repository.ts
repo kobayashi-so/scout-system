@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CreateScoutInput, ScoutEntity } from '../type/scout';
+import { CreateScoutInput, ScoutEntity, ScoutStatus } from '../type/scout';
 
 @Injectable()
 export class ScoutRepository {
@@ -12,7 +12,29 @@ export class ScoutRepository {
   ) {}
 
   async findAll(): Promise<ScoutEntity[]> {
-    return this.repository.query('SELECT * FROM scouts ORDER BY created_at DESC');
+    const rows = await this.repository.query(
+      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+       FROM scouts
+       ORDER BY created_at DESC`,
+    );
+
+    return rows.map((row: any) => this.mapRowToEntity(row));
+  }
+
+  async findById(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+       FROM scouts
+       WHERE id = $1
+       LIMIT 1`,
+      [scoutId],
+    );
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return this.mapRowToEntity(rows[0]);
   }
 
   async saveWithRequirement(
@@ -25,8 +47,8 @@ export class ScoutRepository {
 
     try {
       const insertedScouts = await queryRunner.query(
-        `INSERT INTO scouts (id, creator, title, body, status)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO scouts (id, creator, title, body, status, first_approver_id, second_approver_id)
+         VALUES ($1, $2, $3, $4, $5, NULL, NULL)
          RETURNING *`,
         [scout.id, scout.creator, scout.title, scout.body, scout.status],
       );
@@ -59,5 +81,59 @@ export class ScoutRepository {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async approveByLeader(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET status = $2,
+           first_approver_id = $3
+       WHERE id = $1
+         AND status = $4
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async finalApprove(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET status = $2,
+           second_approver_id = $3
+       WHERE id = $1
+         AND status = $4
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'approved', approverId, 'waiting_admin'],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async remand(scoutId: string, currentStatus: ScoutStatus): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET status = $2
+       WHERE id = $1
+         AND status = $3
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'remanded', currentStatus],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  private mapRowToEntity(row: any): ScoutEntity {
+    return {
+      id: row.id,
+      createdAt: row.created_at,
+      creator: row.creator,
+      title: row.title,
+      body: row.body,
+      status: row.status as ScoutStatus,
+      firstApproverId: row.first_approver_id,
+      secondApproverId: row.second_approver_id,
+    } as ScoutEntity;
   }
 }

@@ -20,6 +20,15 @@ export class UserRepository {
     return rows.length > 0 ? this.mapRowToEntity(rows[0]) : null;
   }
 
+  async findById(userId: string): Promise<UserEntity | null> {
+    const rows = await this.repository.query(
+      'SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE user_id = $1 LIMIT 1',
+      [userId],
+    );
+
+    return rows.length > 0 ? this.mapRowToEntity(rows[0]) : null;
+  }
+
   // usersテーブルへINSERTし、登録済みレコードを返す
   async createUser(input: {
     userName: string;

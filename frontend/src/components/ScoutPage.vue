@@ -99,11 +99,26 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
 import { useScoutStore } from '../store/scoutStore'
-import type { CreateScoutPayload, ScoutEntity } from '../type/scout'
+import type { CreateScoutPayload } from '../type/scout'
 
 const store = useScoutStore()
 
-const form = reactive({
+const form = reactive<{
+  creator: string
+  title: string
+  requirement: {
+    companyName: string
+    jobCategory: string
+    jobDescription: string
+    requiredSkills: string
+    workLocation: string
+    salaryInfo: string
+    jobAppeal: string
+  }
+  tone: 'カジュアル' | '熱意' | 'プロフェッショナル'
+  promptText: string
+  body: string
+}>({
   creator: '',
   title: '',
   requirement: {
