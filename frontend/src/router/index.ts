@@ -15,6 +15,7 @@ import LeaderReviewPage from "../components/LeaderReviewPage.vue";
 import AdminReviewPage from "../components/AdminReviewPage.vue";
 import SalesApprovalPage from "../components/SalesApprovalPage.vue";
 import FinalApprovalPage from "../components/FinalApprovalPage.vue";
+import RemandedEditPage from "../components/RemandedEditPage.vue";
 
 // 認証導線: ルート初期表示はログイン画面。
 const routes: RouteRecordRaw[] = [
@@ -54,6 +55,13 @@ const routes: RouteRecordRaw[] = [
     path: "/approval/final",
     name: "approval-final",
     component: FinalApprovalPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    // 差戻し文書の修正・再申請画面
+    path: "/scouts/:id/remanded-edit",
+    name: "remanded-edit",
+    component: RemandedEditPage,
     meta: { requiresAuth: true },
   },
   {

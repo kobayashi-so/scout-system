@@ -6,6 +6,7 @@ import {
   ScoutDetail,
   ScoutEntity,
   ScoutStatus,
+  UpdateRemandedScoutInput,
 } from '../type/scout';
 
 @Injectable()
@@ -74,9 +75,33 @@ export class ScoutRepository {
     }
 
     const row = rows[0];
+    // LEFT JOIN結果から、求人行が実在するかを値の有無で判定
+    const hasRequirementRow = [
+      row.company_name,
+      row.job_category,
+      row.job_description,
+      row.required_skills,
+      row.work_location,
+      row.salary_info,
+      row.job_appeal,
+      row.tone,
+    ].some((value) => value !== null && value !== undefined);
+
+    const fallbackRequirement = {
+      // 旧データで求人行が無い場合は、元文書(scouts)の情報を編集初期値として返す
+      companyName: row.creator ?? '',
+      jobCategory: row.title ?? '',
+      jobDescription: row.body ?? '',
+      requiredSkills: '',
+      workLocation: '',
+      salaryInfo: '',
+      jobAppeal: '',
+      tone: 'プロフェッショナル',
+    };
+
     return {
       ...this.mapRowToEntity(row),
-      requirement: row.company_name
+      requirement: hasRequirementRow
         ? {
             companyName: row.company_name,
             jobCategory: row.job_category,
@@ -87,7 +112,7 @@ export class ScoutRepository {
             jobAppeal: row.job_appeal,
             tone: row.tone,
           }
-        : null,
+        : fallbackRequirement,
     } as ScoutDetail;
   }
 
@@ -179,6 +204,71 @@ export class ScoutRepository {
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async resubmitRemandedScout(
+    scoutId: string,
+    input: UpdateRemandedScoutInput,
+  ): Promise<ScoutEntity | null> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 差戻し状態の文書だけ更新し、承認者情報は再申請時にクリアする
+      const updatedRows = await queryRunner.query(
+        `UPDATE scouts
+         SET title = $2,
+             body = $3,
+             status = $4,
+             first_approver_id = NULL,
+             second_approver_id = NULL
+         WHERE id = $1
+           AND status = $5
+         RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
+        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded'],
+      );
+
+      if (updatedRows.length === 0) {
+        await queryRunner.rollbackTransaction();
+        return null;
+      }
+
+      const r = input.requirement;
+      // 求人情報は同一トランザクション内で更新して本文との不整合を防ぐ
+      await queryRunner.query(
+        `UPDATE scout_job_requirements
+         SET company_name = $2,
+             job_category = $3,
+             job_description = $4,
+             required_skills = $5,
+             work_location = $6,
+             salary_info = $7,
+             job_appeal = $8,
+             tone = $9,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE scout_id = $1`,
+        [
+          scoutId,
+          r.companyName.trim(),
+          r.jobCategory.trim(),
+          r.jobDescription.trim(),
+          r.requiredSkills.trim(),
+          r.workLocation.trim(),
+          r.salaryInfo.trim(),
+          r.jobAppeal.trim(),
+          input.tone,
+        ],
+      );
+
+      await queryRunner.commitTransaction();
+      return this.mapRowToEntity(updatedRows[0]);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   private mapRowToEntity(row: any): ScoutEntity {

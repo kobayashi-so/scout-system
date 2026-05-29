@@ -22,6 +22,7 @@
       :rows="displayRows"
       :role-type="roleType"
       @open-review="openReview"
+      @open-remanded-edit="openRemandedEdit"
     />
   </section>
 </template>
@@ -120,15 +121,15 @@ const statusStats = computed(() => ({
   rejected: rows.value.filter((r: ScoutEntity) => r.status === 'remanded').length,
 }))
 
+const roleType = computed(() => authStore.currentUserRoleType)
+
 
 function onClickTab(tab: ScoutListType) {
   if (tab === 'my') {
     selectedStatusCard.value = 'all'
-
-  const roleType = computed(() => authStore.currentUserRoleType)
-    } else {
-      selectedStatusCard.value = 'salesPending'
-    }
+  } else {
+    selectedStatusCard.value = 'salesPending'
+  }
 }
 
 function ensureActorId(): string | null {
@@ -158,6 +159,12 @@ async function openReview(item: ScoutEntity) {
   }
 
   error.value = 'このアカウントではレビュー画面を開けません'
+}
+
+async function openRemandedEdit(item: ScoutEntity) {
+  if (!item.id) return
+  // 差戻し編集画面は文書IDでルーティングして、初期値は詳細APIから復元する
+  await router.push(`/scouts/${item.id}/remanded-edit`)
 }
 
 watch(activeTab, () => {

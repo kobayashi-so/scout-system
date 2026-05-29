@@ -80,3 +80,13 @@ export interface ScoutJobRequirement {
 export interface ScoutDetail extends ScoutEntity {
   requirement?: ScoutJobRequirement | null;
 }
+
+export interface UpdateRemandedScoutInput {
+  // 差戻し編集画面で更新された本文情報
+  title: string;
+  body: string;
+  // 再申請時に求人要件と同時保存するトーン
+  tone: 'カジュアル' | '熱意' | 'プロフェッショナル';
+  // 差戻し編集画面で再編集された求人情報
+  requirement: ScoutJobRequirementInput;
+}

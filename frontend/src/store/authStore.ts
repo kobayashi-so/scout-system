@@ -5,6 +5,7 @@ import type { RegisterUserPayload, RoleType, UserResponse } from '../type/user'
 // 認証ストアの状態型。現在のログイン状態・メール・権限・初期化済みかを保持
 interface AuthState {
   isAuthenticated: boolean // ログイン済みか
+  loading: boolean // 認証系APIの実行中フラグ
   currentUserId: string | null // 現在ログイン中ユーザーのID
   currentUserEmail: string | null // 現在ログイン中のメールアドレス
   currentUserRoleType: RoleType | null // 現在ログイン中ユーザーの権限
@@ -25,6 +26,7 @@ interface AuthSession {
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     isAuthenticated: false,
+    loading: false,
     currentUserId: null,
     currentUserEmail: null,
     currentUserRoleType: null,
@@ -59,22 +61,32 @@ export const useAuthStore = defineStore('auth', {
 
     // 新規ユーザーをAPI経由でusersテーブルに登録する。
     async register(payload: RegisterPayload) {
-      const user = await registerUser({
-        ...payload,
-        email: payload.email.trim().toLowerCase(),
-      })
+      this.loading = true
+      try {
+        const user = await registerUser({
+          ...payload,
+          email: payload.email.trim().toLowerCase(),
+        })
 
-      this.setSession(user)
+        this.setSession(user)
+      } finally {
+        this.loading = false
+      }
     },
 
     // メールアドレスとパスワードで認証し、権限もストアにセット
     async login(email: string, password: string) {
-      const user = await loginUser({
-        email: email.trim().toLowerCase(),
-        password,
-      })
+      this.loading = true
+      try {
+        const user = await loginUser({
+          email: email.trim().toLowerCase(),
+          password,
+        })
 
-      this.setSession(user)
+        this.setSession(user)
+      } finally {
+        this.loading = false
+      }
     },
 
     // ログアウト時は状態と保存済みセッションをクリアする。

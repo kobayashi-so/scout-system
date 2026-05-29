@@ -47,6 +47,15 @@
                   詳細
                 </button>
 
+                <!-- 営業担当が差戻し文書を修正画面へ開く導線 -->
+                <button
+                  v-if="canOpenRemandedEdit(item.status)"
+                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
+                  @click="$emit('open-remanded-edit', item)"
+                >
+                  差戻し編集
+                </button>
+
                 <button
                   v-if="canOpenLeaderReview(item.status)"
                   class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
@@ -91,7 +100,7 @@
               <div class="info-item"><strong>勤務地</strong><p>{{ selectedRow.requirement?.workLocation }}</p></div>
               <div class="info-item"><strong>給与</strong><p>{{ selectedRow.requirement?.salaryInfo }}</p></div>
               <div class="info-item"><strong>求人の魅力</strong><p>{{ selectedRow.requirement?.jobAppeal }}</p></div>
-              <div class="info-item"><strong>文章トーン</strong><p>{{ selectedRow.tone }}</p></div>
+              <div class="info-item"><strong>文章トーン</strong><p>{{ selectedRow.requirement?.tone }}</p></div>
             </div>
           </div>
 
@@ -128,6 +137,7 @@ const props = defineProps<{
 // エミット定義（2個目のレビュー画面行き専用に統一）
 defineEmits<{
   (e: 'open-review', row: ScoutEntity): void
+  (e: 'open-remanded-edit', row: ScoutEntity): void
 }>()
 
 // モーダル制御用のリアクティブステート
@@ -203,6 +213,11 @@ function canOpenLeaderReview(status?: ScoutStatus): boolean {
 
 function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === 'admin' && status === 'waiting_admin'
+}
+
+function canOpenRemandedEdit(status?: ScoutStatus): boolean {
+  // sales かつ remanded の行だけに「差戻し編集」ボタンを表示
+  return props.roleType === 'sales' && status === 'remanded'
 }
 </script>
 

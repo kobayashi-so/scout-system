@@ -16,6 +16,7 @@ import {
   ScoutDetail,
   ScoutEntity,
   ScoutStatus,
+  UpdateRemandedScoutInput,
   WorkflowActionInput,
 } from '../type/scout';
 import { CommentEntity } from '../type/comment';
@@ -156,6 +157,33 @@ export class ScoutService {
       authorId: userId,
       content: comment,
     });
+
+    return updated;
+  }
+
+  async resubmitRemanded(
+    scoutId: string,
+    input: UpdateRemandedScoutInput,
+  ): Promise<ScoutEntity> {
+    // Path Param のIDを正規化（空文字や空白のみを拒否）
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+
+    if (!input.title?.trim() || !input.body?.trim()) {
+      throw new BadRequestException('タイトル・本文は必須です');
+    }
+
+    if (!input.requirement) {
+      throw new BadRequestException('求人情報が不足しています');
+    }
+
+    // 差戻し状態の文書だけを更新し、再申請状態へ戻す
+    const updated = await this.scoutRepository.resubmitRemandedScout(
+      normalizedScoutId,
+      input,
+    );
+    if (!updated) {
+      throw new ConflictException('差し戻し中の文書のみ再申請できます');
+    }
 
     return updated;
   }
