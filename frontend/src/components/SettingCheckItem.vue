@@ -101,9 +101,7 @@ onMounted(async () => {
 
     <div class="content-layout">
       <div class="table-section">
-        <div class="action-bar">
-          <button class="btn-add" @click="onClickAdd">新規追加</button>
-        </div>
+        <div class="action-bar"></div>
 
         <table class="item-table">
           <thead>
@@ -200,6 +198,7 @@ onMounted(async () => {
   margin-bottom: 10px;
 }
 
+/* 追加 */
 /* テックリーダー指定のボタン色 */
 .btn-add {
   background-color: #05ad54; /* 緑四角 */
