@@ -13,6 +13,7 @@
         </main>
       </div>
     </template>
+
     <template v-else>
       <RouterView />
     </template>
@@ -32,6 +33,11 @@ const userEmail = computed(() => authStore.currentUserEmail || "未ログイン"
 const userRole = computed(() => authStore.currentUserRoleType || "ゲスト");
 
 async function handleLogout() {
+  const shouldLogout = window.confirm("ログアウトしますか？");
+  if (!shouldLogout) {
+    return;
+  }
+
   authStore.logout();
   await router.push("/login");
 }
