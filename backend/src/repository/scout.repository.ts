@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { CreateScoutInput, ScoutEntity, ScoutStatus } from '../type/scout';
+import {
+  CreateScoutInput,
+  ScoutDetail,
+  ScoutEntity,
+  ScoutStatus,
+} from '../type/scout';
 
 @Injectable()
 export class ScoutRepository {
@@ -35,6 +40,55 @@ export class ScoutRepository {
     }
 
     return this.mapRowToEntity(rows[0]);
+  }
+
+  async findDetailById(scoutId: string): Promise<ScoutDetail | null> {
+    // レビュー画面表示のため、scout本体と求人情報を1クエリで取得
+    const rows = await this.repository.query(
+      `SELECT
+         s.id,
+         s.created_at,
+         s.creator,
+         s.title,
+         s.body,
+         s.status,
+         s.first_approver_id,
+         s.second_approver_id,
+         r.company_name,
+         r.job_category,
+         r.job_description,
+         r.required_skills,
+         r.work_location,
+         r.salary_info,
+         r.job_appeal,
+         r.tone
+       FROM scouts s
+       LEFT JOIN scout_job_requirements r ON r.scout_id = s.id
+       WHERE s.id = $1
+       LIMIT 1`,
+      [scoutId],
+    );
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const row = rows[0];
+    return {
+      ...this.mapRowToEntity(row),
+      requirement: row.company_name
+        ? {
+            companyName: row.company_name,
+            jobCategory: row.job_category,
+            jobDescription: row.job_description,
+            requiredSkills: row.required_skills,
+            workLocation: row.work_location,
+            salaryInfo: row.salary_info,
+            jobAppeal: row.job_appeal,
+            tone: row.tone,
+          }
+        : null,
+    } as ScoutDetail;
   }
 
   async saveWithRequirement(
@@ -84,6 +138,7 @@ export class ScoutRepository {
   }
 
   async approveByLeader(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+    // 楽観的制御: WHEREで現在statusも条件化し、同時更新競合を防ぐ
     const rows = await this.repository.query(
       `UPDATE scouts
        SET status = $2,
@@ -98,6 +153,7 @@ export class ScoutRepository {
   }
 
   async finalApprove(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+    // 楽観的制御: waiting_adminのときのみapprovedへ遷移
     const rows = await this.repository.query(
       `UPDATE scouts
        SET status = $2,
@@ -112,6 +168,7 @@ export class ScoutRepository {
   }
 
   async remand(scoutId: string, currentStatus: ScoutStatus): Promise<ScoutEntity | null> {
+    // 差戻しも現在status一致時のみ更新
     const rows = await this.repository.query(
       `UPDATE scouts
        SET status = $2

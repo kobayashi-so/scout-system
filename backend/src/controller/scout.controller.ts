@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ScoutService } from '../service/scout.service';
 import { CreateScoutInput, RemandInput, WorkflowActionInput } from '../type/scout';
 
@@ -9,6 +9,18 @@ export class ScoutController {
   @Get(['scouts', 'api/scouts'])
   findAll() {
     return this.scoutService.findAll();
+  }
+
+  @Get(['scouts/:id', 'api/scouts/:id'])
+  findDetail(@Param('id') id: string) {
+    // レビュー画面向け: スカウト本文 + 求人情報を返却
+    return this.scoutService.findDetailById(id);
+  }
+
+  @Get(['scouts/:id/comments', 'api/scouts/:id/comments'])
+  findComments(@Param('id') id: string) {
+    // レビュー画面向け: 差戻しコメント履歴を返却
+    return this.scoutService.findCommentsByScoutId(id);
   }
 
   @Post(['scouts', 'api/scouts'])

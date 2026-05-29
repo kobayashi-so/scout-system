@@ -25,6 +25,19 @@ export class CommentRepository {
     return this.mapRowToEntity(rows[0]);
   }
 
+  async findByScoutId(targetScoutId: string): Promise<CommentEntity[]> {
+    // レビュー画面のコメント履歴表示用（新しい順）
+    const rows = await this.repository.query(
+      `SELECT comment_id, target_scout_id, author_id, content, created_at
+       FROM comments
+       WHERE target_scout_id = $1
+       ORDER BY created_at DESC`,
+      [targetScoutId],
+    );
+
+    return rows.map((row: any) => this.mapRowToEntity(row));
+  }
+
   private mapRowToEntity(row: any): CommentEntity {
     return {
       commentId: row.comment_id,

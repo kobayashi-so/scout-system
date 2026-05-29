@@ -150,6 +150,7 @@ const store = useScoutStore()
 const form = reactive<{
   creator: string
   title: string
+  status: ScoutStatus
   requirement: {
     companyName: string
     jobCategory: string
@@ -267,7 +268,7 @@ async function handleSubmit(status: ScoutStatus) {
     return
   }
 
-  const payload: CreateScoutPayload & { status?: ScoutStatus } = {
+  const payload: CreateScoutPayload = {
     creator: form.creator.trim(),
     title: form.title.trim(),
     body: form.body.trim(),

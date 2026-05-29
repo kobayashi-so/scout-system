@@ -29,28 +29,22 @@
           <td class="px-4 py-3">
             <div class="flex gap-2">
               <button
-                v-if="canApprove(item.status)"
-                class="rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-                @click="$emit('approve', item)"
+                v-if="canOpenLeaderReview(item.status)"
+                class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                @click="$emit('open-review', item)"
               >
-                承認
+                <!-- 一覧で即承認はせず、レビュー画面でチェック・コメントを必須化する -->
+                営業承認レビュー
               </button>
               <button
-                v-if="canFinalApprove(item.status)"
-                class="rounded-md bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
-                @click="$emit('final-approve', item)"
+                v-if="canOpenAdminReview(item.status)"
+                class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                @click="$emit('open-review', item)"
               >
-                最終承認
-              </button>
-              <button
-                v-if="canRemand(item.status)"
-                class="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
-                @click="$emit('remand', item)"
-              >
-                差戻し
+                最終承認レビュー
               </button>
               <span
-                v-if="!canApprove(item.status) && !canFinalApprove(item.status) && !canRemand(item.status)"
+                v-if="!canOpenLeaderReview(item.status) && !canOpenAdminReview(item.status)"
                 class="text-xs text-slate-400"
               >
                 操作なし
@@ -76,9 +70,7 @@ const props = defineProps<{
 }>()
 
 defineEmits<{
-  (e: 'approve', row: ScoutEntity): void
-  (e: 'final-approve', row: ScoutEntity): void
-  (e: 'remand', row: ScoutEntity): void
+  (e: 'open-review', row: ScoutEntity): void
 }>()
 
 function formatDate(value: string | undefined) {
@@ -94,18 +86,13 @@ function statusClass(status?: ScoutStatus) {
   return 'bg-slate-100 text-slate-700'
 }
 
-function canApprove(status?: ScoutStatus): boolean {
+function canOpenLeaderReview(status?: ScoutStatus): boolean {
+  // leaderは「営業承認待ち」のみレビュー可能
   return props.roleType === 'leader' && status === 'waiting_leader'
 }
 
-function canFinalApprove(status?: ScoutStatus): boolean {
+function canOpenAdminReview(status?: ScoutStatus): boolean {
+  // adminは「最終承認待ち」のみレビュー可能
   return props.roleType === 'admin' && status === 'waiting_admin'
-}
-
-function canRemand(status?: ScoutStatus): boolean {
-  return (
-    (props.roleType === 'leader' || props.roleType === 'admin') &&
-    (status === 'waiting_leader' || status === 'waiting_admin')
-  )
 }
 </script>

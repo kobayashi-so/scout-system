@@ -17,23 +17,16 @@
       v-else
       :rows="displayRows"
       :role-type="roleType"
-      @approve="handleApprove"
-      @final-approve="handleFinalApprove"
-      @remand="handleRemand"
+      @open-review="openReview"
     />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import {
-  approveScout,
-  fetchScouts,
-  finalApproveScout,
-  remandScout,
-  type ScoutListType,
-} from '../api/scoutApi'
+import { fetchScouts, type ScoutListType } from '../api/scoutApi'
 import { useAuthStore } from '../store/authStore'
+import { useRouter } from 'vue-router'
 import type { ScoutEntity } from '../type/scout'
 import DashboardTabs from './dashboard/DashboardTabs.vue'
 import StatusCards, { type StatusFilterKey } from './dashboard/StatusCards.vue'
@@ -42,8 +35,10 @@ import ScoutTable from './dashboard/ScoutTable.vue'
 type RoleLevel = 1 | 2 | 3
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const roleLevel = computed<RoleLevel>(() => {
+  // 画面タブ制御用にroleを段階値へ変換
   if (authStore.currentUserRoleType === 'admin') return 3
   if (authStore.currentUserRoleType === 'leader') return 2
   return 1
@@ -90,6 +85,7 @@ async function loadRows() {
 const displayRows = computed(() => {
   let filteredRows = rows.value
 
+  // レビュー対象タブはバックエンド未実装のtypeパラメータを使わず、フロントで絞り込む
   if (activeTab.value === 'sales_pending') {
     filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'waiting_leader')
   }
@@ -123,6 +119,7 @@ const statusStats = computed(() => ({
 const roleType = computed(() => authStore.currentUserRoleType)
 
 function ensureActorId(): string | null {
+  // 旧セッション（userId未保存）を明示的に検知
   if (!authStore.currentUserId) {
     error.value = 'ユーザー情報が古いため、再ログインしてください'
     return null
@@ -131,53 +128,23 @@ function ensureActorId(): string | null {
   return authStore.currentUserId
 }
 
-async function handleApprove(item: ScoutEntity) {
+async function openReview(item: ScoutEntity) {
   if (!item.id) return
   const actorId = ensureActorId()
   if (!actorId) return
 
-  try {
-    await approveScout({ scoutId: item.id, userId: actorId })
-    await loadRows()
-  } catch (e) {
-    console.error(e)
-    error.value = '承認に失敗しました'
+  // ロールに応じて同一UIの別モード画面へ遷移
+  if (authStore.currentUserRoleType === 'leader') {
+    await router.push(`/reviews/leader/${item.id}`)
+    return
   }
-}
 
-async function handleFinalApprove(item: ScoutEntity) {
-  if (!item.id) return
-  const actorId = ensureActorId()
-  if (!actorId) return
-
-  try {
-    await finalApproveScout({ scoutId: item.id, userId: actorId })
-    await loadRows()
-  } catch (e) {
-    console.error(e)
-    error.value = '最終承認に失敗しました'
+  if (authStore.currentUserRoleType === 'admin') {
+    await router.push(`/reviews/admin/${item.id}`)
+    return
   }
-}
 
-async function handleRemand(item: ScoutEntity) {
-  if (!item.id) return
-  const actorId = ensureActorId()
-  if (!actorId) return
-
-  const comment = window.prompt('差し戻しコメントを入力してください')
-  if (!comment?.trim()) return
-
-  try {
-    await remandScout({
-      scoutId: item.id,
-      userId: actorId,
-      comment: comment.trim(),
-    })
-    await loadRows()
-  } catch (e) {
-    console.error(e)
-    error.value = '差し戻しに失敗しました'
-  }
+  error.value = 'このアカウントではレビュー画面を開けません'
 }
 
 watch(activeTab, () => {

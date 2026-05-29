@@ -13,10 +13,12 @@ import {
   RemandInput,
   RoleType,
   SCOUT_STATUSES,
+  ScoutDetail,
   ScoutEntity,
   ScoutStatus,
   WorkflowActionInput,
 } from '../type/scout';
+import { CommentEntity } from '../type/comment';
 
 const REMANDABLE_STATUSES: ScoutStatus[] = ['waiting_leader', 'waiting_admin'];
 
@@ -30,6 +32,24 @@ export class ScoutService {
 
   findAll(): Promise<ScoutEntity[]> {
     return this.scoutRepository.findAll();
+  }
+
+  async findDetailById(scoutId: string): Promise<ScoutDetail> {
+    // レビュー画面表示用の詳細取得
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const scout = await this.scoutRepository.findDetailById(normalizedScoutId);
+    if (!scout) {
+      throw new NotFoundException('対象スカウトが見つかりません');
+    }
+
+    return scout;
+  }
+
+  async findCommentsByScoutId(scoutId: string): Promise<CommentEntity[]> {
+    // 対象スカウトの差戻しコメント履歴を取得
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    await this.getScoutOrThrow(normalizedScoutId);
+    return this.commentRepository.findByScoutId(normalizedScoutId);
   }
 
   async create(input: CreateScoutInput): Promise<ScoutEntity> {
@@ -58,6 +78,7 @@ export class ScoutService {
     const scout = await this.getScoutOrThrow(scoutId);
     const user = await this.getUserOrThrow(userId);
 
+    // 要件: leader かつ waiting_leader のときのみ承認可能
     if (user.roleType !== 'leader') {
       throw new ForbiddenException('リーダーのみ承認できます');
     }
@@ -84,6 +105,7 @@ export class ScoutService {
     const scout = await this.getScoutOrThrow(scoutId);
     const user = await this.getUserOrThrow(userId);
 
+    // 要件: admin かつ waiting_admin のときのみ最終承認可能
     if (user.roleType !== 'admin') {
       throw new ForbiddenException('管理者のみ最終承認できます');
     }
@@ -111,6 +133,7 @@ export class ScoutService {
     const scout = await this.getScoutOrThrow(scoutId);
     const user = await this.getUserOrThrow(userId);
 
+    // 要件: 差戻しは leader/admin のみ
     if (!['leader', 'admin'].includes(user.roleType)) {
       throw new ForbiddenException('差し戻しはリーダーまたは管理者のみ実行できます');
     }
@@ -127,6 +150,7 @@ export class ScoutService {
       throw new ConflictException('ステータスが更新されたため差し戻しを完了できませんでした');
     }
 
+    // スカウト状態更新後にコメント履歴を保存
     await this.commentRepository.createComment({
       targetScoutId: scout.id as string,
       authorId: userId,
