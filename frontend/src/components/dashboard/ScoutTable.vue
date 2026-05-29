@@ -23,21 +23,42 @@
             <td class="px-4 py-3 font-medium text-slate-800">{{ item.title }}</td>
             <td class="px-4 py-3">
               <span class="rounded-full px-2 py-1 text-xs font-semibold" :class="statusClass(item.status)">
-                {{ item.status || '未設定' }}
+                {{ statusLabel(item.status) }}
               </span>
             </td>
             <td class="px-4 py-3">{{ item.creator }}</td>
-            <td class="px-4 py-3">{{ formatDate(item.createdAt) }}</td>
+            <td class="px-4 py-3">{{ formatDate(item.createdAt as string | undefined) }}</td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
+                <!-- 詳細ボタン（0529_nobu のモーダル開閉機能） -->
                 <button
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200"
                   @click="openDetail(item)"
                 >
                   詳細
                 </button>
-                <button class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200">
-                  編集
+
+                <!-- 承認・差戻しボタン群（main の権限ロジック機能） -->
+                <button
+                  v-if="canApprove(item.status)"
+                  class="rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+                  @click="$emit('approve', item)"
+                >
+                  承認
+                </button>
+                <button
+                  v-if="canFinalApprove(item.status)"
+                  class="rounded-md bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
+                  @click="$emit('final-approve', item)"
+                >
+                  最終承認
+                </button>
+                <button
+                  v-if="canRemand(item.status)"
+                  class="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
+                  @click="$emit('remand', item)"
+                >
+                  差戻し
                 </button>
               </div>
             </td>
@@ -46,20 +67,17 @@
       </table>
     </div>
 
-    <!-- ========= MODAL ========= -->
+    <!-- ========= MODAL (0529_nobuのモーダル詳細機能) ========= -->
     <div v-if="selectedRow" class="overlay" @click.self="closeDetail">
       <div class="modal">
-
         <!-- 閉じる -->
         <button class="close" @click="closeDetail">×</button>
 
         <!-- 中身 -->
         <div class="content">
-          
-          <!-- 左 -->
+          <!-- 左カラム：求人詳細情報 -->
           <div class="col">
             <h3 class="title">求人情報</h3>
-
             <div class="grid space-y-2 text-sm">
               <div><strong>作成者</strong><p>{{ selectedRow.creator }}</p></div>
               <div><strong>求人タイトル</strong><p>{{ selectedRow.title }}</p></div>
@@ -74,15 +92,13 @@
             </div>
           </div>
 
-          <!-- 右 -->
+          <!-- 右カラム：スカウト文プレビュー -->
           <div class="col right-col">
             <h3 class="title">スカウト文</h3>
-
             <div class="right-body">
               <div class="scout-display-box">
                 {{ selectedRow.body || 'スカウト文を表示' }}
               </div>
-
               <div class="footer">
                 <button class="copy-btn" @click="copyBody">
                   文書コピー
@@ -91,7 +107,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -100,13 +115,27 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { RoleType } from '../../type/user'
+import { statusLabel, type ScoutEntity, type ScoutStatus } from '../../type/scout'
 
-const props = defineProps<{ rows: any[] }>()
+// Props 定義の統合（mainブランチベースにScoutEntityを厳格に指定）
+const props = defineProps<{
+  rows: ScoutEntity[]
+  roleType: RoleType | null
+}>()
 
-const selectedRow = ref<any | null>(null)
+// Emits 定義（mainブランチ）
+defineEmits<{
+  (e: 'approve', row: ScoutEntity): void
+  (e: 'final-approve', row: ScoutEntity): void
+  (e: 'remand', row: ScoutEntity): void
+}>()
+
+// モーダル制御用の状態（0529_nobuブランチ）
+const selectedRow = ref<ScoutEntity | null>(null)
 const copyMessage = ref('')
 
-function openDetail(item: any) {
+function openDetail(item: ScoutEntity) {
   selectedRow.value = item
   copyMessage.value = ''
 }
@@ -116,21 +145,44 @@ function closeDetail() {
 }
 
 async function copyBody() {
-  await navigator.clipboard.writeText(selectedRow.value.body)
-  copyMessage.value = 'コピーしました'
+  if (selectedRow.value?.body) {
+    await navigator.clipboard.writeText(selectedRow.value.body)
+    copyMessage.value = 'コピーしました'
+  }
 }
 
 function formatDate(v?: string) {
   return v ? new Date(v).toLocaleDateString() : '-'
 }
 
-function statusClass(status?: string) {
+// ステータスに応じたスタイリング（mainブランチのカラフルな配色に統合）
+function statusClass(status?: ScoutStatus) {
+  if (status === 'approved') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'waiting_leader') return 'bg-amber-100 text-amber-700'
+  if (status === 'waiting_admin') return 'bg-blue-100 text-blue-700'
+  if (status === 'remanded') return 'bg-rose-100 text-rose-700'
   return 'bg-slate-100 text-slate-700'
+}
+
+// 権限制御ロジック（mainブランチ）
+function canApprove(status?: ScoutStatus): boolean {
+  return props.roleType === 'leader' && status === 'waiting_leader'
+}
+
+function canFinalApprove(status?: ScoutStatus): boolean {
+  return props.roleType === 'admin' && status === 'waiting_admin'
+}
+
+function canRemand(status?: ScoutStatus): boolean {
+  return (
+    (props.roleType === 'leader' || props.roleType === 'admin') &&
+    (status === 'waiting_leader' || status === 'waiting_admin')
+  )
 }
 </script>
 
 <style scoped>
-/* 背景 */
+/* 0529_nobuブランチで追加されたモーダル専用CSSをすべて維持 */
 .overlay {
   position: fixed;
   inset: 0;
@@ -142,7 +194,6 @@ function statusClass(status?: string) {
   padding: 20px;
 }
 
-/* モーダル */
 .modal {
   width: 80vw;
   max-width: 1200px;
@@ -155,7 +206,6 @@ function statusClass(status?: string) {
   padding: 32px;
 }
 
-/* 閉じる */
 .close {
   position: absolute;
   top: 20px;
@@ -167,14 +217,12 @@ function statusClass(status?: string) {
   cursor: pointer;
 }
 
-/* レイアウト */
 .content {
   display: flex;
   gap: 40px;
   height: 100%;
 }
 
-/* カラム */
 .col {
   flex: 1;
   display: flex;
@@ -183,7 +231,6 @@ function statusClass(status?: string) {
   width: 100%;
 }
 
-/* タイトル */
 .title {
   font-size: 26px;
   margin-bottom: 16px;
@@ -225,7 +272,6 @@ function statusClass(status?: string) {
   overflow-y: auto;
 }
 
-/* フッター */
 .footer {
   display: flex;
   justify-content: center;
@@ -239,7 +285,6 @@ function statusClass(status?: string) {
   color: #475569;
 }
 
-/* コピー */
 .copy-btn {
   border: 1px solid #000;
   background: #fff;
@@ -258,7 +303,6 @@ function statusClass(status?: string) {
     padding: 28px;
     border-radius: 28px;
   }
-
   .content {
     gap: 12px;
   }
@@ -269,17 +313,14 @@ function statusClass(status?: string) {
     height: 82vh;
     padding: 20px;
   }
-
   .content {
     flex-direction: column;
     gap: 20px;
   }
-
   .title {
     width: 100%;
     font-size: 22px;
   }
-
   .scout-display-box {
     width: 100%;
     min-width: 0;
