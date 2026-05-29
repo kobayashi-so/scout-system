@@ -13,6 +13,8 @@ import SettingCheckItem from "../components/SettingCheckItem.vue";
 import SettingUserprofile from "../components/SettingUserprofile.vue";
 import LeaderReviewPage from "../components/LeaderReviewPage.vue";
 import AdminReviewPage from "../components/AdminReviewPage.vue";
+import SalesApprovalPage from "../components/SalesApprovalPage.vue";
+import FinalApprovalPage from "../components/FinalApprovalPage.vue";
 
 // 認証導線: ルート初期表示はログイン画面。
 const routes: RouteRecordRaw[] = [
@@ -40,6 +42,18 @@ const routes: RouteRecordRaw[] = [
     path: "/create",
     name: "scout-create",
     component: ScoutPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/approval/sales",
+    name: "approval-sales",
+    component: SalesApprovalPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/approval/final",
+    name: "approval-final",
+    component: FinalApprovalPage,
     meta: { requiresAuth: true },
   },
   {
