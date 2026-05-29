@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { createScout, fetchScouts } from '../api/scoutApi'
-import type { ScoutEntity } from '../type/scout'
+import type { CreateScoutPayload, ScoutEntity } from '../type/scout'
 
 interface ScoutState {
   scouts: ScoutEntity[]
@@ -29,7 +29,7 @@ export const useScoutStore = defineStore('scout', {
       }
     },
 
-    async addScout(payload: ScoutEntity) {
+    async addScout(payload: CreateScoutPayload) {
       this.loading = true
       this.error = null
       try {
