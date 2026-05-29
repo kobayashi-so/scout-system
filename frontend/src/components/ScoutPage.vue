@@ -138,6 +138,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, reactive } from 'vue'
 import { useScoutStore } from '../store/scoutStore'
+
 import { fetchCheckItems } from '../api/checkItemApi'
 import type { CreateScoutPayload } from '../type/scout'
 import type { checkItem } from '../type/checkItem'
@@ -146,7 +147,22 @@ type ScoutStatus = 'draft' | 'waiting_leader' | 'waiting_admin' | 'approved' | '
 
 const store = useScoutStore()
 
-const form = reactive({
+const form = reactive<{
+  creator: string
+  title: string
+  requirement: {
+    companyName: string
+    jobCategory: string
+    jobDescription: string
+    requiredSkills: string
+    workLocation: string
+    salaryInfo: string
+    jobAppeal: string
+  }
+  tone: 'カジュアル' | '熱意' | 'プロフェッショナル'
+  promptText: string
+  body: string
+}>({
   creator: '',
   title: '',
   status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加

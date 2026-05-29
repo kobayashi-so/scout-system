@@ -5,8 +5,16 @@ CREATE TABLE IF NOT EXISTS scouts (
   creator VARCHAR(100) NOT NULL,
   title VARCHAR(255) NOT NULL,
   body TEXT NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'DRAFT'
+  status VARCHAR(20) NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft', 'waiting_leader', 'waiting_admin', 'approved', 'remanded')),
+  first_approver_id UUID NULL,
+  second_approver_id UUID NULL
 );
+
+ALTER TABLE scouts ADD COLUMN IF NOT EXISTS first_approver_id UUID NULL;
+ALTER TABLE scouts ADD COLUMN IF NOT EXISTS second_approver_id UUID NULL;
+
+UPDATE scouts SET status = LOWER(status);
 
 -- 2. 求人条件のテーブル
 CREATE TABLE IF NOT EXISTS scout_job_requirements (
@@ -33,6 +41,15 @@ CREATE TABLE IF NOT EXISTS users (
   role_type VARCHAR(20) NOT NULL CHECK (role_type IN ('sales', 'leader', 'admin')),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 差し戻しコメントテーブル
+CREATE TABLE IF NOT EXISTS comments (
+  comment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_scout_id VARCHAR(50) NOT NULL REFERENCES scouts(id) ON DELETE CASCADE,
+  author_id UUID NOT NULL REFERENCES users(user_id),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 更新日時を自動付与するトリガー関数
