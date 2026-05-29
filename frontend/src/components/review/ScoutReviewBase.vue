@@ -308,10 +308,13 @@ async function handleRemand() {
       comment: remandComment.value.trim(),
     })
 
-    await router.push('/list')
+    // 差戻し後は画面遷移せず、その場で「次に進めない」状態を表示する
+    await loadReviewData()
+    errorMessage.value = 'E_REMANDED: 差戻し済みのため次に進めません。'
   } catch (error) {
     console.error(error)
-    errorMessage.value = '差戻し処理に失敗しました'
+    const statusCode = (error as any)?.response?.status
+    errorMessage.value = `差戻し処理に失敗しました (error code: ${statusCode ?? 'unknown'})`
   } finally {
     submitting.value = false
   }
