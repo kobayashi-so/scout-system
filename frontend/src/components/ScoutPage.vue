@@ -318,7 +318,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 94vh;
+  height: 93vh;
   max-height: 100vh;
   overflow: hidden; 
   box-sizing: border-box;
