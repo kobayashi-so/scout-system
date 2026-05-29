@@ -30,7 +30,7 @@
             <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
-                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200"
+                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
                   @click="openDetail(item)"
                 >
                   詳細
@@ -51,22 +51,11 @@
                   最終承認レビュー
                 </button>
 
-                <button
-                  v-if="canRemand(item.status)"
-                  class="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
-                  @click="$emit('remand', item)"
-                >
-                  差戻し
-                </button>
-
-                <span
-                  v-if="!canOpenLeaderReview(item.status) && !canOpenAdminReview(item.status) && !canRemand(item.status)"
-                  class="text-xs text-slate-400 self-center"
-                >
-                  操作なし
-                </span>
               </div>
             </td>
+          </tr>
+          <tr v-if="rows.length === 0">
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500">データがありません</td>
           </tr>
         </tbody>
       </table>
@@ -125,12 +114,12 @@ const props = defineProps<{
   roleType: RoleType | null
 }>()
 
-// 💡 0529-1hinata の 'open-review' エミット定義をベースにしつつ、main由来の 'remand' も残して統合
+// エミット定義（2個目のレビュー画面行き専用に統一）
 defineEmits<{
   (e: 'open-review', row: ScoutEntity): void
-  (e: 'remand', row: ScoutEntity): void
 }>()
 
+// モーダル制御用のリアクティブステート
 const selectedRow = ref<ScoutEntity | null>(null)
 const copyMessage = ref('')
 
@@ -153,8 +142,9 @@ async function copyBody() {
   }
 }
 
-function formatDate(v?: string) {
-  return v ? new Date(v).toLocaleDateString() : '-'
+function formatDate(value: string | undefined) {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('ja-JP')
 }
 
 function statusClass(status?: ScoutStatus) {
@@ -165,7 +155,7 @@ function statusClass(status?: ScoutStatus) {
   return 'bg-slate-100 text-slate-700'
 }
 
-// 💡 0529-1hinata 由来のレビュー画面オープン判定ロジック
+// 💡 権限とステータスに応じたボタンの表示ロジック関数
 function canOpenLeaderReview(status?: ScoutStatus): boolean {
   return props.roleType === 'leader' && status === 'waiting_leader'
 }
@@ -173,18 +163,10 @@ function canOpenLeaderReview(status?: ScoutStatus): boolean {
 function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === 'admin' && status === 'waiting_admin'
 }
-
-// 💡 main 由来の差戻し判定ロジック
-function canRemand(status?: ScoutStatus): boolean {
-  return (
-    (props.roleType === 'leader' || props.roleType === 'admin') &&
-    (status === 'waiting_leader' || status === 'waiting_admin')
-  )
-}
 </script>
 
 <style scoped>
-/* 美しく整えた詳細モーダル用のスタイルシートを完全にキープ */
+/* モーダルおよびパーツデザイン用のクリーンなCSSスタイル */
 .overlay {
   position: fixed;
   inset: 0;
