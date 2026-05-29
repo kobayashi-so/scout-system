@@ -65,3 +65,18 @@ export interface WorkflowActionInput {
 export interface RemandInput extends WorkflowActionInput {
   comment: string;
 }
+
+export interface ScoutJobRequirement {
+  companyName: string;
+  jobCategory: string;
+  jobDescription: string;
+  requiredSkills: string;
+  workLocation: string;
+  salaryInfo: string;
+  jobAppeal: string;
+  tone: string;
+}
+
+export interface ScoutDetail extends ScoutEntity {
+  requirement?: ScoutJobRequirement | null;
+}

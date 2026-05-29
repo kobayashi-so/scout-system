@@ -37,19 +37,20 @@
                 </button>
 
                 <button
-                  v-if="canApprove(item.status)"
-                  class="rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-                  @click="$emit('approve', item)"
+                  v-if="canOpenLeaderReview(item.status)"
+                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  @click="$emit('open-review', item)"
                 >
-                  承認
+                  営業承認レビュー
                 </button>
                 <button
-                  v-if="canFinalApprove(item.status)"
-                  class="rounded-md bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-200"
-                  @click="$emit('final-approve', item)"
+                  v-if="canOpenAdminReview(item.status)"
+                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  @click="$emit('open-review', item)"
                 >
-                  最終承認
+                  最終承認レビュー
                 </button>
+
                 <button
                   v-if="canRemand(item.status)"
                   class="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
@@ -57,6 +58,13 @@
                 >
                   差戻し
                 </button>
+
+                <span
+                  v-if="!canOpenLeaderReview(item.status) && !canOpenAdminReview(item.status) && !canRemand(item.status)"
+                  class="text-xs text-slate-400 self-center"
+                >
+                  操作なし
+                </span>
               </div>
             </td>
           </tr>
@@ -117,9 +125,9 @@ const props = defineProps<{
   roleType: RoleType | null
 }>()
 
+// 💡 0529-1hinata の 'open-review' エミット定義をベースにしつつ、main由来の 'remand' も残して統合
 defineEmits<{
-  (e: 'approve', row: ScoutEntity): void
-  (e: 'final-approve', row: ScoutEntity): void
+  (e: 'open-review', row: ScoutEntity): void
   (e: 'remand', row: ScoutEntity): void
 }>()
 
@@ -141,7 +149,7 @@ async function copyBody() {
     copyMessage.value = 'クリップボードにコピーしました！'
     setTimeout(() => {
       copyMessage.value = ''
-    }, 3000) // 3秒後にトーストを消す
+    }, 3000)
   }
 }
 
@@ -157,14 +165,16 @@ function statusClass(status?: ScoutStatus) {
   return 'bg-slate-100 text-slate-700'
 }
 
-function canApprove(status?: ScoutStatus): boolean {
+// 💡 0529-1hinata 由来のレビュー画面オープン判定ロジック
+function canOpenLeaderReview(status?: ScoutStatus): boolean {
   return props.roleType === 'leader' && status === 'waiting_leader'
 }
 
-function canFinalApprove(status?: ScoutStatus): boolean {
+function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === 'admin' && status === 'waiting_admin'
 }
 
+// 💡 main 由来の差戻し判定ロジック
 function canRemand(status?: ScoutStatus): boolean {
   return (
     (props.roleType === 'leader' || props.roleType === 'admin') &&
@@ -174,28 +184,27 @@ function canRemand(status?: ScoutStatus): boolean {
 </script>
 
 <style scoped>
-/* 背景レイヤー */
+/* 美しく整えた詳細モーダル用のスタイルシートを完全にキープ */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: rgba(15, 23, 42, 0.4); /* Tailwindのslate-900ベースのなめらかな不透明度 */
-  backdrop-filter: blur(4px); /* 背景をほんのりぼかすトレンドUI */
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
 }
 
-/* モーダルコンテナ */
 .modal {
   width: 90vw;
   max-width: 1100px;
   height: 80vh;
   max-height: 750px;
   background: #ffffff;
-  border-radius: 20px; /* 尖りすぎず丸すぎない最適なアール */
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); /* ふんわりとしたリッチな影 */
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   position: relative;
   padding: 32px;
   display: flex;
@@ -203,7 +212,6 @@ function canRemand(status?: ScoutStatus): boolean {
   overflow: hidden;
 }
 
-/* 閉じるボタン（アイコン化） */
 .close {
   position: absolute;
   top: 24px;
@@ -225,15 +233,13 @@ function canRemand(status?: ScoutStatus): boolean {
   color: #1e293b;
 }
 
-/* メインコンテンツ（2カラム定義） */
 .content {
   display: flex;
   gap: 32px;
   height: 100%;
-  min-height: 0; /* 子要素のスクロールを正常に効かせるおまじない */
+  min-height: 0;
 }
 
-/* 左右共通カラム定義 */
 .col {
   flex: 1;
   display: flex;
@@ -241,7 +247,6 @@ function canRemand(status?: ScoutStatus): boolean {
   min-width: 0;
 }
 
-/* カラムタイトル */
 .title {
   font-size: 1.15rem;
   font-weight: 700;
@@ -251,9 +256,8 @@ function canRemand(status?: ScoutStatus): boolean {
   border-bottom: 2px solid #f1f5f9;
 }
 
-/* 左カラム：求人情報のカード風グリッドリスト */
 .left-col {
-  overflow-y: auto; /* 項目が多くても左側だけでスクロール可能に */
+  overflow-y: auto;
   padding-right: 8px;
 }
 
@@ -272,7 +276,7 @@ function canRemand(status?: ScoutStatus): boolean {
 }
 
 .info-item {
-  background: #f8fafc; /* アイテムごとの淡い背景 */
+  background: #f8fafc;
   border: 1px solid #f1f5f9;
   border-radius: 8px;
   padding: 10px 14px;
@@ -281,7 +285,7 @@ function canRemand(status?: ScoutStatus): boolean {
 .info-item strong {
   display: block;
   font-size: 0.75rem;
-  color: #64748b; /* メタデータ用の淡い文字色 */
+  color: #64748b;
   margin-bottom: 4px;
   text-transform: uppercase;
 }
@@ -295,7 +299,6 @@ function canRemand(status?: ScoutStatus): boolean {
   line-height: 1.5;
 }
 
-/* 右カラム：スカウト文プレビューエリア */
 .right-col {
   height: 100%;
 }
@@ -307,7 +310,6 @@ function canRemand(status?: ScoutStatus): boolean {
   min-height: 0;
 }
 
-/* プレビューテキストボックス */
 .scout-display-box {
   width: 100%;
   flex: 1;
@@ -319,7 +321,7 @@ function canRemand(status?: ScoutStatus): boolean {
   font-size: 0.95rem;
   line-height: 1.7;
   color: #1e293b;
-  overflow-y: auto; /* 長文テキストもここだけで綺麗に流れる */
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -331,7 +333,6 @@ function canRemand(status?: ScoutStatus): boolean {
   border-radius: 3px;
 }
 
-/* モーダルフッターボタンエリア */
 .footer {
   margin-top: 16px;
   display: flex;
@@ -340,7 +341,6 @@ function canRemand(status?: ScoutStatus): boolean {
   flex-shrink: 0;
 }
 
-/* コピーボタン（モダン化） */
 .copy-btn {
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -360,7 +360,6 @@ function canRemand(status?: ScoutStatus): boolean {
   color: #0f172a;
 }
 
-/* コピー成功トースト通知 */
 .copy-toast {
   font-size: 0.8rem;
   color: #10b981;
@@ -376,7 +375,6 @@ function canRemand(status?: ScoutStatus): boolean {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* レスポンシブ対応（1024px以下） */
 @media (max-width: 1024px) {
   .modal {
     padding: 24px;
@@ -387,7 +385,6 @@ function canRemand(status?: ScoutStatus): boolean {
   }
 }
 
-/* レスポンシブ対応（モバイル・768px以下） */
 @media (max-width: 768px) {
   .modal {
     height: 90vh;
@@ -397,7 +394,7 @@ function canRemand(status?: ScoutStatus): boolean {
   
   .content {
     flex-direction: column;
-    overflow-y: auto; /* スマホ環境では上下1本のスクロールに統合 */
+    overflow-y: auto;
     gap: 24px;
   }
 

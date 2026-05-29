@@ -33,11 +33,6 @@ const loadItems = async () => {
   } //成功/失敗に関係なく必ず読み込み中を終了する
 };
 
-// --- ボタンを押したときの関数 ---
-const onClickAdd = () => {
-  resetForm();
-};
-
 const onClickEdit = (item: checkItem) => {
   selectedItemId.value = item.id;
   inputCheckTitle.value = item.checkTitle;

@@ -1,6 +1,7 @@
 import type {
   CreateScoutPayload,
   RemandPayload,
+  ScoutComment,
   ScoutEntity,
   WorkflowActionPayload,
 } from '../type/scout'
@@ -20,22 +21,37 @@ export async function fetchScouts(): Promise<ScoutEntity[]> {
   return data
 }
 
+export async function fetchScoutDetail(scoutId: string): Promise<ScoutEntity> {
+  // レビュー画面で利用するスカウト詳細を取得
+  const { data } = await apiClient.get<ScoutEntity>(`/api/scouts/${scoutId}`)
+  return data
+}
+
+export async function fetchScoutComments(scoutId: string): Promise<ScoutComment[]> {
+  // 差戻しコメント履歴（最新順）を取得
+  const { data } = await apiClient.get<ScoutComment[]>(`/api/scouts/${scoutId}/comments`)
+  return data
+}
+
 export async function createScout(payload: CreateScoutPayload): Promise<ScoutEntity> {
   const { data } = await apiClient.post<ScoutEntity>('/api/scouts', payload)
   return data
 }
 
 export async function approveScout(payload: WorkflowActionPayload): Promise<ScoutEntity> {
+  // leader承認: waiting_leader -> waiting_admin
   const { data } = await apiClient.post<ScoutEntity>('/api/approve', payload)
   return data
 }
 
 export async function finalApproveScout(payload: WorkflowActionPayload): Promise<ScoutEntity> {
+  // admin最終承認: waiting_admin -> approved
   const { data } = await apiClient.post<ScoutEntity>('/api/final-approve', payload)
   return data
 }
 
 export async function remandScout(payload: RemandPayload): Promise<ScoutEntity> {
+  // 差戻し: status -> remanded、コメントは別テーブルに保存
   const { data } = await apiClient.post<ScoutEntity>('/api/remand', payload)
   return data
 }

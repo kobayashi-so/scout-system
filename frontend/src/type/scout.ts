@@ -23,6 +23,15 @@ export interface ScoutJobRequirement {
   workLocation: string
   salaryInfo: string
   jobAppeal: string
+  tone?: string
+}
+
+export interface ScoutComment {
+  commentId?: string
+  targetScoutId: string
+  authorId: string
+  content: string
+  createdAt?: string
 }
 
 /** 作成時の送信ペイロード */

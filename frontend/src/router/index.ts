@@ -11,6 +11,8 @@ import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
 import SettingCheckItem from "../components/SettingCheckItem.vue";
 import SettingUserprofile from "../components/SettingUserprofile.vue";
+import LeaderReviewPage from "../components/LeaderReviewPage.vue";
+import AdminReviewPage from "../components/AdminReviewPage.vue";
 
 // 認証導線: ルート初期表示はログイン画面。
 const routes: RouteRecordRaw[] = [
@@ -38,6 +40,20 @@ const routes: RouteRecordRaw[] = [
     path: "/create",
     name: "scout-create",
     component: ScoutPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    // leader向けレビュー画面（営業承認）
+    path: "/reviews/leader/:id",
+    name: "leader-review",
+    component: LeaderReviewPage,
+    meta: { requiresAuth: true },
+  },
+  {
+    // admin向けレビュー画面（最終承認）
+    path: "/reviews/admin/:id",
+    name: "admin-review",
+    component: AdminReviewPage,
     meta: { requiresAuth: true },
   },
   {
