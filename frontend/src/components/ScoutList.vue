@@ -129,7 +129,11 @@ function onClickTab(tab: ScoutListType) {
   if (tab === 'my') {
     selectedStatusCard.value = 'all'
 
-const roleType = computed(() => authStore.currentUserRoleType)
+  const roleType = computed(() => authStore.currentUserRoleType)
+    } else {
+      selectedStatusCard.value = 'salesPending'
+    }
+}
 
 function ensureActorId(): string | null {
   if (!authStore.currentUserId) {
@@ -198,4 +202,5 @@ onMounted(() => {
   activeTab.value = resolveInitialTab(roleLevel.value)
   loadRows()
 })
+
 </script>
