@@ -1,6 +1,7 @@
 import type {
   CreateScoutPayload,
   RemandPayload,
+  ResubmitRemandedPayload,
   ScoutComment,
   ScoutEntity,
   WorkflowActionPayload,
@@ -53,5 +54,14 @@ export async function finalApproveScout(payload: WorkflowActionPayload): Promise
 export async function remandScout(payload: RemandPayload): Promise<ScoutEntity> {
   // 差戻し: status -> remanded、コメントは別テーブルに保存
   const { data } = await apiClient.post<ScoutEntity>('/api/remand', payload)
+  return data
+}
+
+export async function resubmitRemandedScout(
+  scoutId: string,
+  payload: ResubmitRemandedPayload,
+): Promise<ScoutEntity> {
+  // 差戻し編集画面からの再申請API
+  const { data } = await apiClient.post<ScoutEntity>(`/api/scouts/${scoutId}/resubmit`, payload)
   return data
 }

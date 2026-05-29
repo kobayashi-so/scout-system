@@ -54,6 +54,13 @@ export interface RemandPayload extends WorkflowActionPayload {
   comment: string
 }
 
+export interface ResubmitRemandedPayload {
+  title: string
+  body: string
+  tone: 'カジュアル' | '熱意' | 'プロフェッショナル'
+  requirement: ScoutJobRequirement
+}
+
 export function statusLabel(status?: ScoutStatus): string {
   if (status === 'approved') return '承認済み'
   if (status === 'waiting_leader') return '営業承認者承認待ち'

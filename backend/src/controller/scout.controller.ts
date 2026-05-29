@@ -1,6 +1,11 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ScoutService } from '../service/scout.service';
-import { CreateScoutInput, RemandInput, WorkflowActionInput } from '../type/scout';
+import {
+  CreateScoutInput,
+  RemandInput,
+  UpdateRemandedScoutInput,
+  WorkflowActionInput,
+} from '../type/scout';
 
 @Controller()
 export class ScoutController {
@@ -41,5 +46,14 @@ export class ScoutController {
   @Post(['remand', 'api/remand'])
   remand(@Body() body: RemandInput) {
     return this.scoutService.remand(body);
+  }
+
+  @Post(['scouts/:id/resubmit', 'api/scouts/:id/resubmit'])
+  resubmitRemanded(
+    @Param('id') id: string,
+    @Body() body: UpdateRemandedScoutInput,
+  ) {
+    // 差戻し文書の再申請（修正内容を保存し、承認フローを先頭に戻す）
+    return this.scoutService.resubmitRemanded(id, body);
   }
 }
