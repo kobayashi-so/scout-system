@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- ========= TABLE ========= -->
     <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table class="min-w-full text-left text-sm">
         <thead class="bg-slate-50 text-slate-600">
@@ -30,7 +29,6 @@
             <td class="px-4 py-3">{{ formatDate(item.createdAt as string | undefined) }}</td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
-                <!-- 詳細ボタン（0529_nobu のモーダル開閉機能） -->
                 <button
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200"
                   @click="openDetail(item)"
@@ -38,7 +36,6 @@
                   詳細
                 </button>
 
-                <!-- 承認・差戻しボタン群（main の権限ロジック機能） -->
                 <button
                   v-if="canApprove(item.status)"
                   class="rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
@@ -67,43 +64,40 @@
       </table>
     </div>
 
-    <!-- ========= MODAL (0529_nobuのモーダル詳細機能) ========= -->
     <div v-if="selectedRow" class="overlay" @click.self="closeDetail">
       <div class="modal">
-        <!-- 閉じる -->
-        <button class="close" @click="closeDetail">×</button>
+        <button class="close" @click="closeDetail">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
 
-        <!-- 中身 -->
         <div class="content">
-          <!-- 左カラム：求人詳細情報 -->
-          <div class="col">
-            <h3 class="title">求人情報</h3>
-            <div class="grid space-y-2 text-sm">
-              <div><strong>作成者</strong><p>{{ selectedRow.creator }}</p></div>
-              <div><strong>求人タイトル</strong><p>{{ selectedRow.title }}</p></div>
-              <div><strong>会社名</strong><p>{{ selectedRow.requirement?.companyName }}</p></div>
-              <div><strong>職種</strong><p>{{ selectedRow.requirement?.jobCategory }}</p></div>
-              <div><strong>業務内容</strong><p>{{ selectedRow.requirement?.jobDescription }}</p></div>
-              <div><strong>必須スキル</strong><p>{{ selectedRow.requirement?.requiredSkills }}</p></div>
-              <div><strong>勤務地</strong><p>{{ selectedRow.requirement?.workLocation }}</p></div>
-              <div><strong>給与</strong><p>{{ selectedRow.requirement?.salaryInfo }}</p></div>
-              <div><strong>求人の魅力</strong><p>{{ selectedRow.requirement?.jobAppeal }}</p></div>
-              <div><strong>文章トーン</strong><p>{{ selectedRow.tone }}</p></div>
+          <div class="col left-col">
+            <h3 class="title">📁 求人情報</h3>
+            <div class="info-grid">
+              <div class="info-item"><strong>作成者</strong><p>{{ selectedRow.creator }}</p></div>
+              <div class="info-item"><strong>求人タイトル</strong><p>{{ selectedRow.title }}</p></div>
+              <div class="info-item"><strong>会社名</strong><p>{{ selectedRow.requirement?.companyName }}</p></div>
+              <div class="info-item"><strong>職種</strong><p>{{ selectedRow.requirement?.jobCategory }}</p></div>
+              <div class="info-item"><strong>業務内容</strong><p>{{ selectedRow.requirement?.jobDescription }}</p></div>
+              <div class="info-item"><strong>必須スキル</strong><p>{{ selectedRow.requirement?.requiredSkills }}</p></div>
+              <div class="info-item"><strong>勤務地</strong><p>{{ selectedRow.requirement?.workLocation }}</p></div>
+              <div class="info-item"><strong>給与</strong><p>{{ selectedRow.requirement?.salaryInfo }}</p></div>
+              <div class="info-item"><strong>求人の魅力</strong><p>{{ selectedRow.requirement?.jobAppeal }}</p></div>
+              <div class="info-item"><strong>文章トーン</strong><p>{{ selectedRow.tone }}</p></div>
             </div>
           </div>
 
-          <!-- 右カラム：スカウト文プレビュー -->
           <div class="col right-col">
-            <h3 class="title">スカウト文</h3>
+            <h3 class="title">📝 スカウト文プレビュー</h3>
             <div class="right-body">
               <div class="scout-display-box">
-                {{ selectedRow.body || 'スカウト文を表示' }}
+                {{ selectedRow.body || 'スカウト文がありません。' }}
               </div>
               <div class="footer">
                 <button class="copy-btn" @click="copyBody">
-                  文書コピー
+                  🗎 文章をコピーする
                 </button>
-                <span>{{ copyMessage }}</span>
+                <span v-if="copyMessage" class="copy-toast">{{ copyMessage }}</span>
               </div>
             </div>
           </div>
@@ -118,20 +112,17 @@ import { ref } from 'vue'
 import type { RoleType } from '../../type/user'
 import { statusLabel, type ScoutEntity, type ScoutStatus } from '../../type/scout'
 
-// Props 定義の統合（mainブランチベースにScoutEntityを厳格に指定）
 const props = defineProps<{
   rows: ScoutEntity[]
   roleType: RoleType | null
 }>()
 
-// Emits 定義（mainブランチ）
 defineEmits<{
   (e: 'approve', row: ScoutEntity): void
   (e: 'final-approve', row: ScoutEntity): void
   (e: 'remand', row: ScoutEntity): void
 }>()
 
-// モーダル制御用の状態（0529_nobuブランチ）
 const selectedRow = ref<ScoutEntity | null>(null)
 const copyMessage = ref('')
 
@@ -147,7 +138,10 @@ function closeDetail() {
 async function copyBody() {
   if (selectedRow.value?.body) {
     await navigator.clipboard.writeText(selectedRow.value.body)
-    copyMessage.value = 'コピーしました'
+    copyMessage.value = 'クリップボードにコピーしました！'
+    setTimeout(() => {
+      copyMessage.value = ''
+    }, 3000) // 3秒後にトーストを消す
   }
 }
 
@@ -155,7 +149,6 @@ function formatDate(v?: string) {
   return v ? new Date(v).toLocaleDateString() : '-'
 }
 
-// ステータスに応じたスタイリング（mainブランチのカラフルな配色に統合）
 function statusClass(status?: ScoutStatus) {
   if (status === 'approved') return 'bg-emerald-100 text-emerald-700'
   if (status === 'waiting_leader') return 'bg-amber-100 text-amber-700'
@@ -164,7 +157,6 @@ function statusClass(status?: ScoutStatus) {
   return 'bg-slate-100 text-slate-700'
 }
 
-// 権限制御ロジック（mainブランチ）
 function canApprove(status?: ScoutStatus): boolean {
   return props.roleType === 'leader' && status === 'waiting_leader'
 }
@@ -182,149 +174,241 @@ function canRemand(status?: ScoutStatus): boolean {
 </script>
 
 <style scoped>
-/* 0529_nobuブランチで追加されたモーダル専用CSSをすべて維持 */
+/* 背景レイヤー */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(15, 23, 42, 0.4); /* Tailwindのslate-900ベースのなめらかな不透明度 */
+  backdrop-filter: blur(4px); /* 背景をほんのりぼかすトレンドUI */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
 }
 
+/* モーダルコンテナ */
 .modal {
-  width: 80vw;
-  max-width: 1200px;
-  height: 75vh;
-  background: white;
-  border-radius: 46px;
-  border: 2px solid #2e7d32;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: 90vw;
+  max-width: 1100px;
+  height: 80vh;
+  max-height: 750px;
+  background: #ffffff;
+  border-radius: 20px; /* 尖りすぎず丸すぎない最適なアール */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); /* ふんわりとしたリッチな影 */
   position: relative;
   padding: 32px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+/* 閉じるボタン（アイコン化） */
 .close {
   position: absolute;
-  top: 20px;
-  right: 30px;
-  font-size: 32px;
-  color: #2e7d32;
+  top: 24px;
+  right: 24px;
+  color: #64748b;
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.close:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* メインコンテンツ（2カラム定義） */
 .content {
   display: flex;
-  gap: 40px;
+  gap: 32px;
   height: 100%;
+  min-height: 0; /* 子要素のスクロールを正常に効かせるおまじない */
 }
 
+/* 左右共通カラム定義 */
 .col {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  width: 100%;
+  min-width: 0;
 }
 
+/* カラムタイトル */
 .title {
-  font-size: 26px;
-  margin-bottom: 16px;
-  border-bottom: 2px solid #e5e7eb;
-  width: 60%;
-  padding-bottom: 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
+/* 左カラム：求人情報のカード風グリッドリスト */
+.left-col {
+  overflow-y: auto; /* 項目が多くても左側だけでスクロール可能に */
+  padding-right: 8px;
+}
+
+.left-col::-webkit-scrollbar {
+  width: 6px;
+}
+.left-col::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-item {
+  background: #f8fafc; /* アイテムごとの淡い背景 */
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.info-item strong {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b; /* メタデータ用の淡い文字色 */
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.info-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #334155;
+  font-weight: 500;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* 右カラム：スカウト文プレビューエリア */
 .right-col {
-  align-items: flex-start;
+  height: 100%;
 }
 
 .right-body {
-  width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 12px;
   min-height: 0;
 }
 
+/* プレビューテキストボックス */
 .scout-display-box {
-  width: 70%;
-  min-width: 320px;
-  height: 340px;
-  border: 2px solid #000;
-  border-radius: 6px;
-  background: #fff;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  text-align: left;
+  width: 100%;
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fafafa;
   white-space: pre-wrap;
-  padding: 16px;
-  font-size: 16px;
+  padding: 20px;
+  font-size: 0.95rem;
   line-height: 1.7;
-  overflow-y: auto;
+  color: #1e293b;
+  overflow-y: auto; /* 長文テキストもここだけで綺麗に流れる */
+  box-sizing: border-box;
 }
 
+.scout-display-box::-webkit-scrollbar {
+  width: 6px;
+}
+.scout-display-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+/* モーダルフッターボタンエリア */
 .footer {
+  margin-top: 16px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-  min-height: 32px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
-.footer span {
-  font-size: 12px;
-  color: #475569;
-}
-
+/* コピーボタン（モダン化） */
 .copy-btn {
-  border: 1px solid #000;
-  background: #fff;
-  color: #111827;
-  padding: 8px 16px;
-  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .copy-btn:hover {
   background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
+/* コピー成功トースト通知 */
+.copy-toast {
+  font-size: 0.8rem;
+  color: #10b981;
+  font-weight: 600;
+  background: #ecfdf5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* レスポンシブ対応（1024px以下） */
 @media (max-width: 1024px) {
   .modal {
-    padding: 28px;
-    border-radius: 28px;
+    padding: 24px;
+    height: 85vh;
   }
   .content {
-    gap: 12px;
+    gap: 20px;
   }
 }
 
+/* レスポンシブ対応（モバイル・768px以下） */
 @media (max-width: 768px) {
   .modal {
-    height: 82vh;
+    height: 90vh;
+    max-height: none;
     padding: 20px;
   }
+  
   .content {
     flex-direction: column;
-    gap: 20px;
+    overflow-y: auto; /* スマホ環境では上下1本のスクロールに統合 */
+    gap: 24px;
   }
-  .title {
-    width: 100%;
-    font-size: 22px;
+
+  .left-col {
+    overflow-y: visible;
+    height: auto;
   }
+
   .scout-display-box {
-    width: 100%;
-    min-width: 0;
-    height: 260px;
+    height: 280px;
+    flex: none;
   }
 }
 </style>
