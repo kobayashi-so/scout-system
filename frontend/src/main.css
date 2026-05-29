@@ -145,6 +145,10 @@ aside nav button::before,
   opacity: 0.95;
 }
 
+aside nav a:nth-child(2)::before {
+  left: 14px;
+}
+
 aside nav a:nth-child(1)::before {
   content: "◼";
 }
@@ -153,9 +157,13 @@ aside nav a:nth-child(2)::before {
   content: "+";
 }
 
-aside nav button::before,
-.sidebar-bottom button::before {
+aside nav button::before {
   content: "⚙";
+}
+
+.sidebar-bottom button::before {
+  content: "⎋";
+  font-size: 22px;
 }
 
 .sidebar-bottom {
