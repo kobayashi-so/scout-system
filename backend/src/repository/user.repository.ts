@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserEntity } from '../type/user';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { UserEntity } from "../type/user";
 
 @Injectable()
 export class UserRepository {
@@ -13,7 +13,7 @@ export class UserRepository {
   // メールアドレスで1件検索（ログイン・重複チェックで利用）
   async findByEmail(email: string): Promise<UserEntity | null> {
     const rows = await this.repository.query(
-      'SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE email = $1 LIMIT 1',
+      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE email = $1 LIMIT 1",
       [email],
     );
 
@@ -25,7 +25,7 @@ export class UserRepository {
     userName: string;
     email: string;
     password: string;
-    roleType: 'sales' | 'leader' | 'admin';
+    roleType: "sales" | "leader" | "admin";
   }): Promise<UserEntity> {
     const rows = await this.repository.query(
       `INSERT INTO users (user_name, email, password, role_type)
@@ -35,6 +35,45 @@ export class UserRepository {
     );
 
     return this.mapRowToEntity(rows[0]);
+  }
+
+  // ユーザー一覧を作成日時順で取得
+  async findAll(): Promise<UserEntity[]> {
+    const rows = await this.repository.query(
+      `SELECT user_id, user_name, email, password, role_type, created_at, updated_at
+       FROM users
+       ORDER BY created_at ASC`,
+    );
+
+    return rows.map((row: any) => this.mapRowToEntity(row));
+  }
+
+  // ユーザーのrole_typeを更新
+  async updateRole(
+    userId: string,
+    roleType: "sales" | "leader" | "admin",
+  ): Promise<UserEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE users
+       SET role_type = $2
+       WHERE user_id = $1
+       RETURNING user_id, user_name, email, password, role_type, created_at, updated_at`,
+      [userId, roleType],
+    );
+
+    return rows.length > 0 ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  // ユーザーを物理削除
+  async deleteById(userId: string): Promise<boolean> {
+    const rows = await this.repository.query(
+      `DELETE FROM users
+       WHERE user_id = $1
+       RETURNING user_id`,
+      [userId],
+    );
+
+    return rows.length > 0;
   }
 
   // snake_caseのDB結果をアプリ側のcamelCaseへ変換
