@@ -47,7 +47,7 @@ export interface RemandPayload extends WorkflowActionPayload {
 
 export function statusLabel(status?: ScoutStatus): string {
   if (status === 'approved') return '承認済み'
-  if (status === 'waiting_leader') return 'リーダー承認待ち'
+  if (status === 'waiting_leader') return '営業承認者承認待ち'
   if (status === 'waiting_admin') return '管理者承認待ち'
   if (status === 'remanded') return '差戻し'
   if (status === 'draft') return '下書き'
