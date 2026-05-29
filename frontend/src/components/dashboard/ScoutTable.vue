@@ -8,13 +8,24 @@
             <th class="px-4 py-3 font-semibold">求人タイトル</th>
             <th class="px-4 py-3 font-semibold">ステータス</th>
             <th class="px-4 py-3 font-semibold">作成者</th>
-            <th class="px-4 py-3 font-semibold">更新日</th>
+            <th class="px-4 py-3 font-semibold">
+              <div class="flex items-center gap-2">
+                <span>更新日</span>
+                <button
+                  type="button"
+                  class="sort-btn"
+                  @click="toggleDateSort"
+                >
+                  {{ sortOrder === 'asc' ? '昇順' : '降順' }}
+                </button>
+              </div>
+            </th>
             <th class="px-4 py-3 font-semibold">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="item in rows"
+            v-for="item in sortedRows"
             :key="item.id"
             class="border-t border-slate-100"
           >
@@ -30,7 +41,7 @@
             <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
-                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200"
+                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
                   @click="openDetail(item)"
                 >
                   詳細
@@ -51,22 +62,11 @@
                   最終承認レビュー
                 </button>
 
-                <button
-                  v-if="canRemand(item.status)"
-                  class="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
-                  @click="$emit('remand', item)"
-                >
-                  差戻し
-                </button>
-
-                <span
-                  v-if="!canOpenLeaderReview(item.status) && !canOpenAdminReview(item.status) && !canRemand(item.status)"
-                  class="text-xs text-slate-400 self-center"
-                >
-                  操作なし
-                </span>
               </div>
             </td>
+          </tr>
+          <tr v-if="rows.length === 0">
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500">データがありません</td>
           </tr>
         </tbody>
       </table>
@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { RoleType } from '../../type/user'
 import { statusLabel, type ScoutEntity, type ScoutStatus } from '../../type/scout'
 
@@ -125,14 +125,32 @@ const props = defineProps<{
   roleType: RoleType | null
 }>()
 
-// 💡 0529-1hinata の 'open-review' エミット定義をベースにしつつ、main由来の 'remand' も残して統合
+// エミット定義（2個目のレビュー画面行き専用に統一）
 defineEmits<{
   (e: 'open-review', row: ScoutEntity): void
-  (e: 'remand', row: ScoutEntity): void
 }>()
 
+// モーダル制御用のリアクティブステート
 const selectedRow = ref<ScoutEntity | null>(null)
 const copyMessage = ref('')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+
+const sortedRows = computed(() => {
+  const list = [...props.rows]
+
+  list.sort((a, b) => {
+    const timeA = getRowDateTimestamp(a)
+    const timeB = getRowDateTimestamp(b)
+
+    if (timeA === null && timeB === null) return 0
+    if (timeA === null) return 1
+    if (timeB === null) return -1
+
+    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA
+  })
+
+  return list
+})
 
 function openDetail(item: ScoutEntity) {
   selectedRow.value = item
@@ -141,6 +159,10 @@ function openDetail(item: ScoutEntity) {
 
 function closeDetail() {
   selectedRow.value = null
+}
+
+function toggleDateSort() {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
 }
 
 async function copyBody() {
@@ -153,8 +175,17 @@ async function copyBody() {
   }
 }
 
-function formatDate(v?: string) {
-  return v ? new Date(v).toLocaleDateString() : '-'
+function formatDate(value: string | undefined) {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('ja-JP')
+}
+
+function getRowDateTimestamp(row: ScoutEntity): number | null {
+  const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
+  if (!source) return null
+
+  const timestamp = Date.parse(source)
+  return Number.isNaN(timestamp) ? null : timestamp
 }
 
 function statusClass(status?: ScoutStatus) {
@@ -165,7 +196,7 @@ function statusClass(status?: ScoutStatus) {
   return 'bg-slate-100 text-slate-700'
 }
 
-// 💡 0529-1hinata 由来のレビュー画面オープン判定ロジック
+// 💡 権限とステータスに応じたボタンの表示ロジック関数
 function canOpenLeaderReview(status?: ScoutStatus): boolean {
   return props.roleType === 'leader' && status === 'waiting_leader'
 }
@@ -173,18 +204,10 @@ function canOpenLeaderReview(status?: ScoutStatus): boolean {
 function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === 'admin' && status === 'waiting_admin'
 }
-
-// 💡 main 由来の差戻し判定ロジック
-function canRemand(status?: ScoutStatus): boolean {
-  return (
-    (props.roleType === 'leader' || props.roleType === 'admin') &&
-    (status === 'waiting_leader' || status === 'waiting_admin')
-  )
-}
 </script>
 
 <style scoped>
-/* 美しく整えた詳細モーダル用のスタイルシートを完全にキープ */
+/* モーダルおよびパーツデザイン用のクリーンなCSSスタイル */
 .overlay {
   position: fixed;
   inset: 0;
@@ -373,6 +396,21 @@ function canRemand(status?: ScoutStatus): boolean {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.sort-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background: #f8fafc;
 }
 
 @media (max-width: 1024px) {
