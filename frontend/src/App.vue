@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-slate-100 text-slate-800">
     <template v-if="authStore.isAuthenticated">
       <div class="mx-auto flex min-h-screen max-w-[1440px]">
-        <aside class="w-64 shrink-0 border-r border-slate-200 bg-white p-4">
+        <aside class="w-64 shrink-0 border-r border-slate-200 p-4">
           <h1 class="mt-6 mb-6 text-lg font-bold">Scout System</h1>
 
           <nav class="space-y-2">
@@ -23,6 +23,7 @@
             </RouterLink>
 
             <!-- ▼▼▼ 設定メニュー（アコーディオン化） ▼▼▼ -->
+
             <div class="pt-2">
               <button
                 type="button"
@@ -31,7 +32,9 @@
                 @click="isSettingsOpen = !isSettingsOpen"
               >
                 <span>設定</span>
+
                 <!-- 矢印（文字で表現して巨大化を防止） -->
+
                 <span
                   class="transition-transform duration-200 inline-block text-xs"
                   :style="
@@ -45,6 +48,7 @@
               </button>
 
               <!-- サブメニュー項目 -->
+
               <div v-show="isSettingsOpen" class="mt-2 space-y-1 pl-6">
                 <RouterLink
                   to="/settings/evaluations"
@@ -65,8 +69,10 @@
                 </RouterLink>
               </div>
             </div>
-            <!-- ▲▲▲ 設定メニュー（アコーディオン化） ▲▲▲ -->
 
+            <!-- ▲▲▲ 設定メニュー（アコーディオン化） ▲▲▲ -->
+          </nav>
+          <div class="sidebar-bottom">
             <button
               type="button"
               class="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
@@ -74,13 +80,14 @@
             >
               ログアウト
             </button>
-          </nav>
+            <div class="sidebar-user" aria-label="ログインユーザー情報">
+              <div class="sidebar-avatar">{{ userInitial }}</div>
 
-          <div class="sidebar-user" aria-label="ログインユーザー情報">
-            <div class="sidebar-avatar">{{ userInitial }}</div>
-            <div class="sidebar-user-meta">
-              <p class="sidebar-user-name">{{ userEmail }}</p>
-              <p class="sidebar-user-role">{{ userRole }}</p>
+              <div class="sidebar-user-meta">
+                <p class="sidebar-user-name">{{ userEmail }}</p>
+
+                <p class="sidebar-user-role">{{ userRole }}</p>
+              </div>
             </div>
           </div>
         </aside>
@@ -90,6 +97,7 @@
         </main>
       </div>
     </template>
+
     <template v-else>
       <RouterView />
     </template>
@@ -129,6 +137,11 @@ const userInitial = computed(() => {
 });
 
 async function handleLogout() {
+  const shouldLogout = window.confirm("ログアウトしますか？");
+  if (!shouldLogout) {
+    return;
+  }
+
   authStore.logout();
   await router.push("/login");
 }
