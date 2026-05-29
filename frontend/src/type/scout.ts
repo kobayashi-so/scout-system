@@ -14,8 +14,11 @@ export interface ScoutEntity {
 export interface ScoutJobRequirement {
   companyName: string
   jobCategory: string
+  jobDescription?: string
+  requiredSkills?: string
+  workLocation?: string
   salaryInfo: string
-  
+  jobAppeal?: string
 }
 
 /** 作成時の送信ペイロード */

@@ -2,7 +2,11 @@
   <section>
     <h2 class="mb-4 text-2xl font-bold text-slate-900">全ステータスのスカウト文</h2>
 
-    <DashboardTabs v-model="activeTab" :tabs="availableTabs" />
+    <DashboardTabs
+      v-model="activeTab"
+      :tabs="availableTabs"
+      @tab-click="onClickTab"
+    />
 
     <StatusCards
       :stats="statusStats"
@@ -96,6 +100,12 @@ const statusStats = computed(() => ({
   finalPending: rows.value.filter((r: ScoutEntity) => r.status === '最終承認待ち').length,
   rejected: rows.value.filter((r: ScoutEntity) => r.status === '差戻し中').length,
 }))
+
+function onClickTab(tab: ScoutListType) {
+  if (tab === 'my') {
+    selectedStatusCard.value = 'all'
+  }
+}
 
 watch(activeTab, () => {
   loadRows()
