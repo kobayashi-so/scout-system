@@ -8,7 +8,7 @@
       :class="tab.key === modelValue
         ? 'bg-slate-900 text-white'
         : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
-      @click="$emit('update:modelValue', tab.key)"
+      @click="onClickTab(tab.key)"
     >
       {{ tab.label }}
     </button>
@@ -26,7 +26,13 @@ defineProps<{
   tabs: TabItem[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'update:modelValue', value: TabItem['key']): void
+  (e: 'tab-click', value: TabItem['key']): void
 }>()
+
+function onClickTab(tabKey: TabItem['key']) {
+  emit('update:modelValue', tabKey)
+  emit('tab-click', tabKey)
+}
 </script>
