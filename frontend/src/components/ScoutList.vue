@@ -2,7 +2,11 @@
   <section>
     <h2 class="mb-4 text-2xl font-bold text-slate-900">全ステータスのスカウト文</h2>
 
-    <DashboardTabs v-model="activeTab" :tabs="availableTabs" />
+    <DashboardTabs
+      v-model="activeTab"
+      :tabs="availableTabs"
+      @tab-click="onClickTab"
+    />
 
     <StatusCards
       :stats="statusStats"
@@ -116,7 +120,16 @@ const statusStats = computed(() => ({
   rejected: rows.value.filter((r: ScoutEntity) => r.status === 'remanded').length,
 }))
 
-const roleType = computed(() => authStore.currentUserRoleType)
+
+function onClickTab(tab: ScoutListType) {
+  if (tab === 'my') {
+    selectedStatusCard.value = 'all'
+
+  const roleType = computed(() => authStore.currentUserRoleType)
+    } else {
+      selectedStatusCard.value = 'salesPending'
+    }
+}
 
 function ensureActorId(): string | null {
   // 旧セッション（userId未保存）を明示的に検知
@@ -156,4 +169,5 @@ onMounted(() => {
   activeTab.value = resolveInitialTab(roleLevel.value)
   loadRows()
 })
+
 </script>
