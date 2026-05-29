@@ -8,13 +8,24 @@
             <th class="px-4 py-3 font-semibold">求人タイトル</th>
             <th class="px-4 py-3 font-semibold">ステータス</th>
             <th class="px-4 py-3 font-semibold">作成者</th>
-            <th class="px-4 py-3 font-semibold">更新日</th>
+            <th class="px-4 py-3 font-semibold">
+              <div class="flex items-center gap-2">
+                <span>更新日</span>
+                <button
+                  type="button"
+                  class="sort-btn"
+                  @click="toggleDateSort"
+                >
+                  {{ sortOrder === 'asc' ? '昇順' : '降順' }}
+                </button>
+              </div>
+            </th>
             <th class="px-4 py-3 font-semibold">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="item in rows"
+            v-for="item in sortedRows"
             :key="item.id"
             class="border-t border-slate-100"
           >
@@ -116,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { RoleType } from '../../type/user'
 import { statusLabel, type ScoutEntity, type ScoutStatus } from '../../type/scout'
 
@@ -133,6 +144,24 @@ defineEmits<{
 
 const selectedRow = ref<ScoutEntity | null>(null)
 const copyMessage = ref('')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+
+const sortedRows = computed(() => {
+  const list = [...props.rows]
+
+  list.sort((a, b) => {
+    const timeA = getRowDateTimestamp(a)
+    const timeB = getRowDateTimestamp(b)
+
+    if (timeA === null && timeB === null) return 0
+    if (timeA === null) return 1
+    if (timeB === null) return -1
+
+    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA
+  })
+
+  return list
+})
 
 function openDetail(item: ScoutEntity) {
   selectedRow.value = item
@@ -141,6 +170,10 @@ function openDetail(item: ScoutEntity) {
 
 function closeDetail() {
   selectedRow.value = null
+}
+
+function toggleDateSort() {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
 }
 
 async function copyBody() {
@@ -155,6 +188,14 @@ async function copyBody() {
 
 function formatDate(v?: string) {
   return v ? new Date(v).toLocaleDateString() : '-'
+}
+
+function getRowDateTimestamp(row: ScoutEntity): number | null {
+  const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
+  if (!source) return null
+
+  const timestamp = Date.parse(source)
+  return Number.isNaN(timestamp) ? null : timestamp
 }
 
 function statusClass(status?: ScoutStatus) {
@@ -373,6 +414,21 @@ function canRemand(status?: ScoutStatus): boolean {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.sort-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background: #f8fafc;
 }
 
 @media (max-width: 1024px) {
