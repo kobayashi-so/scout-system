@@ -93,10 +93,12 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 import { updateMyProfile } from "../api/userApi";
 import { useAuthStore } from "../store/authStore";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 authStore.hydrateFromStorage();
 
@@ -132,21 +134,27 @@ async function handleSave() {
     return;
   }
 
+  const currentPassword = form.currentPassword.trim();
+  const newPassword = form.newPassword.trim();
+  const newPasswordConfirmTrimmed = newPasswordConfirm.value.trim();
+
+  // 新しいパスワードを入力したときだけパスワード変更として扱う
   const willChangePassword =
-    form.currentPassword.length > 0 || form.newPassword.length > 0;
+    newPassword.length > 0 || newPasswordConfirmTrimmed.length > 0;
+
   if (willChangePassword) {
-    if (!form.currentPassword) {
+    if (!currentPassword) {
       errorMessage.value = "パスワード変更時は現在のパスワードが必要です。";
       return;
     }
 
-    if (!form.newPassword || form.newPassword.length < 6) {
+    if (newPassword.length < 6) {
       errorMessage.value = "新しいパスワードは6文字以上で入力してください。";
       return;
     }
 
-    if (form.newPassword !== newPasswordConfirm.value) {
-      errorMessage.value = "新しいパスワード（確認）が一致しません。";
+    if (newPassword !== newPasswordConfirmTrimmed) {
+      errorMessage.value = "パスワードが一致していません";
       return;
     }
   }
@@ -158,23 +166,20 @@ async function handleSave() {
 
   saving.value = true;
   try {
-    const updatedUser = await updateMyProfile(authStore.currentUserId, {
+    await updateMyProfile(authStore.currentUserId, {
       userName: form.userName.trim(),
       email: form.email.trim().toLowerCase(),
       ...(willChangePassword
         ? {
-            currentPassword: form.currentPassword,
-            newPassword: form.newPassword,
+            currentPassword,
+            newPassword,
           }
         : {}),
     });
 
-    authStore.setSession(updatedUser);
-
-    form.currentPassword = "";
-    form.newPassword = "";
-    newPasswordConfirm.value = "";
-    successMessage.value = "ユーザー情報を更新しました。";
+    window.alert("保存成功後、ログイン画面に移動します。");
+    authStore.logout();
+    await router.push({ name: "login", query: { profileUpdated: "1" } });
   } catch (error: any) {
     errorMessage.value =
       error?.response?.data?.message || "ユーザー情報の更新に失敗しました。";
