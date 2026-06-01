@@ -41,7 +41,7 @@ export class ScoutService implements OnModuleInit, OnModuleDestroy {
     await this.purgeOldSoftDeleted();
     this.cleanupTimer = setInterval(() => {
       void this.purgeOldSoftDeleted();
-    }, 1 * 60 * 1000); // 1分ごとに実行
+    }, 24 * 60 * 60 * 1000);
   }
 
   onModuleDestroy(): void {
