@@ -49,8 +49,9 @@
             <hr class="separator" />
 
             <label class="form-label">
-              会社名
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head"
+                >会社名 <span class="required-soft">(必須)</span></span
+              >
               <input
                 v-model="form.requirement.companyName"
                 type="text"
@@ -60,8 +61,9 @@
             </label>
 
             <label class="form-label">
-              職種
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head"
+                >職種 <span class="required-soft">(必須)</span></span
+              >
               <input
                 v-model="form.requirement.jobCategory"
                 type="text"
@@ -71,8 +73,9 @@
             </label>
 
             <label class="form-label">
-              業務内容
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head"
+                >業務内容 <span class="required-soft">(必須)</span></span
+              >
               <textarea
                 v-model="form.requirement.jobDescription"
                 placeholder="要件定義〜設計・実装・運用まで担当"
@@ -109,8 +112,9 @@
             </label>
 
             <label class="form-label">
-              求人の魅力
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head"
+                >求人の魅力 <span class="required-soft">(必須)</span></span
+              >
               <input
                 v-model="form.requirement.jobAppeal"
                 type="text"
@@ -514,7 +518,7 @@ onMounted(async () => {
 }
 
 .btn-primary-green {
-  background-color: #00c77b;
+  background-color: #3cb47a;
   border: none;
   color: #ffffff;
   padding: 8px 16px;
@@ -607,6 +611,12 @@ onMounted(async () => {
 
 .form-label.compact {
   flex: 1;
+}
+
+.form-label-head {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .separator {
@@ -733,6 +743,6 @@ textarea:focus {
 .required-soft {
   color: #ef4444;
   font-size: 12px;
-  margin-left: 4px;
+  display: inline;
 }
 </style>
