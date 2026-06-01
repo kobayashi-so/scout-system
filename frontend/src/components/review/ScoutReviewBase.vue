@@ -167,6 +167,14 @@
           </button>
         </div>
       </div>
+
+      <div
+        v-if="showApprovalTextEffect"
+        class="approval-rainbow-overlay"
+        aria-hidden="true"
+      >
+        <p class="approval-rainbow-text">承認</p>
+      </div>
     </template>
   </section>
 </template>
@@ -210,6 +218,7 @@ const checkItems = ref<checkItem[]>([]);
 const selectedCheckIds = ref<string[]>([]);
 const remandComment = ref("");
 const showPreviousBody = ref(false);
+const showApprovalTextEffect = ref(false);
 
 const scoutId = computed(() => String(route.params.id || ""));
 
@@ -380,6 +389,8 @@ async function handleApprove() {
         scoutId: scout.value.id,
         userId: authStore.currentUserId,
       });
+
+      await playApprovalTextEffect();
     }
 
     await router.push("/list");
@@ -389,6 +400,18 @@ async function handleApprove() {
   } finally {
     submitting.value = false;
   }
+}
+
+async function playApprovalTextEffect() {
+  showApprovalTextEffect.value = true;
+  await wait(900);
+  showApprovalTextEffect.value = false;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 async function handleRemand() {
@@ -704,6 +727,60 @@ onMounted(() => {
 
 .btn-approve:hover {
   background: #15803d;
+}
+
+.approval-rainbow-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.approval-rainbow-text {
+  margin: 0;
+  font-size: clamp(76px, 20vw, 220px);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  background: linear-gradient(
+    90deg,
+    #ef4444 0%,
+    #f97316 16%,
+    #facc15 32%,
+    #22c55e 48%,
+    #06b6d4 64%,
+    #3b82f6 80%,
+    #ec4899 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 10px 36px rgba(16, 24, 40, 0.3);
+  animation: approval-rainbow-pop 0.9s ease-out forwards;
+}
+
+@keyframes approval-rainbow-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-6deg);
+    background-position: 0% 50%;
+    filter: saturate(1.25);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+    background-position: 100% 50%;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.24) rotate(0deg);
+    background-position: 200% 50%;
+    filter: saturate(1.05);
+  }
 }
 
 .validation-text {
