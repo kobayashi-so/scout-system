@@ -115,6 +115,7 @@
       </button>
       <!-- ログインユーザー情報 -->
       <button
+        type="button"
         class="sidebar-user w-full text-left"
         aria-label="ログインユーザー情報"
         @click="goToMyProfile"
