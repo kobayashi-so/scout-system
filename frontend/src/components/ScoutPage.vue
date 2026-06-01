@@ -2,7 +2,7 @@
   <div class="page-fixed-container">
     <header class="page-header">
       <div class="header-left">
-        <button class="btn-back">←</button>
+        <button type="button" class="btn-back" @click="goToDashboard">←</button>
         <h1>スカウト文新規作成</h1>
         
         <span :class="['badge-status', form.status]">
@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { useScoutStore } from '../store/scoutStore'
 
 import { fetchCheckItems } from '../api/checkItemApi'
@@ -146,6 +147,7 @@ import type { checkItem } from '../type/checkItem'
 type ScoutStatus = 'draft' | 'waiting_leader' | 'waiting_admin' | 'approved' | 'remanded';
 
 const store = useScoutStore()
+const router = useRouter()
 
 const form = reactive<{
   creator: string
@@ -201,6 +203,10 @@ const currentStatusLabel = computed(() => {
 const allCheckItemsDone = computed(() => {
   return checkItems.value.length > 0 && checkedItemIds.value.length === checkItems.value.length
 })
+
+function goToDashboard() {
+  router.push({ name: 'scout-list' })
+}
 
 async function loadCheckItems() {
   checkItemsLoading.value = true
