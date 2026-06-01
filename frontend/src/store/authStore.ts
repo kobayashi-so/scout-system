@@ -7,6 +7,7 @@ interface AuthState {
   isAuthenticated: boolean // ログイン済みか
   loading: boolean // 認証系APIの実行中フラグ
   currentUserId: string | null // 現在ログイン中ユーザーのID
+  currentUserName: string | null // 現在ログイン中ユーザー名
   currentUserEmail: string | null // 現在ログイン中のメールアドレス
   currentUserRoleType: RoleType | null // 現在ログイン中ユーザーの権限
   initialized: boolean // ストア初期化済みか
@@ -19,6 +20,7 @@ const AUTH_STORAGE_KEY = 'scout_auth_user'
 
 interface AuthSession {
   userId: string | null
+  userName: string
   email: string
   roleType: RoleType
 }
@@ -28,6 +30,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: false,
     loading: false,
     currentUserId: null,
+    currentUserName: null,
     currentUserEmail: null,
     currentUserRoleType: null,
     initialized: false,
@@ -44,12 +47,14 @@ export const useAuthStore = defineStore('auth', {
           // 既存セッションを復元
           const session = JSON.parse(raw) as AuthSession
           this.currentUserId = session.userId ?? null
+          this.currentUserName = session.userName ?? null
           this.currentUserEmail = session.email
           this.currentUserRoleType = session.roleType
           this.isAuthenticated = true
         } catch {
           // 破損データがあれば未ログイン扱いで安全に継続
           this.currentUserId = null
+          this.currentUserName = null
           this.currentUserEmail = null
           this.currentUserRoleType = null
           this.isAuthenticated = false
@@ -92,6 +97,7 @@ export const useAuthStore = defineStore('auth', {
     // ログアウト時は状態と保存済みセッションをクリアする。
     logout() {
       this.currentUserId = null
+      this.currentUserName = null
       this.currentUserEmail = null
       this.currentUserRoleType = null
       this.isAuthenticated = false
@@ -102,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
     setSession(user: UserResponse) {
       // 認証成功時の共通セッション反映処理
       this.currentUserId = user.userId ?? null
+      this.currentUserName = user.userName
       this.currentUserEmail = user.email
       this.currentUserRoleType = user.roleType
       this.isAuthenticated = true
@@ -110,6 +117,7 @@ export const useAuthStore = defineStore('auth', {
         AUTH_STORAGE_KEY,
         JSON.stringify({
           userId: user.userId ?? null,
+          userName: user.userName,
           email: user.email,
           roleType: user.roleType,
         }),

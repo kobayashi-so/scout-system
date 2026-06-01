@@ -28,10 +28,6 @@
             
             <div class="form-group-row">
               <label class="form-label compact">
-                作成者
-                <input v-model="form.creator" type="text" placeholder="テスト太郎" required />
-              </label>
-              <label class="form-label compact">
                 求人タイトル
                 <input v-model="form.title" type="text" placeholder="エンジニア向けスカウト" required />
               </label>
@@ -139,6 +135,7 @@
 import { computed, onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useScoutStore } from '../store/scoutStore'
+import { useAuthStore } from '../store/authStore'
 
 import { fetchCheckItems } from '../api/checkItemApi'
 import type { CreateScoutPayload } from '../type/scout'
@@ -147,10 +144,10 @@ import type { checkItem } from '../type/checkItem'
 type ScoutStatus = 'draft' | 'waiting_leader' | 'waiting_admin' | 'approved' | 'remanded';
 
 const store = useScoutStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 const form = reactive<{
-  creator: string
   title: string
   status: ScoutStatus
   requirement: {
@@ -166,7 +163,6 @@ const form = reactive<{
   promptText: string
   body: string
 }>({
-  creator: '',
   title: '',
   status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
   requirement: {
@@ -265,6 +261,12 @@ function handleGeneratePrompt() {
 }
 
 async function handleSubmit(status: ScoutStatus) {
+  const creatorName = authStore.currentUserName?.trim()
+  if (!creatorName) {
+    generateError.value = '作成者情報が取得できません。再ログインしてください。'
+    return
+  }
+
   if (!allCheckItemsDone.value) {
     generateError.value = 'チェック項目をすべて確認してください。'
     return
@@ -275,7 +277,7 @@ async function handleSubmit(status: ScoutStatus) {
   }
 
   const payload: CreateScoutPayload = {
-    creator: form.creator.trim(),
+    creator: creatorName,
     title: form.title.trim(),
     body: form.body.trim(),
     tone: form.tone,
@@ -298,6 +300,7 @@ async function handleSubmit(status: ScoutStatus) {
     form.status = status
 
     // 入力項目をクリア
+    form.title = ''
     form.requirement.companyName = ''
     form.requirement.jobCategory = ''
     form.requirement.jobDescription = ''
@@ -305,9 +308,14 @@ async function handleSubmit(status: ScoutStatus) {
     form.requirement.workLocation = ''
     form.requirement.salaryInfo = ''
     form.requirement.jobAppeal = ''
+    form.promptText = ''
     form.body = ''
     generateError.value = ''
     checkedItemIds.value = []
+
+    if (status === 'waiting_leader') {
+      await router.push({ name: 'scout-list' })
+    }
   } catch (error) {
     generateError.value = 'データの保存に失敗しました。'
     console.error(error)
@@ -315,6 +323,7 @@ async function handleSubmit(status: ScoutStatus) {
 }
 
 onMounted(async () => {
+  authStore.hydrateFromStorage()
   await Promise.all([store.loadScouts(), loadCheckItems()])
 })
 </script>
