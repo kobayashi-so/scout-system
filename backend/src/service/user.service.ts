@@ -5,6 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { QueryFailedError } from "typeorm";
 import { UserRepository } from "../repository/user.repository";
 import { UserEntity } from "../type/user";
 
@@ -58,12 +59,26 @@ export class UserService {
       throw new BadRequestException("このメールアドレスは既に登録されています");
     }
 
-    const created = await this.userRepository.createUser({
-      userName: input.userName.trim(),
-      email: normalizedEmail,
-      password: input.password,
-      roleType: input.roleType,
-    });
+    let created: UserEntity;
+    try {
+      created = await this.userRepository.createUser({
+        userName: input.userName.trim(),
+        email: normalizedEmail,
+        password: input.password,
+        roleType: input.roleType,
+      });
+    } catch (error) {
+      const isUniqueViolation =
+        error instanceof QueryFailedError &&
+        ((error as any)?.driverError?.code === "23505" ||
+          (error as any)?.driverError?.constraint?.includes("email"));
+
+      if (isUniqueViolation) {
+        throw new BadRequestException("このメールアドレスは既に登録されています");
+      }
+
+      throw error;
+    }
 
     // レスポンスにはパスワードを含めない
     return this.toUserResponse(created);
