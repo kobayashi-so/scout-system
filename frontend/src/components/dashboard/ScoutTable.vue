@@ -116,35 +116,35 @@
               </div>
               <div class="info-item">
                 <strong>会社名</strong>
-                <p>{{ selectedRow.requirement?.companyName }}</p>
+                <p>{{ selectedRow.requirement?.companyName || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>職種</strong>
-                <p>{{ selectedRow.requirement?.jobCategory }}</p>
+                <p>{{ selectedRow.requirement?.jobCategory || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>業務内容</strong>
-                <p>{{ selectedRow.requirement?.jobDescription }}</p>
+                <p>{{ selectedRow.requirement?.jobDescription || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>必須スキル</strong>
-                <p>{{ selectedRow.requirement?.requiredSkills }}</p>
+                <p>{{ selectedRow.requirement?.requiredSkills || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>勤務地</strong>
-                <p>{{ selectedRow.requirement?.workLocation }}</p>
+                <p>{{ selectedRow.requirement?.workLocation || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>給与</strong>
-                <p>{{ selectedRow.requirement?.salaryInfo }}</p>
+                <p>{{ selectedRow.requirement?.salaryInfo || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>求人の魅力</strong>
-                <p>{{ selectedRow.requirement?.jobAppeal }}</p>
+                <p>{{ selectedRow.requirement?.jobAppeal || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>文章トーン</strong>
-                <p>{{ selectedRow.requirement?.tone }}</p>
+                <p>{{ selectedRow.requirement?.tone || "-" }}</p>
               </div>
             </div>
           </div>
@@ -183,6 +183,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { fetchScoutDetail } from "../../api/scoutApi";
 import type { RoleType } from "../../type/user";
 import {
   statusLabel,
@@ -227,9 +228,20 @@ const sortedRows = computed(() => {
   return list;
 });
 
-function openDetail(item: ScoutEntity) {
-  selectedRow.value = item;
+async function openDetail(item: ScoutEntity) {
   copyMessage.value = "";
+  selectedRow.value = item;
+
+  if (!item.id) {
+    return;
+  }
+
+  try {
+    // 一覧レスポンスでは不足しうる求人情報を詳細APIから再取得
+    selectedRow.value = await fetchScoutDetail(item.id);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function closeDetail() {
