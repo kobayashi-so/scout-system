@@ -16,7 +16,7 @@
                 </button>
               </div>
             </th>
-            <th class="px-4 py-3 font-semibold">操作</th>
+            <th class="px-4 py-3 font-semibold">アクション</th>
           </tr>
         </thead>
         <tbody>
@@ -59,17 +59,17 @@
 
                 <button
                   v-if="canOpenLeaderReview(item.status)"
-                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  class="review-action-btn"
                   @click="$emit('open-review', item)"
                 >
-                  営業承認者承認レビュー
+                  レビュー
                 </button>
                 <button
                   v-if="canOpenAdminReview(item.status)"
-                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  class="review-action-btn"
                   @click="$emit('open-review', item)"
                 >
-                  管理者承認レビュー
+                  レビュー
                 </button>
               </div>
             </td>
@@ -509,6 +509,19 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.review-action-btn {
+  border-radius: 0.375rem;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.review-action-btn:hover {
+  background: #bfdbfe;
 }
 
 .copy-btn:hover {
