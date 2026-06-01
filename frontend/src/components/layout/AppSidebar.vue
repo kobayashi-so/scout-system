@@ -58,7 +58,7 @@
               style="display: block"
             >
               <span class="inline-block w-4 text-emerald-600 mr-1">📝</span
-              >最終承認
+              >管理者承認
             </RouterLink>
           </div>
         </div>

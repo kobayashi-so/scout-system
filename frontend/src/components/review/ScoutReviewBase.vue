@@ -1,8 +1,9 @@
 <template>
   <section class="review-page">
     <header class="review-header review-card">
-      <RouterLink to="/list" class="review-back-link">← スカウト文レビュー</RouterLink>
-      <p class="review-eyebrow">F04-S01 スカウト文レビュー</p>
+      <RouterLink to="/list" class="review-back-link"
+        >← スカウト文レビュー
+      </RouterLink>
       <h2 class="review-title">{{ screenTitle }}</h2>
       <p class="review-status">{{ statusText }}</p>
     </header>
@@ -19,19 +20,19 @@
           <dl class="detail-list">
             <div class="detail-row">
               <dt>職種</dt>
-              <dd>{{ scout.requirement?.jobCategory || '-' }}</dd>
+              <dd>{{ scout.requirement?.jobCategory || "-" }}</dd>
             </div>
             <div class="detail-row">
               <dt>会社名</dt>
-              <dd>{{ scout.requirement?.companyName || '-' }}</dd>
+              <dd>{{ scout.requirement?.companyName || "-" }}</dd>
             </div>
             <div class="detail-row">
               <dt>勤務地</dt>
-              <dd>{{ scout.requirement?.workLocation || '-' }}</dd>
+              <dd>{{ scout.requirement?.workLocation || "-" }}</dd>
             </div>
             <div class="detail-row">
               <dt>給与</dt>
-              <dd>{{ scout.requirement?.salaryInfo || '-' }}</dd>
+              <dd>{{ scout.requirement?.salaryInfo || "-" }}</dd>
             </div>
           </dl>
         </article>
@@ -79,11 +80,7 @@
       <article class="review-card">
         <h3 class="card-title">品質チェック（承認時は全チェック必須）</h3>
         <div class="check-list">
-          <label
-            v-for="item in checkItems"
-            :key="item.id"
-            class="check-item"
-          >
+          <label v-for="item in checkItems" :key="item.id" class="check-item">
             <input
               type="checkbox"
               class="check-input"
@@ -92,9 +89,13 @@
             />
             <span>{{ item.checkTitle }}</span>
           </label>
-          <p v-if="checkItems.length === 0" class="empty-text">チェック項目が登録されていません。</p>
+          <p v-if="checkItems.length === 0" class="empty-text">
+            チェック項目が登録されていません。
+          </p>
         </div>
-        <p v-if="validationMessage" class="validation-text">{{ validationMessage }}</p>
+        <p v-if="validationMessage" class="validation-text">
+          {{ validationMessage }}
+        </p>
       </article>
 
       <article class="review-card">
@@ -105,10 +106,14 @@
             :key="comment.commentId"
             class="comment-item"
           >
-            <p class="comment-meta">{{ formatDate(comment.createdAt) }} / {{ comment.authorId }}</p>
+            <p class="comment-meta">
+              {{ formatDate(comment.createdAt) }} / {{ comment.authorId }}
+            </p>
             <p class="comment-body">{{ comment.content }}</p>
           </article>
-          <p v-if="comments.length === 0" class="empty-text">コメント履歴はありません</p>
+          <p v-if="comments.length === 0" class="empty-text">
+            コメント履歴はありません
+          </p>
         </div>
       </article>
 
@@ -150,32 +155,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   approveScout,
   fetchScoutComments,
   fetchScoutDetail,
   finalApproveScout,
   remandScout,
-} from '../../api/scoutApi'
-import { fetchCheckItems } from '../../api/checkItemApi'
-import { useAuthStore } from '../../store/authStore'
-import { statusLabel, type ScoutComment, type ScoutEntity } from '../../type/scout'
-import type { checkItem } from '../../type/checkItem'
+} from "../../api/scoutApi";
+import { fetchCheckItems } from "../../api/checkItemApi";
+import { useAuthStore } from "../../store/authStore";
+import {
+  statusLabel,
+  type ScoutComment,
+  type ScoutEntity,
+} from "../../type/scout";
+import type { checkItem } from "../../type/checkItem";
 
 const props = defineProps<{
-  mode: 'leader' | 'admin'
-}>()
+  mode: "leader" | "admin";
+}>();
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 
-const loading = ref(false)
-const submitting = ref(false)
-const errorMessage = ref('')
-const validationMessage = ref('')
+const loading = ref(false);
+const submitting = ref(false);
+const errorMessage = ref("");
+const validationMessage = ref("");
 
 const scout = ref<ScoutEntity | null>(null)
 const comments = ref<ScoutComment[]>([])
@@ -184,59 +193,45 @@ const selectedCheckIds = ref<string[]>([])
 const remandComment = ref('')
 const showPreviousBody = ref(false)
 
-const scoutId = computed(() => String(route.params.id || ''))
+const scoutId = computed(() => String(route.params.id || ""));
 
 const screenTitle = computed(() =>
   // 画面レイアウトは共通で、modeだけで文言と承認アクションを切替
-  props.mode === 'leader' ? '営業承認レビュー画面' : '最終承認レビュー画面',
-)
+  props.mode === "leader"
+    ? "営業承認者承認レビュー画面"
+    : "管理者承認レビュー画面",
+);
 
 const statusText = computed(() => {
-  if (!scout.value?.status) return '対象文書を読み込み中です。'
-  return `現在ステータス: ${statusLabel(scout.value.status)}`
-})
+  if (!scout.value?.status) return "対象文書を読み込み中です。";
+  return `現在ステータス: ${statusLabel(scout.value.status)}`;
+});
 
 const approveLabel = computed(() =>
-  props.mode === 'leader' ? '営業承認する' : '最終承認する',
-)
+  props.mode === "leader" ? "営業承認者承認する" : "管理者承認する",
+);
 
 const showApproveButton = computed(() => {
-  if (!scout.value?.status) return false
-  if (props.mode === 'leader') {
+  if (!scout.value?.status) return false;
+  if (props.mode === "leader") {
     // leaderレビュー画面は waiting_leader のときのみ承認ボタンを表示
-    return authStore.currentUserRoleType === 'leader' && scout.value.status === 'waiting_leader'
+    return (
+      authStore.currentUserRoleType === "leader" &&
+      scout.value.status === "waiting_leader"
+    );
   }
   // adminレビュー画面は waiting_admin のときのみ承認ボタンを表示
-  return authStore.currentUserRoleType === 'admin' && scout.value.status === 'waiting_admin'
-})
+  return (
+    authStore.currentUserRoleType === "admin" &&
+    scout.value.status === "waiting_admin"
+  );
+});
 
-const showRemandButton = computed(() => {
-  if (!scout.value?.status) return false
-
-  if (props.mode === 'leader') {
-    // leaderレビュー画面では waiting_leader のときだけ差戻し可能
-    return authStore.currentUserRoleType === 'leader' && scout.value.status === 'waiting_leader'
-  }
-
-  // adminレビュー画面では waiting_admin のときだけ差戻し可能
-  return authStore.currentUserRoleType === 'admin' && scout.value.status === 'waiting_admin'
-})
-
-const hasPreviousBody = computed(() => {
-  return Boolean(scout.value?.previousBody?.trim())
-})
-
-const displayedScoutBody = computed(() => {
-  if (showPreviousBody.value && hasPreviousBody.value) {
-    return scout.value?.previousBody || ''
-  }
-
-  return scout.value?.body || ''
-})
+const showRemandButton = computed(() => showApproveButton.value);
 
 function formatDate(value?: string): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('ja-JP')
+  if (!value) return "-";
+  return new Date(value).toLocaleString("ja-JP");
 }
 
 function togglePreviousBody() {
@@ -245,38 +240,40 @@ function togglePreviousBody() {
 }
 
 function toggleCheck(id: string) {
-  validationMessage.value = ''
+  validationMessage.value = "";
   if (selectedCheckIds.value.includes(id)) {
     selectedCheckIds.value = selectedCheckIds.value.filter((v: string) => v !== id)
     return
   }
-  selectedCheckIds.value = [...selectedCheckIds.value, id]
+  selectedCheckIds.value = [...selectedCheckIds.value, id];
 }
 
 function validateBeforeApprove(): boolean {
   if (checkItems.value.length === 0) {
-    validationMessage.value = 'チェック項目がありません。評価基準・チェック項目を設定してください。'
-    return false
+    validationMessage.value =
+      "チェック項目がありません。評価基準・チェック項目を設定してください。";
+    return false;
   }
 
   // 要件: 承認時は全チェック必須
   const allChecked = checkItems.value.every((item: checkItem) => selectedCheckIds.value.includes(item.id))
   if (!allChecked) {
-    validationMessage.value = '承認するには品質チェックを全て完了してください。'
-    return false
+    validationMessage.value =
+      "承認するには品質チェックを全て完了してください。";
+    return false;
   }
 
-  return true
+  return true;
 }
 
 async function loadReviewData() {
   if (!scoutId.value) {
-    errorMessage.value = '対象のスカウトIDが不正です'
-    return
+    errorMessage.value = "対象のスカウトIDが不正です";
+    return;
   }
 
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = "";
 
   try {
     // レビュー画面で必要な3情報を同時取得
@@ -291,86 +288,94 @@ async function loadReviewData() {
     comments.value = commentsResponse
     checkItems.value = [...checkItemsResponse].sort((a, b) => a.display_order - b.display_order)
   } catch (error) {
-    console.error(error)
-    errorMessage.value = 'レビュー情報の取得に失敗しました'
+    console.error(error);
+    errorMessage.value = "レビュー情報の取得に失敗しました";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 async function handleApprove() {
   if (!scout.value?.id || !authStore.currentUserId) {
-    errorMessage.value = '承認に必要なユーザー情報が不足しています。再ログインしてください。'
-    return
+    errorMessage.value =
+      "承認に必要なユーザー情報が不足しています。再ログインしてください。";
+    return;
   }
 
   if (!validateBeforeApprove()) {
-    return
+    return;
   }
 
-  submitting.value = true
-  errorMessage.value = ''
+  submitting.value = true;
+  errorMessage.value = "";
 
   try {
     // modeに応じて承認APIを切替（UIは共通）
-    if (props.mode === 'leader') {
-      await approveScout({ scoutId: scout.value.id, userId: authStore.currentUserId })
+    if (props.mode === "leader") {
+      await approveScout({
+        scoutId: scout.value.id,
+        userId: authStore.currentUserId,
+      });
     } else {
-      await finalApproveScout({ scoutId: scout.value.id, userId: authStore.currentUserId })
+      await finalApproveScout({
+        scoutId: scout.value.id,
+        userId: authStore.currentUserId,
+      });
     }
 
-    await router.push('/list')
+    await router.push("/list");
   } catch (error) {
-    console.error(error)
-    errorMessage.value = '承認処理に失敗しました'
+    console.error(error);
+    errorMessage.value = "承認処理に失敗しました";
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 async function handleRemand() {
   if (!showRemandButton.value) {
-    errorMessage.value = 'この画面では差戻しできません'
-    return
+    errorMessage.value = "この画面では差戻しできません";
+    return;
   }
 
   if (!scout.value?.id || !authStore.currentUserId) {
-    errorMessage.value = '差戻しに必要なユーザー情報が不足しています。再ログインしてください。'
-    return
+    errorMessage.value =
+      "差戻しに必要なユーザー情報が不足しています。再ログインしてください。";
+    return;
   }
 
   // 要件: 差戻し時はコメント必須
   if (!remandComment.value.trim()) {
-    errorMessage.value = '差戻しコメントは必須です'
-    return
+    errorMessage.value = "差戻しコメントは必須です";
+    return;
   }
 
-  submitting.value = true
-  errorMessage.value = ''
+  submitting.value = true;
+  errorMessage.value = "";
 
   try {
     await remandScout({
       scoutId: scout.value.id,
       userId: authStore.currentUserId,
       comment: remandComment.value.trim(),
-    })
+    });
 
     // 差戻し後は画面遷移せず、その場で「次に進めない」状態を表示する
-    await loadReviewData()
-    errorMessage.value = 'E_REMANDED: 差戻し済みのため次に進めません。'
+    await loadReviewData();
+    errorMessage.value = "E_REMANDED: 差戻し済みのため次に進めません。";
   } catch (error) {
-    console.error(error)
-    const statusCode = (error as any)?.response?.status
-    errorMessage.value = `差戻し処理に失敗しました (error code: ${statusCode ?? 'unknown'})`
+    console.error(error);
+    const statusCode = (error as any)?.response?.status;
+    errorMessage.value = `差戻し処理に失敗しました (error code: ${statusCode ?? "unknown"})`;
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 onMounted(() => {
-  authStore.hydrateFromStorage()
-  loadReviewData()
-})
+  authStore.hydrateFromStorage();
+  loadReviewData();
+});
 </script>
 
 <style scoped>

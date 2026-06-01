@@ -94,19 +94,19 @@ const filteredRows = computed(() => {
 });
 
 const pageTitle = computed(() => {
-  return props.mode === "sales" ? "承認待ち一覧" : "最終承認待ち一覧";
+  return props.mode === "sales" ? "承認待ち一覧" : "管理者承認待ち一覧";
 });
 
 const pageDescription = computed(() => {
   return props.mode === "sales"
-    ? "営業承認待ちの案件のみ表示"
-    : "最終承認待ちの案件のみ表示";
+    ? "営業承認者承認待ちの案件のみ表示"
+    : "管理者承認待ちの案件のみ表示";
 });
 
 const cardDescription = computed(() => {
   return props.mode === "sales"
-    ? "あなたの営業承認を待っている案件"
-    : "あなたの最終承認を待っている案件";
+    ? "あなたの営業承認者承認を待っている案件"
+    : "あなたの管理者承認を待っている案件";
 });
 
 function formatDate(value?: string) {
