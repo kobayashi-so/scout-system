@@ -16,7 +16,7 @@
                 </button>
               </div>
             </th>
-            <th class="px-4 py-3 font-semibold">操作</th>
+            <th class="px-4 py-3 font-semibold">アクション</th>
           </tr>
         </thead>
         <tbody>
@@ -50,26 +50,26 @@
 
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
-                  v-if="canOpenDraftEdit(item.status)"
+                  v-if="canOpenDraftEdit(item.status, item.creator)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
-                 @click="$emit('open-remanded-edit', item)"
+                  @click="$emit('open-remanded-edit', item)"
                 >
                   編集
                 </button>
 
                 <button
                   v-if="canOpenLeaderReview(item.status)"
-                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  class="review-button"
                   @click="$emit('open-review', item)"
                 >
-                  営業承認者承認レビュー
+                  レビュー
                 </button>
                 <button
                   v-if="canOpenAdminReview(item.status)"
-                  class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                  class="review-button"
                   @click="$emit('open-review', item)"
                 >
-                  管理者承認レビュー
+                  レビュー
                 </button>
               </div>
             </td>
@@ -156,13 +156,22 @@
                 {{ selectedRow.body || "スカウト文がありません。" }}
               </div>
               <div class="footer">
-                <span v-if="copyMessage" class="copy-toast">{{ copyMessage }}</span>
+                <span v-if="copyMessage" class="copy-toast">{{
+                  copyMessage
+                }}</span>
                 <div class="footer-actions">
                   <button class="action-btn copy-btn" @click="copyBody">
                     🗎 文章をコピーする
                   </button>
+                  <button
+                    v-if="!props.isTrashView"
+                    class="action-btn duplicate-btn"
+                    @click="confirmDuplicateReuse"
+                  >
+                    複製して再利用
+                  </button>
                   <button class="action-btn delete-btn" @click="confirmDelete">
-                    {{ props.isTrashView ? '復元' : '削除' }}
+                    {{ props.isTrashView ? "復元" : "削除" }}
                   </button>
                   <button
                     v-if="props.isTrashView"
@@ -194,17 +203,19 @@ import {
 const props = defineProps<{
   rows: ScoutEntity[]
   roleType: RoleType | null
+  currentUserName?: string | null
   isTrashView?: boolean
 }>()
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
 const emit = defineEmits<{
-  (e: 'open-review', row: ScoutEntity): void
-  (e: 'open-remanded-edit', row: ScoutEntity): void
-  (e: 'soft-delete', row: ScoutEntity): void
-  (e: 'restore', row: ScoutEntity): void
-  (e: 'hard-delete', row: ScoutEntity): void
-}>()
+  (e: "open-review", row: ScoutEntity): void;
+  (e: "open-remanded-edit", row: ScoutEntity): void;
+  (e: "duplicate-reuse", row: ScoutEntity): void;
+  (e: "soft-delete", row: ScoutEntity): void;
+  (e: "restore", row: ScoutEntity): void;
+  (e: "hard-delete", row: ScoutEntity): void;
+}>();
 
 // モーダル制御用のリアクティブステート
 const selectedRow = ref<ScoutEntity | null>(null);
@@ -263,28 +274,41 @@ async function copyBody() {
 }
 
 function confirmDelete() {
-  if (!selectedRow.value) return
+  if (!selectedRow.value) return;
 
   if (props.isTrashView) {
-    if (window.confirm('このスカウト文を元に戻しますか')) {
-      emit('restore', selectedRow.value)
-      closeDetail()
+    if (window.confirm("このスカウト文を元に戻しますか")) {
+      emit("restore", selectedRow.value);
+      closeDetail();
     }
-    return
+    return;
   }
 
-  if (window.confirm('このスカウト文をゴミ箱へ移動しますか')) {
-    emit('soft-delete', selectedRow.value)
-    closeDetail()
+  if (window.confirm("このスカウト文をゴミ箱へ移動しますか")) {
+    emit("soft-delete", selectedRow.value);
+    closeDetail();
   }
 }
 
 function confirmHardDelete() {
-  if (!selectedRow.value) return
+  if (!selectedRow.value) return;
 
-  if (window.confirm('このスカウト文を完全削除します。元に戻せません。実行しますか')) {
-    emit('hard-delete', selectedRow.value)
-    closeDetail()
+  if (
+    window.confirm(
+      "このスカウト文を完全削除します。元に戻せません。実行しますか",
+    )
+  ) {
+    emit("hard-delete", selectedRow.value);
+    closeDetail();
+  }
+}
+
+function confirmDuplicateReuse() {
+  if (!selectedRow.value) return;
+
+  if (window.confirm("この文書を複製して下書きとして再利用しますか")) {
+    emit("duplicate-reuse", selectedRow.value);
+    closeDetail();
   }
 }
 
@@ -319,11 +343,15 @@ function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === "admin" && status === "waiting_admin";
 }
 
-function canOpenDraftEdit(status?: ScoutStatus): boolean {
-  return (
-    props.roleType === "sales" &&
-    (status === "draft" || status === "remanded")
-  );
+function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
+  if (!status || (status !== "draft" && status !== "remanded")) {
+    return false;
+  }
+
+  const currentUserName = (props.currentUserName || "").trim();
+  const rowCreator = (creator || "").trim();
+
+  return currentUserName.length > 0 && currentUserName === rowCreator;
 }
 </script>
 
@@ -452,6 +480,22 @@ function canOpenDraftEdit(status?: ScoutStatus): boolean {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.review-button {
+  border: none;
+  border-radius: 6px;
+  background: #c4b5fd;
+  color: #312e81;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.review-button:hover {
+  background: #a78bfa;
 }
 
 .scout-display-box {

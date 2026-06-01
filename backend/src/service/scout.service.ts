@@ -13,6 +13,7 @@ import { ScoutRepository } from "../repository/scout.repository";
 import { UserRepository } from "../repository/user.repository";
 import {
   CreateScoutInput,
+  DuplicateScoutInput,
   RemandInput,
   RoleType,
   SCOUT_STATUSES,
@@ -39,9 +40,12 @@ export class ScoutService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     await this.purgeOldSoftDeleted();
-    this.cleanupTimer = setInterval(() => {
-      void this.purgeOldSoftDeleted();
-    }, 24 * 60 * 60 * 1000);
+    this.cleanupTimer = setInterval(
+      () => {
+        void this.purgeOldSoftDeleted();
+      },
+      24 * 60 * 60 * 1000,
+    );
   }
 
   onModuleDestroy(): void {
@@ -218,40 +222,97 @@ export class ScoutService implements OnModuleInit, OnModuleDestroy {
     return updated;
   }
 
+  async saveDraft(
+    scoutId: string,
+    input: UpdateRemandedScoutInput,
+  ): Promise<ScoutEntity> {
+    const normalizedScoutId = this.requireText(scoutId, "scoutIdは必須です");
+
+    if (!input.title?.trim() || !input.body?.trim()) {
+      throw new BadRequestException("タイトル・本文は必須です");
+    }
+
+    if (!input.requirement) {
+      throw new BadRequestException("求人情報が不足しています");
+    }
+
+    const updated = await this.scoutRepository.saveDraftScout(
+      normalizedScoutId,
+      input,
+    );
+    if (!updated) {
+      throw new ConflictException("下書き文書のみ一時保存できます");
+    }
+
+    return updated;
+  }
+
+  async duplicateAsDraft(
+    sourceScoutId: string,
+    input: DuplicateScoutInput,
+  ): Promise<ScoutEntity> {
+    const normalizedSourceId = this.requireText(
+      sourceScoutId,
+      "scoutIdは必須です",
+    );
+    const normalizedUserId = this.requireText(input.userId, "userIdは必須です");
+
+    await this.getScoutOrThrow(normalizedSourceId);
+    const user = await this.getUserOrThrow(normalizedUserId);
+
+    const duplicated = await this.scoutRepository.duplicateScoutAsDraft(
+      normalizedSourceId,
+      this.generateId(),
+      user.userName,
+    );
+
+    if (!duplicated) {
+      throw new ConflictException("文書の複製に失敗しました");
+    }
+
+    return duplicated;
+  }
+
   async softDelete(scoutId: string): Promise<ScoutEntity> {
-    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const normalizedScoutId = this.requireText(scoutId, "scoutIdは必須です");
     const deleted = await this.scoutRepository.softDelete(normalizedScoutId);
     if (!deleted) {
-      throw new NotFoundException('対象スカウトが見つかりません');
+      throw new NotFoundException("対象スカウトが見つかりません");
     }
 
     return deleted;
   }
 
   async restore(scoutId: string): Promise<ScoutEntity> {
-    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const normalizedScoutId = this.requireText(scoutId, "scoutIdは必須です");
     const restored = await this.scoutRepository.restore(normalizedScoutId);
     if (!restored) {
-      throw new NotFoundException('対象スカウトが見つかりません');
+      throw new NotFoundException("対象スカウトが見つかりません");
     }
 
     return restored;
   }
 
   async hardDelete(scoutId: string): Promise<{ deleted: boolean }> {
-    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const normalizedScoutId = this.requireText(scoutId, "scoutIdは必須です");
     const deleted = await this.scoutRepository.hardDelete(normalizedScoutId);
     return { deleted };
   }
 
   private async purgeOldSoftDeleted(): Promise<void> {
     try {
-      const deletedCount = await this.scoutRepository.hardDeleteOlderThanOneYear();
+      const deletedCount =
+        await this.scoutRepository.hardDeleteOlderThanOneYear();
       if (deletedCount > 0) {
-        this.logger.log(`1年以上前に論理削除されたスカウトを${deletedCount}件削除しました`);
+        this.logger.log(
+          `1年以上前に論理削除されたスカウトを${deletedCount}件削除しました`,
+        );
       }
     } catch (error) {
-      this.logger.error('1年超過ゴミ箱データの自動削除に失敗しました', error as Error);
+      this.logger.error(
+        "1年超過ゴミ箱データの自動削除に失敗しました",
+        error as Error,
+      );
     }
   }
 
@@ -291,7 +352,7 @@ export class ScoutService implements OnModuleInit, OnModuleDestroy {
 
   private async getUserOrThrow(
     userId: string,
-  ): Promise<{ roleType: RoleType }> {
+  ): Promise<{ roleType: RoleType; userName: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException("対象ユーザーが見つかりません");

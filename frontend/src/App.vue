@@ -6,6 +6,8 @@
           :user-name="userName"
           :user-email="userEmail"
           :user-role="userRole"
+          :collapsed="isSidebarCollapsed"
+          @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
           @logout="handleLogout"
         />
 
@@ -22,13 +24,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "./store/authStore";
 import AppSidebar from "./components/layout/AppSidebar.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const isSidebarCollapsed = ref(false);
 
 const userName = computed(() => {
   if (authStore.currentUserName) return authStore.currentUserName;

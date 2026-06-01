@@ -1,46 +1,46 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
 
 export const SCOUT_STATUSES = [
-  'draft',
-  'waiting_leader',
-  'waiting_admin',
-  'approved',
-  'remanded',
+  "draft",
+  "waiting_leader",
+  "waiting_admin",
+  "approved",
+  "remanded",
 ] as const;
 
 export type ScoutStatus = (typeof SCOUT_STATUSES)[number];
-export type RoleType = 'sales' | 'leader' | 'admin';
+export type RoleType = "sales" | "leader" | "admin";
 
-@Entity('scouts')
+@Entity("scouts")
 export class ScoutEntity {
-  @PrimaryColumn({ name: 'id' })
+  @PrimaryColumn({ name: "id" })
   id?: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt?: Date;
 
-  @Column({ name: 'creator', type: 'varchar', length: 100 })
+  @Column({ name: "creator", type: "varchar", length: 100 })
   creator: string;
 
-  @Column({ name: 'title', type: 'varchar', length: 255 })
+  @Column({ name: "title", type: "varchar", length: 255 })
   title: string;
 
-  @Column({ name: 'body', type: 'text' })
+  @Column({ name: "body", type: "text" })
   body: string;
 
-  @Column({ name: 'previous_body', type: 'text', nullable: true })
+  @Column({ name: "previous_body", type: "text", nullable: true })
   previousBody?: string | null;
 
-  @Column({ name: 'status', type: 'varchar', length: 20, default: 'draft' })
+  @Column({ name: "status", type: "varchar", length: 20, default: "draft" })
   status: ScoutStatus;
 
-  @Column({ name: 'first_approver_id', type: 'uuid', nullable: true })
+  @Column({ name: "first_approver_id", type: "uuid", nullable: true })
   firstApproverId?: string | null;
 
-  @Column({ name: 'second_approver_id', type: 'uuid', nullable: true })
+  @Column({ name: "second_approver_id", type: "uuid", nullable: true })
   secondApproverId?: string | null;
 
-  @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  @Column({ name: "deleted_at", type: "timestamp", nullable: true })
   deletedAt?: Date | null;
 }
 
@@ -59,7 +59,7 @@ export interface CreateScoutInput {
   title: string;
   body: string;
   status?: ScoutStatus;
-  tone: 'カジュアル' | '熱意' | 'プロフェッショナル';
+  tone: "カジュアル" | "熱意" | "プロフェッショナル";
   requirement: ScoutJobRequirementInput;
 }
 
@@ -70,6 +70,10 @@ export interface WorkflowActionInput {
 
 export interface RemandInput extends WorkflowActionInput {
   comment: string;
+}
+
+export interface DuplicateScoutInput {
+  userId: string;
 }
 
 export interface ScoutJobRequirement {
@@ -92,7 +96,7 @@ export interface UpdateRemandedScoutInput {
   title: string;
   body: string;
   // 再申請時に求人要件と同時保存するトーン
-  tone: 'カジュアル' | '熱意' | 'プロフェッショナル';
+  tone: "カジュアル" | "熱意" | "プロフェッショナル";
   // 差戻し編集画面で再編集された求人情報
   requirement: ScoutJobRequirementInput;
 }

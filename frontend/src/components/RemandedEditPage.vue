@@ -15,6 +15,15 @@
           キャンセル
         </button>
         <button
+          v-if="isDraftDocument"
+          type="button"
+          class="btn-secondary"
+          :disabled="submitting"
+          @click="handleSaveDraft"
+        >
+          一時保存
+        </button>
+        <button
           type="button"
           class="btn-primary-green"
           :disabled="submitting"
@@ -37,12 +46,16 @@
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
             <label class="form-label">
-              会社名
+              <span class="form-label-head"
+                >会社名 <span class="required-soft">(必須)</span></span
+              >
               <input v-model="form.requirement.companyName" type="text" />
             </label>
 
             <label class="form-label">
-              職種
+              <span class="form-label-head"
+                >職種 <span class="required-soft">(必須)</span></span
+              >
               <input v-model="form.requirement.jobCategory" type="text" />
             </label>
 
@@ -57,7 +70,9 @@
             </label>
 
             <label class="form-label">
-              業務内容
+              <span class="form-label-head"
+                >業務内容 <span class="required-soft">(必須)</span></span
+              >
               <textarea v-model="form.requirement.jobDescription" rows="2" />
             </label>
 
@@ -67,7 +82,9 @@
             </label>
 
             <label class="form-label">
-              求人の魅力
+              <span class="form-label-head"
+                >求人の魅力 <span class="required-soft">(必須)</span></span
+              >
               <textarea v-model="form.requirement.jobAppeal" rows="2" />
             </label>
 
@@ -166,6 +183,7 @@ import {
   fetchScoutComments,
   fetchScoutDetail,
   resubmitRemandedScout,
+  saveDraftScout,
 } from "../api/scoutApi";
 import type { checkItem } from "../type/checkItem";
 import type {
@@ -189,6 +207,7 @@ const checkItemsError = ref("");
 const scout = ref<ScoutEntity | null>(null);
 const comments = ref<ScoutComment[]>([]);
 const form = ref<ResubmitRemandedPayload | null>(null);
+const isDraftDocument = ref(false);
 
 const pageTitle = ref("文書の編集");
 const submitButtonLabel = ref("修正して再申請");
@@ -273,6 +292,8 @@ async function loadPage() {
       return;
     }
 
+    isDraftDocument.value = detail.status === "draft";
+
     pageTitle.value =
       detail.status === "draft" ? "下書き文書の編集" : "差戻し文書の修正";
     submitButtonLabel.value =
@@ -354,6 +375,41 @@ async function handleResubmit() {
   }
 }
 
+async function handleSaveDraft() {
+  if (!form.value || !isDraftDocument.value) return;
+
+  if (isFormCompletelyEmpty(form.value)) {
+    window.alert(
+      "入力フォームが未入力です。内容を入力してから操作してください。",
+    );
+    return;
+  }
+
+  if (!form.value.title.trim() || !form.value.body.trim()) {
+    errorMessage.value = "タイトルと本文は必須です";
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "この内容で一時保存します。よろしいですか？",
+  );
+  if (!confirmed) return;
+
+  submitting.value = true;
+  errorMessage.value = "";
+
+  try {
+    await saveDraftScout(scoutId, form.value);
+    await router.push("/list");
+  } catch (error: any) {
+    console.error(error);
+    errorMessage.value =
+      error?.response?.data?.message || "一時保存に失敗しました";
+  } finally {
+    submitting.value = false;
+  }
+}
+
 onMounted(() => {
   loadPage();
   loadCheckItems();
@@ -371,7 +427,9 @@ onMounted(() => {
   overflow: hidden;
   box-sizing: border-box;
   padding: 16px 24px;
-  background-color: #ffffff;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
+    linear-gradient(180deg, #f7faf9 0%, #f3f6f9 100%);
 }
 
 .page-header {
@@ -400,9 +458,10 @@ onMounted(() => {
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.01em;
 }
 
 .header-right {
@@ -412,36 +471,39 @@ onMounted(() => {
 
 .btn-secondary {
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  border: 1px solid #b7c4d6;
+  color: #334155;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .btn-primary-green {
-  background-color: #00c77b;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
   color: #ffffff;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.24);
 }
 
 .btn-ai {
   width: 100%;
   padding: 10px;
-  background-color: #004d34;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
 }
 
 .workspace {
@@ -453,13 +515,15 @@ onMounted(() => {
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -467,9 +531,10 @@ onMounted(() => {
 
 .card h2 {
   margin: 0 0 16px 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #004d34;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #065f46;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
 
@@ -524,13 +589,25 @@ onMounted(() => {
   color: #475569;
 }
 
+.form-label-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required-soft {
+  color: #e11d48;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 input[type="text"],
 select,
 textarea {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid #c4d0df;
+  border-radius: 8px;
   font-size: 0.85rem;
   color: #1e293b;
   box-sizing: border-box;
@@ -541,7 +618,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #00c77b;
+  border-color: #0ea5a4;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
 }
 
 .card-header-row {
