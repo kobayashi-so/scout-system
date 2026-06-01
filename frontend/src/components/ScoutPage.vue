@@ -4,36 +4,54 @@
       <div class="header-left">
         <button type="button" class="btn-back" @click="goToDashboard">←</button>
         <h1>スカウト文新規作成</h1>
-        
+
         <span :class="['badge-status', form.status]">
           {{ currentStatusLabel }}
         </span>
       </div>
       <div class="header-right">
-        <button type="button" class="btn-secondary" :disabled="store.loading" @click="handleSubmit('draft')">
+        <button
+          type="button"
+          class="btn-secondary"
+          :disabled="store.loading"
+          @click="handleSubmit('draft')"
+        >
           一時保存
         </button>
-        <button type="button" class="btn-primary-green" :disabled="store.loading" @click="handleSubmit('waiting_leader')">
+        <button
+          type="button"
+          class="btn-primary-green"
+          :disabled="store.loading"
+          @click="handleSubmit('waiting_leader')"
+        >
           営業承認を申請
         </button>
       </div>
     </header>
 
     <div class="workspace">
-      
       <section class="card column-input">
         <h2>📁 1. 求人情報入力</h2>
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
-            
             <div class="form-group-row">
               <label class="form-label compact">
                 作成者
-                <input v-model="form.creator" type="text" placeholder="テスト太郎" required />
+                <input
+                  v-model="form.creator"
+                  type="text"
+                  placeholder="テスト太郎"
+                  required
+                />
               </label>
               <label class="form-label compact">
                 求人タイトル
-                <input v-model="form.title" type="text" placeholder="エンジニア向けスカウト" required />
+                <input
+                  v-model="form.title"
+                  type="text"
+                  placeholder="エンジニア向けスカウト"
+                  required
+                />
               </label>
             </div>
 
@@ -41,37 +59,72 @@
 
             <label class="form-label">
               会社名
-              <input v-model="form.requirement.companyName" type="text" placeholder="株式会社TechVision" required />
+              <input
+                v-model="form.requirement.companyName"
+                type="text"
+                placeholder="株式会社TechVision"
+                required
+              />
             </label>
 
             <label class="form-label">
               職種
-              <input v-model="form.requirement.jobCategory" type="text" placeholder="バックエンドエンジニア" required />
+              <input
+                v-model="form.requirement.jobCategory"
+                type="text"
+                placeholder="バックエンドエンジニア"
+                required
+              />
             </label>
 
             <label class="form-label">
               業務内容
-              <textarea v-model="form.requirement.jobDescription" placeholder="要件定義〜設計・実装・運用まで担当" rows="2" required></textarea>
+              <textarea
+                v-model="form.requirement.jobDescription"
+                placeholder="要件定義〜設計・実装・運用まで担当"
+                rows="2"
+                required
+              ></textarea>
             </label>
 
             <label class="form-label">
               必須スキル
-              <textarea v-model="form.requirement.requiredSkills" placeholder="Java/Kotlin3年以上, AWS, Webアプリ開発" rows="2" required></textarea>
+              <textarea
+                v-model="form.requirement.requiredSkills"
+                placeholder="Java/Kotlin3年以上, AWS, Webアプリ開発"
+                rows="2"
+                required
+              ></textarea>
             </label>
 
             <label class="form-label">
               勤務地
-              <input v-model="form.requirement.workLocation" type="text" placeholder="東京都港区（リモート併用可）" required />
+              <input
+                v-model="form.requirement.workLocation"
+                type="text"
+                placeholder="東京都港区（リモート併用可）"
+                required
+              />
             </label>
 
             <label class="form-label">
               給与
-              <input v-model="form.requirement.salaryInfo" type="text" placeholder="年収600万円〜800万円" required />
+              <input
+                v-model="form.requirement.salaryInfo"
+                type="text"
+                placeholder="年収600万円〜800万円"
+                required
+              />
             </label>
 
             <label class="form-label">
               求人の魅力
-              <input v-model="form.requirement.jobAppeal" type="text" placeholder="自社サービス開発・モダン技術環境・裁量大" required />
+              <input
+                v-model="form.requirement.jobAppeal"
+                type="text"
+                placeholder="自社サービス開発・モダン技術環境・裁量大"
+                required
+              />
             </label>
 
             <label class="form-label">
@@ -82,8 +135,10 @@
                 <option value="プロフェッショナル">プロフェッショナル</option>
               </select>
             </label>
-            
-            <p v-if="generateError" class="message error">{{ generateError }}</p>
+
+            <p v-if="generateError" class="message error">
+              {{ generateError }}
+            </p>
           </form>
         </div>
 
@@ -100,7 +155,12 @@
           <span class="edit-notice">※直接編集可</span>
         </div>
         <div class="output-container">
-          <textarea v-model="form.body" class="body-textarea" placeholder="左の「AIで生成」ボタンを押すか、直接ここに入力してください" required />
+          <textarea
+            v-model="form.body"
+            class="body-textarea"
+            placeholder="左の「AIで生成」ボタンを押すか、直接ここに入力してください"
+            required
+          />
           <div class="char-count">文字数: {{ form.body.length }}文字</div>
         </div>
       </section>
@@ -109,8 +169,12 @@
         <h2>📊 3. 評価基準チェック</h2>
         <div class="check-scroll-wrapper">
           <p v-if="checkItemsLoading" class="check-item-meta">読み込み中...</p>
-          <p v-else-if="checkItemsError" class="message error">{{ checkItemsError }}</p>
-          <p v-else-if="checkItems.length === 0" class="check-item-meta">チェック項目がありません。</p>
+          <p v-else-if="checkItemsError" class="message error">
+            {{ checkItemsError }}
+          </p>
+          <p v-else-if="checkItems.length === 0" class="check-item-meta">
+            チェック項目がありません。
+          </p>
 
           <div v-else class="check-item-list">
             <label
@@ -130,148 +194,194 @@
           </div>
         </div>
       </section>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useScoutStore } from '../store/scoutStore'
+import { computed, onMounted, ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useScoutStore } from "../store/scoutStore";
 
-import { fetchCheckItems } from '../api/checkItemApi'
-import type { CreateScoutPayload } from '../type/scout'
-import type { checkItem } from '../type/checkItem'
+import { fetchCheckItems } from "../api/checkItemApi";
+import type { CreateScoutPayload } from "../type/scout";
+import type { checkItem } from "../type/checkItem";
 
-type ScoutStatus = 'draft' | 'waiting_leader' | 'waiting_admin' | 'approved' | 'remanded';
+type ScoutStatus =
+  | "draft"
+  | "waiting_leader"
+  | "waiting_admin"
+  | "approved"
+  | "remanded";
 
-const store = useScoutStore()
-const router = useRouter()
+const store = useScoutStore();
+const router = useRouter();
 
 const form = reactive<{
-  creator: string
-  title: string
-  status: ScoutStatus
+  creator: string;
+  title: string;
+  status: ScoutStatus;
   requirement: {
-    companyName: string
-    jobCategory: string
-    jobDescription: string
-    requiredSkills: string
-    workLocation: string
-    salaryInfo: string
-    jobAppeal: string
-  }
-  tone: 'カジュアル' | '熱意' | 'プロフェッショナル'
-  promptText: string
-  body: string
+    companyName: string;
+    jobCategory: string;
+    jobDescription: string;
+    requiredSkills: string;
+    workLocation: string;
+    salaryInfo: string;
+    jobAppeal: string;
+  };
+  tone: "カジュアル" | "熱意" | "プロフェッショナル";
+  promptText: string;
+  body: string;
 }>({
-  creator: '',
-  title: '',
-  status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
+  creator: "",
+  title: "",
+  status: "draft" as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
   requirement: {
-    companyName: '',
-    jobCategory: '',
-    jobDescription: '',
-    requiredSkills: '',
-    workLocation: '',
-    salaryInfo: '',
-    jobAppeal: '',
+    companyName: "",
+    jobCategory: "",
+    jobDescription: "",
+    requiredSkills: "",
+    workLocation: "",
+    salaryInfo: "",
+    jobAppeal: "",
   },
-  tone: 'カジュアル',
-  promptText: '',
-  body: '',
-})
+  tone: "カジュアル",
+  promptText: "",
+  body: "",
+});
 
-const generateError = ref('')
-const checkItems = ref<checkItem[]>([])
-const checkedItemIds = ref<string[]>([])
-const checkItemsLoading = ref(false)
-const checkItemsError = ref('')
+const generateError = ref("");
+const checkItems = ref<checkItem[]>([]);
+const checkedItemIds = ref<string[]>([]);
+const checkItemsLoading = ref(false);
+const checkItemsError = ref("");
 
 // 💡 提示いただいた関数ロジックを Vue の算出プロパティ（computed）として組み込み
 const currentStatusLabel = computed(() => {
-  const status = form.status
-  if (status === 'approved') return '承認済み'
-  if (status === 'waiting_leader') return '営業承認者承認待ち'
-  if (status === 'waiting_admin') return '管理者承認待ち'
-  if (status === 'remanded') return '差戻し'
-  if (status === 'draft') return '下書き'
-  return '未設定'
-})
+  const status = form.status;
+  if (status === "approved") return "承認済み";
+  if (status === "waiting_leader") return "営業承認者承認待ち";
+  if (status === "waiting_admin") return "管理者承認待ち";
+  if (status === "remanded") return "差戻し";
+  if (status === "draft") return "下書き";
+  return "未設定";
+});
 
 const allCheckItemsDone = computed(() => {
-  return checkItems.value.length > 0 && checkedItemIds.value.length === checkItems.value.length
-})
+  return (
+    checkItems.value.length > 0 &&
+    checkedItemIds.value.length === checkItems.value.length
+  );
+});
+
+function isFormCompletelyEmpty(): boolean {
+  return [
+    form.creator,
+    form.title,
+    form.body,
+    form.requirement.companyName,
+    form.requirement.jobCategory,
+    form.requirement.jobDescription,
+    form.requirement.requiredSkills,
+    form.requirement.workLocation,
+    form.requirement.salaryInfo,
+    form.requirement.jobAppeal,
+  ].every((value) => !value.trim());
+}
 
 function goToDashboard() {
-  router.push({ name: 'scout-list' })
+  router.push({ name: "scout-list" });
 }
 
 async function loadCheckItems() {
-  checkItemsLoading.value = true
-  checkItemsError.value = ''
+  checkItemsLoading.value = true;
+  checkItemsError.value = "";
   try {
-    checkItems.value = await fetchCheckItems()
+    checkItems.value = await fetchCheckItems();
   } catch (error) {
-    console.error(error)
-    checkItemsError.value = 'チェック項目の取得に失敗しました。'
+    console.error(error);
+    checkItemsError.value = "チェック項目の取得に失敗しました。";
   } finally {
-    checkItemsLoading.value = false
+    checkItemsLoading.value = false;
   }
 }
 
 function handleGeneratePrompt() {
-  const r = form.requirement
+  const r = form.requirement;
   if (!r.companyName || !r.jobCategory) {
-    generateError.value = '会社名と職種を入力してから生成してください。'
-    return
+    generateError.value = "会社名と職種を入力してから生成してください。";
+    return;
   }
-  generateError.value = ''
+  generateError.value = "";
 
   form.promptText = [
-    'あなたは採用担当です。候補者向けのスカウト文を作成してください。',
+    "あなたは採用担当です。候補者向けのスカウト文を作成してください。",
     `会社名: ${r.companyName}`,
     `職種: ${r.jobCategory}`,
     `トーン: ${form.tone}`,
-  ].join('\n')
+  ].join("\n");
 
-  let generatedBody = ''
-  if (form.tone === 'カジュアル') {
+  let generatedBody = "";
+  if (form.tone === "カジュアル") {
     generatedBody = [
       `${r.companyName}の採用担当です！`,
       `今回は${r.jobCategory}を募集しています。${r.jobDescription}をお任せしたいです。`,
       `スキルは${r.requiredSkills}、勤務地は${r.workLocation}、給与は${r.salaryInfo}です。`,
       `魅力は「${r.jobAppeal}」。まずは気軽にお話しませんか？`,
-    ].join('\n')
-  } else if (form.tone === '熱意') {
+    ].join("\n");
+  } else if (form.tone === "熱意") {
     generatedBody = [
       `${r.companyName}の採用担当です。`,
       `あなたのご経験に強く惹かれ、${r.jobCategory}としてぜひご活躍いただきたいと考えています。`,
       `${r.jobDescription}を中心に、${r.requiredSkills}を活かせる環境です。`,
       `勤務地は${r.workLocation}、給与は${r.salaryInfo}。`,
       `「${r.jobAppeal}」など、当社ならではの魅力も多数。ご応募を心よりお待ちしています！`,
-    ].join('\n')
-  } else if (form.tone === 'プロフェッショナル') {
+    ].join("\n");
+  } else if (form.tone === "プロフェッショナル") {
     generatedBody = [
       `${r.companyName} 採用担当です。`,
       `${r.jobCategory}ポジションにて、${r.jobDescription}を担っていただける方を募集しております。`,
       `必須スキル: ${r.requiredSkills}／勤務地: ${r.workLocation}／給与: ${r.salaryInfo}`,
       `当社の魅力: ${r.jobAppeal}`,
       `ご興味がございましたら、ぜひご連絡ください。`,
-    ].join('\n')
+    ].join("\n");
   }
-  form.body = generatedBody
+  form.body = generatedBody;
 }
 
+//未入力時の確認アラート
 async function handleSubmit(status: ScoutStatus) {
+  if (isFormCompletelyEmpty()) {
+    if (status === "draft") {
+      window.alert(
+        "一時保存できません。入力フォームに内容を入力してください。",
+      );
+    } else {
+      window.alert(
+        "承認申請できません。入力フォームに内容を入力してください。",
+      );
+    }
+    return;
+  }
+
   if (!allCheckItemsDone.value) {
-    generateError.value = 'チェック項目をすべて確認してください。'
-    return
+    generateError.value = "チェック項目をすべて確認してください。";
+    return;
   }
   if (!form.body) {
-    generateError.value = '本文が空欄です。'
-    return
+    generateError.value = "本文が空欄です。";
+    return;
+  }
+
+  //申請、一時保存の確認アラートを追加
+  const confirmMessage =
+    status === "draft"
+      ? "この内容で一時保存します。よろしいですか？"
+      : "この内容で承認を申請します。よろしいですか？";
+
+  if (!window.confirm(confirmMessage)) {
+    return;
   }
 
   const payload: CreateScoutPayload = {
@@ -289,34 +399,34 @@ async function handleSubmit(status: ScoutStatus) {
       salaryInfo: form.requirement.salaryInfo.trim(),
       jobAppeal: form.requirement.jobAppeal.trim(),
     },
-  }
+  };
 
   try {
-    await store.addScout(payload)
-    
+    await store.addScout(payload);
+
     // 💡 保存に成功したら画面の表示ステータスも更新する
-    form.status = status
+    form.status = status;
 
     // 入力項目をクリア
-    form.requirement.companyName = ''
-    form.requirement.jobCategory = ''
-    form.requirement.jobDescription = ''
-    form.requirement.requiredSkills = ''
-    form.requirement.workLocation = ''
-    form.requirement.salaryInfo = ''
-    form.requirement.jobAppeal = ''
-    form.body = ''
-    generateError.value = ''
-    checkedItemIds.value = []
+    form.requirement.companyName = "";
+    form.requirement.jobCategory = "";
+    form.requirement.jobDescription = "";
+    form.requirement.requiredSkills = "";
+    form.requirement.workLocation = "";
+    form.requirement.salaryInfo = "";
+    form.requirement.jobAppeal = "";
+    form.body = "";
+    generateError.value = "";
+    checkedItemIds.value = [];
   } catch (error) {
-    generateError.value = 'データの保存に失敗しました。'
-    console.error(error)
+    generateError.value = "データの保存に失敗しました。";
+    console.error(error);
   }
 }
 
 onMounted(async () => {
-  await Promise.all([store.loadScouts(), loadCheckItems()])
-})
+  await Promise.all([store.loadScouts(), loadCheckItems()]);
+});
 </script>
 
 <style scoped>
@@ -327,7 +437,7 @@ onMounted(async () => {
   width: 100%;
   height: 93vh;
   max-height: 100vh;
-  overflow: hidden; 
+  overflow: hidden;
   box-sizing: border-box;
   padding: 16px 24px;
   background-color: #ffffff;
@@ -374,11 +484,26 @@ onMounted(async () => {
 }
 
 /* 💡 各ステータスに応じたカラー定義（お好みに合わせて微調整してください） */
-.badge-status.draft { background-color: #f1f5f9; color: #475569; }
-.badge-status.waiting_leader { background-color: #fef3c7; color: #d97706; }
-.badge-status.waiting_admin { background-color: #fee2e2; color: #dc2626; }
-.badge-status.approved { background-color: #dcfce7; color: #16a34a; }
-.badge-status.remanded { background-color: #f3e8ff; color: #7c3aed; }
+.badge-status.draft {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+.badge-status.waiting_leader {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.badge-status.waiting_admin {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+.badge-status.approved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+.badge-status.remanded {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
 
 .header-right {
   display: flex;
@@ -412,7 +537,7 @@ onMounted(async () => {
   gap: 20px;
   flex: 1;
   min-height: 0;
-  height: calc(100% - 60px); 
+  height: calc(100% - 60px);
 }
 
 .card {
@@ -436,9 +561,18 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.column-input { flex: 1.3; min-width: 0; }
-.column-edit { flex: 1.1; min-width: 0; }
-.column-check { flex: 0.9; min-width: 0; }
+.column-input {
+  flex: 1.3;
+  min-width: 0;
+}
+.column-edit {
+  flex: 1.1;
+  min-width: 0;
+}
+.column-check {
+  flex: 0.9;
+  min-width: 0;
+}
 
 .form-scroll-wrapper {
   flex: 1;
@@ -479,7 +613,9 @@ onMounted(async () => {
   color: #475569;
 }
 
-.form-label.compact { flex: 1; }
+.form-label.compact {
+  flex: 1;
+}
 
 .separator {
   border: 0;
@@ -501,7 +637,9 @@ textarea {
   background-color: #ffffff;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: #00c77b;
 }
@@ -530,7 +668,9 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 16px;
   flex-shrink: 0;
 }
-.card-header-row h2 { margin: 0; }
+.card-header-row h2 {
+  margin: 0;
+}
 .edit-notice {
   font-size: 0.75rem;
   color: #00c77b;

@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
 import {
   CreateScoutInput,
   ScoutDetail,
   ScoutEntity,
   ScoutStatus,
   UpdateRemandedScoutInput,
-} from '../type/scout';
+} from "../type/scout";
 
 @Injectable()
 export class ScoutRepository {
@@ -94,14 +94,14 @@ export class ScoutRepository {
 
     const fallbackRequirement = {
       // 旧データで求人行が無い場合は、元文書(scouts)の情報を編集初期値として返す
-      companyName: row.creator ?? '',
-      jobCategory: row.title ?? '',
-      jobDescription: row.body ?? '',
-      requiredSkills: '',
-      workLocation: '',
-      salaryInfo: '',
-      jobAppeal: '',
-      tone: 'プロフェッショナル',
+      companyName: row.creator ?? "",
+      jobCategory: row.title ?? "",
+      jobDescription: row.body ?? "",
+      requiredSkills: "",
+      workLocation: "",
+      salaryInfo: "",
+      jobAppeal: "",
+      tone: "プロフェッショナル",
     };
 
     return {
@@ -167,7 +167,10 @@ export class ScoutRepository {
     }
   }
 
-  async approveByLeader(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+  async approveByLeader(
+    scoutId: string,
+    approverId: string,
+  ): Promise<ScoutEntity | null> {
     // 楽観的制御: WHEREで現在statusも条件化し、同時更新競合を防ぐ
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -177,13 +180,16 @@ export class ScoutRepository {
          AND status = $4
          AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
+      [scoutId, "waiting_admin", approverId, "waiting_leader"],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
   }
 
-  async finalApprove(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+  async finalApprove(
+    scoutId: string,
+    approverId: string,
+  ): Promise<ScoutEntity | null> {
     // 楽観的制御: waiting_adminのときのみapprovedへ遷移
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -193,13 +199,16 @@ export class ScoutRepository {
          AND status = $4
          AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'approved', approverId, 'waiting_admin'],
+      [scoutId, "approved", approverId, "waiting_admin"],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
   }
 
-  async remand(scoutId: string, currentStatus: ScoutStatus): Promise<ScoutEntity | null> {
+  async remand(
+    scoutId: string,
+    currentStatus: ScoutStatus,
+  ): Promise<ScoutEntity | null> {
     // 差戻しも現在status一致時のみ更新
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -208,7 +217,7 @@ export class ScoutRepository {
          AND status = $3
          AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'remanded', currentStatus],
+      [scoutId, "remanded", currentStatus],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -223,7 +232,7 @@ export class ScoutRepository {
     await queryRunner.startTransaction();
 
     try {
-      // 差戻し状態の文書だけ更新し、承認者情報は再申請時にクリアする
+      // 差戻し/下書き文書を更新し、再申請時に承認者情報をクリアする
       const updatedRows = await queryRunner.query(
         `UPDATE scouts
          SET title = $2,
@@ -235,7 +244,14 @@ export class ScoutRepository {
            AND status = $5
            AND deleted_at IS NULL
          RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded'],
+        [
+          scoutId,
+          input.title.trim(),
+          input.body.trim(),
+          "waiting_leader",
+          "remanded",
+          "draft",
+        ],
       );
 
       if (updatedRows.length === 0) {
