@@ -52,7 +52,7 @@
                 <button
                   v-if="canOpenDraftEdit(item.status)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
-                 @click="$emit('open-remanded-edit', item)"
+                  @click="$emit('open-remanded-edit', item)"
                 >
                   編集
                 </button>
@@ -156,13 +156,22 @@
                 {{ selectedRow.body || "スカウト文がありません。" }}
               </div>
               <div class="footer">
-                <span v-if="copyMessage" class="copy-toast">{{ copyMessage }}</span>
+                <span v-if="copyMessage" class="copy-toast">{{
+                  copyMessage
+                }}</span>
                 <div class="footer-actions">
                   <button class="action-btn copy-btn" @click="copyBody">
                     🗎 文章をコピーする
                   </button>
+                  <button
+                    v-if="!props.isTrashView"
+                    class="action-btn duplicate-btn"
+                    @click="confirmDuplicateReuse"
+                  >
+                    複製して再利用
+                  </button>
                   <button class="action-btn delete-btn" @click="confirmDelete">
-                    {{ props.isTrashView ? '復元' : '削除' }}
+                    {{ props.isTrashView ? "復元" : "削除" }}
                   </button>
                   <button
                     v-if="props.isTrashView"
@@ -191,19 +200,20 @@ import {
 } from "../../type/scout";
 
 const props = defineProps<{
-  rows: ScoutEntity[]
-  roleType: RoleType | null
-  isTrashView?: boolean
-}>()
+  rows: ScoutEntity[];
+  roleType: RoleType | null;
+  isTrashView?: boolean;
+}>();
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
 const emit = defineEmits<{
-  (e: 'open-review', row: ScoutEntity): void
-  (e: 'open-remanded-edit', row: ScoutEntity): void
-  (e: 'soft-delete', row: ScoutEntity): void
-  (e: 'restore', row: ScoutEntity): void
-  (e: 'hard-delete', row: ScoutEntity): void
-}>()
+  (e: "open-review", row: ScoutEntity): void;
+  (e: "open-remanded-edit", row: ScoutEntity): void;
+  (e: "duplicate-reuse", row: ScoutEntity): void;
+  (e: "soft-delete", row: ScoutEntity): void;
+  (e: "restore", row: ScoutEntity): void;
+  (e: "hard-delete", row: ScoutEntity): void;
+}>();
 
 // モーダル制御用のリアクティブステート
 const selectedRow = ref<ScoutEntity | null>(null);
@@ -251,28 +261,41 @@ async function copyBody() {
 }
 
 function confirmDelete() {
-  if (!selectedRow.value) return
+  if (!selectedRow.value) return;
 
   if (props.isTrashView) {
-    if (window.confirm('このスカウト文を元に戻しますか')) {
-      emit('restore', selectedRow.value)
-      closeDetail()
+    if (window.confirm("このスカウト文を元に戻しますか")) {
+      emit("restore", selectedRow.value);
+      closeDetail();
     }
-    return
+    return;
   }
 
-  if (window.confirm('このスカウト文をゴミ箱へ移動しますか')) {
-    emit('soft-delete', selectedRow.value)
-    closeDetail()
+  if (window.confirm("このスカウト文をゴミ箱へ移動しますか")) {
+    emit("soft-delete", selectedRow.value);
+    closeDetail();
   }
 }
 
 function confirmHardDelete() {
-  if (!selectedRow.value) return
+  if (!selectedRow.value) return;
 
-  if (window.confirm('このスカウト文を完全削除します。元に戻せません。実行しますか')) {
-    emit('hard-delete', selectedRow.value)
-    closeDetail()
+  if (
+    window.confirm(
+      "このスカウト文を完全削除します。元に戻せません。実行しますか",
+    )
+  ) {
+    emit("hard-delete", selectedRow.value);
+    closeDetail();
+  }
+}
+
+function confirmDuplicateReuse() {
+  if (!selectedRow.value) return;
+
+  if (window.confirm("この文書を複製して下書きとして再利用しますか")) {
+    emit("duplicate-reuse", selectedRow.value);
+    closeDetail();
   }
 }
 
@@ -309,8 +332,7 @@ function canOpenAdminReview(status?: ScoutStatus): boolean {
 
 function canOpenDraftEdit(status?: ScoutStatus): boolean {
   return (
-    props.roleType === "sales" &&
-    (status === "draft" || status === "remanded")
+    props.roleType === "sales" && (status === "draft" || status === "remanded")
   );
 }
 </script>
