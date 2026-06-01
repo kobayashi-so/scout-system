@@ -3,7 +3,10 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
+  OnModuleDestroy,
+  OnModuleInit,
 } from "@nestjs/common";
 import { CommentRepository } from "../repository/comment.repository";
 import { ScoutRepository } from "../repository/scout.repository";
@@ -24,15 +27,32 @@ import { CommentEntity } from "../type/comment";
 const REMANDABLE_STATUSES: ScoutStatus[] = ["waiting_leader", "waiting_admin"];
 
 @Injectable()
-export class ScoutService {
+export class ScoutService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(ScoutService.name);
+  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
+
   constructor(
     private readonly scoutRepository: ScoutRepository,
     private readonly userRepository: UserRepository,
     private readonly commentRepository: CommentRepository,
   ) {}
 
-  findAll(): Promise<ScoutEntity[]> {
-    return this.scoutRepository.findAll();
+  async onModuleInit(): Promise<void> {
+    await this.purgeOldSoftDeleted();
+    this.cleanupTimer = setInterval(() => {
+      void this.purgeOldSoftDeleted();
+    }, 24 * 60 * 60 * 1000);
+  }
+
+  onModuleDestroy(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+  }
+
+  findAll(includeDeleted = false): Promise<ScoutEntity[]> {
+    return this.scoutRepository.findAll(includeDeleted);
   }
 
   async findDetailById(scoutId: string): Promise<ScoutDetail> {
@@ -196,6 +216,43 @@ export class ScoutService {
     }
 
     return updated;
+  }
+
+  async softDelete(scoutId: string): Promise<ScoutEntity> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const deleted = await this.scoutRepository.softDelete(normalizedScoutId);
+    if (!deleted) {
+      throw new NotFoundException('対象スカウトが見つかりません');
+    }
+
+    return deleted;
+  }
+
+  async restore(scoutId: string): Promise<ScoutEntity> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const restored = await this.scoutRepository.restore(normalizedScoutId);
+    if (!restored) {
+      throw new NotFoundException('対象スカウトが見つかりません');
+    }
+
+    return restored;
+  }
+
+  async hardDelete(scoutId: string): Promise<{ deleted: boolean }> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const deleted = await this.scoutRepository.hardDelete(normalizedScoutId);
+    return { deleted };
+  }
+
+  private async purgeOldSoftDeleted(): Promise<void> {
+    try {
+      const deletedCount = await this.scoutRepository.hardDeleteOlderThanOneYear();
+      if (deletedCount > 0) {
+        this.logger.log(`1年以上前に論理削除されたスカウトを${deletedCount}件削除しました`);
+      }
+    } catch (error) {
+      this.logger.error('1年超過ゴミ箱データの自動削除に失敗しました', error as Error);
+    }
   }
 
   private generateId(): string {

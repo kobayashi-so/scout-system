@@ -4,13 +4,13 @@ import type { RegisterUserPayload, RoleType, UserResponse } from "../type/user";
 
 // 認証ストアの状態型。現在のログイン状態・メール・権限・初期化済みかを保持
 interface AuthState {
-  isAuthenticated: boolean; // ログイン済みか
-  loading: boolean; // 認証系APIの実行中フラグ
-  currentUserId: string | null; // 現在ログイン中ユーザーのID
-  currentUserName: string | null; // 現在ログイン中ユーザー名
-  currentUserEmail: string | null; // 現在ログイン中のメールアドレス
-  currentUserRoleType: RoleType | null; // 現在ログイン中ユーザーの権限
-  initialized: boolean; // ストア初期化済みか
+  isAuthenticated: boolean // ログイン済みか
+  loading: boolean // 認証系APIの実行中フラグ
+  currentUserId: string | null // 現在ログイン中ユーザーのID
+  currentUserName: string | null // 現在ログイン中ユーザー名
+  currentUserEmail: string | null // 現在ログイン中のメールアドレス
+  currentUserRoleType: RoleType | null // 現在ログイン中ユーザーの権限
+  initialized: boolean // ストア初期化済みか
 }
 
 // 新規登録時に受け取るデータ型（usersテーブルのカラム名に合わせる）
@@ -19,10 +19,10 @@ type RegisterPayload = RegisterUserPayload;
 const AUTH_STORAGE_KEY = "scout_auth_user";
 
 interface AuthSession {
-  userId: string | null;
-  userName?: string;
-  email?: string;
-  roleType?: RoleType;
+  userId: string | null
+  userName: string
+  email: string
+  roleType: RoleType
 }
 
 export const useAuthStore = defineStore("auth", {
@@ -45,30 +45,19 @@ export const useAuthStore = defineStore("auth", {
       if (raw) {
         try {
           // 既存セッションを復元
-          const session = JSON.parse(raw) as AuthSession;
-          this.currentUserId = session.userId ?? null;
-          this.currentUserEmail = session.email ?? null;
-          this.currentUserRoleType = session.roleType ?? null;
-
-          // 旧セッション(userName未保存)との後方互換
-          if (session.userName?.trim()) {
-            this.currentUserName = session.userName;
-          } else if (session.email?.includes("@")) {
-            this.currentUserName = session.email.split("@")[0] || null;
-          } else {
-            this.currentUserName = null;
-          }
-
-          this.isAuthenticated = Boolean(
-            this.currentUserEmail && this.currentUserRoleType,
-          );
+          const session = JSON.parse(raw) as AuthSession
+          this.currentUserId = session.userId ?? null
+          this.currentUserName = session.userName ?? null
+          this.currentUserEmail = session.email
+          this.currentUserRoleType = session.roleType
+          this.isAuthenticated = true
         } catch {
           // 破損データがあれば未ログイン扱いで安全に継続
-          this.currentUserId = null;
-          this.currentUserName = null;
-          this.currentUserEmail = null;
-          this.currentUserRoleType = null;
-          this.isAuthenticated = false;
+          this.currentUserId = null
+          this.currentUserName = null
+          this.currentUserEmail = null
+          this.currentUserRoleType = null
+          this.isAuthenticated = false
         }
       }
 
@@ -107,38 +96,30 @@ export const useAuthStore = defineStore("auth", {
 
     // ログアウト時は状態と保存済みセッションをクリアする。
     logout() {
-      this.currentUserId = null;
-      this.currentUserName = null;
-      this.currentUserEmail = null;
-      this.currentUserRoleType = null;
-      this.isAuthenticated = false;
-      this.initialized = true;
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      this.currentUserId = null
+      this.currentUserName = null
+      this.currentUserEmail = null
+      this.currentUserRoleType = null
+      this.isAuthenticated = false
+      this.initialized = true
+      localStorage.removeItem(AUTH_STORAGE_KEY)
     },
 
     setSession(user: UserResponse) {
       // 認証成功時の共通セッション反映処理
-      this.currentUserId = user.userId ?? this.currentUserId;
-      this.currentUserName =
-        user.userName ?? this.currentUserName ?? this.currentUserEmail;
-      this.currentUserEmail = user.email ?? this.currentUserEmail;
-      this.currentUserRoleType = user.roleType ?? this.currentUserRoleType;
-      this.isAuthenticated = true;
-      this.initialized = true;
-
-      if (!this.currentUserEmail || !this.currentUserRoleType) {
-        // セッション情報が不足するレスポンスは安全側で拒否
-        this.isAuthenticated = false;
-        return;
-      }
-
+      this.currentUserId = user.userId ?? null
+      this.currentUserName = user.userName
+      this.currentUserEmail = user.email
+      this.currentUserRoleType = user.roleType
+      this.isAuthenticated = true
+      this.initialized = true
       localStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify({
-          userId: this.currentUserId ?? null,
-          userName: this.currentUserName,
-          email: this.currentUserEmail,
-          roleType: this.currentUserRoleType,
+          userId: user.userId ?? null,
+          userName: user.userName,
+          email: user.email,
+          roleType: user.roleType,
         }),
       );
     },

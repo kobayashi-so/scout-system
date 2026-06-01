@@ -17,11 +17,13 @@ export class ScoutRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(): Promise<ScoutEntity[]> {
+  async findAll(includeDeleted = false): Promise<ScoutEntity[]> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
+       WHERE ($1::boolean = true OR deleted_at IS NULL)
        ORDER BY created_at DESC`,
+      [includeDeleted],
     );
 
     return rows.map((row: any) => this.mapRowToEntity(row));
@@ -29,9 +31,10 @@ export class ScoutRepository {
 
   async findById(scoutId: string): Promise<ScoutEntity | null> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
        WHERE id = $1
+         AND deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -52,9 +55,11 @@ export class ScoutRepository {
          s.creator,
          s.title,
          s.body,
+         s.previous_body,
          s.status,
          s.first_approver_id,
          s.second_approver_id,
+         s.deleted_at,
          r.company_name,
          r.job_category,
          r.job_description,
@@ -66,6 +71,7 @@ export class ScoutRepository {
        FROM scouts s
        LEFT JOIN scout_job_requirements r ON r.scout_id = s.id
        WHERE s.id = $1
+         AND s.deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -126,8 +132,8 @@ export class ScoutRepository {
 
     try {
       const insertedScouts = await queryRunner.query(
-        `INSERT INTO scouts (id, creator, title, body, status, first_approver_id, second_approver_id)
-         VALUES ($1, $2, $3, $4, $5, NULL, NULL)
+        `INSERT INTO scouts (id, creator, title, body, previous_body, status, first_approver_id, second_approver_id)
+         VALUES ($1, $2, $3, $4, NULL, $5, NULL, NULL)
          RETURNING *`,
         [scout.id, scout.creator, scout.title, scout.body, scout.status],
       );
@@ -173,8 +179,8 @@ export class ScoutRepository {
            first_approver_id = $3
        WHERE id = $1
          AND status = $4
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "waiting_admin", approverId, "waiting_leader"],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -191,8 +197,8 @@ export class ScoutRepository {
            second_approver_id = $3
        WHERE id = $1
          AND status = $4
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "approved", approverId, "waiting_admin"],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'approved', approverId, 'waiting_admin'],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -208,8 +214,8 @@ export class ScoutRepository {
        SET status = $2
        WHERE id = $1
          AND status = $3
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "remanded", currentStatus],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'remanded', currentStatus],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -228,21 +234,16 @@ export class ScoutRepository {
       const updatedRows = await queryRunner.query(
         `UPDATE scouts
          SET title = $2,
+             previous_body = body,
              body = $3,
              status = $4,
              first_approver_id = NULL,
              second_approver_id = NULL
          WHERE id = $1
            AND status IN ($5, $6)
-         RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-        [
-          scoutId,
-          input.title.trim(),
-          input.body.trim(),
-          "waiting_leader",
-          "remanded",
-          "draft",
-        ],
+           AND deleted_at IS NULL
+         RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded', 'draft'],
       );
 
       if (updatedRows.length === 0) {
@@ -287,6 +288,58 @@ export class ScoutRepository {
     }
   }
 
+  async softDelete(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND deleted_at IS NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async restore(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = NULL
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async hardDelete(scoutId: string): Promise<boolean> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id`,
+      [scoutId],
+    );
+
+    return rows.length > 0;
+  }
+
+  async hardDeleteOlderThanOneYear(): Promise<number> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE deleted_at IS NOT NULL
+         AND deleted_at < (CURRENT_TIMESTAMP - INTERVAL '1 year')
+       RETURNING id`,
+    );
+
+    return rows.length;
+  }
+
+  // 注意: 上記の1年超過条件は実際の運用では'1 year'にしてください。テスト用に短縮しています。
+  //     AND deleted_at <= NOW() - INTERVAL '1 minute'
+
   private mapRowToEntity(row: any): ScoutEntity {
     return {
       id: row.id,
@@ -294,9 +347,11 @@ export class ScoutRepository {
       creator: row.creator,
       title: row.title,
       body: row.body,
+      previousBody: row.previous_body,
       status: row.status as ScoutStatus,
       firstApproverId: row.first_approver_id,
       secondApproverId: row.second_approver_id,
+      deletedAt: row.deleted_at,
     } as ScoutEntity;
   }
 }

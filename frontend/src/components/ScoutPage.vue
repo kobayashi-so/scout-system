@@ -36,15 +36,6 @@
           <form @submit.prevent class="scrollable-form">
             <div class="form-group-row">
               <label class="form-label compact">
-                作成者
-                <input
-                  v-model="form.creator"
-                  type="text"
-                  placeholder="テスト太郎"
-                  required
-                />
-              </label>
-              <label class="form-label compact">
                 求人タイトル
                 <input
                   v-model="form.title"
@@ -204,9 +195,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from "vue";
-import { useRouter } from "vue-router";
-import { useScoutStore } from "../store/scoutStore";
+import { computed, onMounted, ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useScoutStore } from '../store/scoutStore'
+import { useAuthStore } from '../store/authStore'
 
 import { fetchCheckItems } from "../api/checkItemApi";
 import type { CreateScoutPayload } from "../type/scout";
@@ -219,13 +211,13 @@ type ScoutStatus =
   | "approved"
   | "remanded";
 
-const store = useScoutStore();
-const router = useRouter();
+const store = useScoutStore()
+const authStore = useAuthStore()
+const router = useRouter()
 
 const form = reactive<{
-  creator: string;
-  title: string;
-  status: ScoutStatus;
+  title: string
+  status: ScoutStatus
   requirement: {
     companyName: string;
     jobCategory: string;
@@ -239,9 +231,8 @@ const form = reactive<{
   promptText: string;
   body: string;
 }>({
-  creator: "",
-  title: "",
-  status: "draft" as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
+  title: '',
+  status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
   requirement: {
     companyName: "",
     jobCategory: "",
@@ -357,27 +348,10 @@ function handleGeneratePrompt() {
 
 //未入力時の確認アラート
 async function handleSubmit(status: ScoutStatus) {
-  if (isFormCompletelyEmpty()) {
-    if (status === "draft") {
-      window.alert(
-        "一時保存できません。入力フォームに内容を入力してください。",
-      );
-    } else {
-      window.alert(
-        "承認申請できません。入力フォームに内容を入力してください。",
-      );
-    }
-    return;
-  }
-
-  if (
-    !form.requirement.companyName.trim() ||
-    !form.requirement.jobCategory.trim() ||
-    !form.requirement.jobDescription.trim() ||
-    !form.requirement.jobAppeal.trim()
-  ) {
-    generateError.value = "会社名・職種・業務内容・求人の魅力は必須項目です。";
-    return;
+  const creatorName = authStore.currentUserName?.trim()
+  if (!creatorName) {
+    generateError.value = '作成者情報が取得できません。再ログインしてください。'
+    return
   }
 
   if (status !== "draft" && !allCheckItemsDone.value) {
@@ -400,7 +374,7 @@ async function handleSubmit(status: ScoutStatus) {
   }
 
   const payload: CreateScoutPayload = {
-    creator: form.creator.trim(),
+    creator: creatorName,
     title: form.title.trim(),
     body: form.body.trim(),
     tone: form.tone,
@@ -423,16 +397,22 @@ async function handleSubmit(status: ScoutStatus) {
     form.status = status;
 
     // 入力項目をクリア
-    form.requirement.companyName = "";
-    form.requirement.jobCategory = "";
-    form.requirement.jobDescription = "";
-    form.requirement.requiredSkills = "";
-    form.requirement.workLocation = "";
-    form.requirement.salaryInfo = "";
-    form.requirement.jobAppeal = "";
-    form.body = "";
-    generateError.value = "";
-    checkedItemIds.value = [];
+    form.title = ''
+    form.requirement.companyName = ''
+    form.requirement.jobCategory = ''
+    form.requirement.jobDescription = ''
+    form.requirement.requiredSkills = ''
+    form.requirement.workLocation = ''
+    form.requirement.salaryInfo = ''
+    form.requirement.jobAppeal = ''
+    form.promptText = ''
+    form.body = ''
+    generateError.value = ''
+    checkedItemIds.value = []
+
+    if (status === 'waiting_leader') {
+      await router.push({ name: 'scout-list' })
+    }
   } catch (error) {
     generateError.value = "データの保存に失敗しました。";
     console.error(error);
@@ -440,8 +420,9 @@ async function handleSubmit(status: ScoutStatus) {
 }
 
 onMounted(async () => {
-  await Promise.all([store.loadScouts(), loadCheckItems()]);
-});
+  authStore.hydrateFromStorage()
+  await Promise.all([store.loadScouts(), loadCheckItems()])
+})
 </script>
 
 <style scoped>

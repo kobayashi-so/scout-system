@@ -61,9 +61,19 @@
       </div>
 
       <article class="review-card">
-        <h3 class="card-title">スカウト本文（読み取り専用）</h3>
+        <div class="scout-body-header">
+          <h3 class="card-title">スカウト本文（読み取り専用）</h3>
+          <button
+            v-if="hasPreviousBody"
+            type="button"
+            class="toggle-previous-btn"
+            @click="togglePreviousBody"
+          >
+            {{ showPreviousBody ? '表示を終了' : '過去のスカウト文' }}
+          </button>
+        </div>
         <div class="scout-body-box">
-          {{ scout.body }}
+          {{ displayedScoutBody }}
         </div>
       </article>
 
@@ -176,11 +186,12 @@ const submitting = ref(false);
 const errorMessage = ref("");
 const validationMessage = ref("");
 
-const scout = ref<ScoutEntity | null>(null);
-const comments = ref<ScoutComment[]>([]);
-const checkItems = ref<checkItem[]>([]);
-const selectedCheckIds = ref<string[]>([]);
-const remandComment = ref("");
+const scout = ref<ScoutEntity | null>(null)
+const comments = ref<ScoutComment[]>([])
+const checkItems = ref<checkItem[]>([])
+const selectedCheckIds = ref<string[]>([])
+const remandComment = ref('')
+const showPreviousBody = ref(false)
 
 const scoutId = computed(() => String(route.params.id || ""));
 
@@ -223,11 +234,16 @@ function formatDate(value?: string): string {
   return new Date(value).toLocaleString("ja-JP");
 }
 
+function togglePreviousBody() {
+  if (!hasPreviousBody.value) return
+  showPreviousBody.value = !showPreviousBody.value
+}
+
 function toggleCheck(id: string) {
   validationMessage.value = "";
   if (selectedCheckIds.value.includes(id)) {
-    selectedCheckIds.value = selectedCheckIds.value.filter((v) => v !== id);
-    return;
+    selectedCheckIds.value = selectedCheckIds.value.filter((v: string) => v !== id)
+    return
   }
   selectedCheckIds.value = [...selectedCheckIds.value, id];
 }
@@ -240,9 +256,7 @@ function validateBeforeApprove(): boolean {
   }
 
   // 要件: 承認時は全チェック必須
-  const allChecked = checkItems.value.every((item) =>
-    selectedCheckIds.value.includes(item.id),
-  );
+  const allChecked = checkItems.value.every((item: checkItem) => selectedCheckIds.value.includes(item.id))
   if (!allChecked) {
     validationMessage.value =
       "承認するには品質チェックを全て完了してください。";
@@ -263,18 +277,16 @@ async function loadReviewData() {
 
   try {
     // レビュー画面で必要な3情報を同時取得
-    const [scoutResponse, commentsResponse, checkItemsResponse] =
-      await Promise.all([
-        fetchScoutDetail(scoutId.value),
-        fetchScoutComments(scoutId.value),
-        fetchCheckItems(),
-      ]);
+    const [scoutResponse, commentsResponse, checkItemsResponse] = await Promise.all([
+      fetchScoutDetail(scoutId.value),
+      fetchScoutComments(scoutId.value),
+      fetchCheckItems(),
+    ])
 
-    scout.value = scoutResponse;
-    comments.value = commentsResponse;
-    checkItems.value = [...checkItemsResponse].sort(
-      (a, b) => a.display_order - b.display_order,
-    );
+    scout.value = scoutResponse
+    showPreviousBody.value = false
+    comments.value = commentsResponse
+    checkItems.value = [...checkItemsResponse].sort((a, b) => a.display_order - b.display_order)
   } catch (error) {
     console.error(error);
     errorMessage.value = "レビュー情報の取得に失敗しました";
@@ -427,6 +439,29 @@ onMounted(() => {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
+}
+
+.scout-body-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.toggle-previous-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle-previous-btn:hover {
+  background: #f8fafc;
 }
 
 .detail-list {
