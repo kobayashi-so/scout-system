@@ -334,6 +334,17 @@ export class ScoutRepository {
     return rows.length > 0;
   }
 
+  async hardDeleteOlderThanOneYear(): Promise<number> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE deleted_at IS NOT NULL
+         AND deleted_at < (CURRENT_TIMESTAMP - INTERVAL '1 year')
+       RETURNING id`,
+    );
+
+    return rows.length;
+  }
+
   private mapRowToEntity(row: any): ScoutEntity {
     return {
       id: row.id,

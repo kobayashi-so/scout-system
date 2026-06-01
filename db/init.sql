@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS scouts (
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS first_approver_id UUID NULL;
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS second_approver_id UUID NULL;
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+CREATE INDEX IF NOT EXISTS idx_scouts_deleted_at ON scouts(deleted_at);
 
 UPDATE scouts SET status = LOWER(status);
 
