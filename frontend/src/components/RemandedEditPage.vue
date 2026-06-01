@@ -15,6 +15,15 @@
           キャンセル
         </button>
         <button
+          v-if="isDraftDocument"
+          type="button"
+          class="btn-secondary"
+          :disabled="submitting"
+          @click="handleSaveDraft"
+        >
+          一時保存
+        </button>
+        <button
           type="button"
           class="btn-primary-green"
           :disabled="submitting"
@@ -37,12 +46,16 @@
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
             <label class="form-label">
-              会社名
+              <span class="form-label-head"
+                >会社名 <span class="required-soft">(必須)</span></span
+              >
               <input v-model="form.requirement.companyName" type="text" />
             </label>
 
             <label class="form-label">
-              職種
+              <span class="form-label-head"
+                >職種 <span class="required-soft">(必須)</span></span
+              >
               <input v-model="form.requirement.jobCategory" type="text" />
             </label>
 
@@ -57,7 +70,9 @@
             </label>
 
             <label class="form-label">
-              業務内容
+              <span class="form-label-head"
+                >業務内容 <span class="required-soft">(必須)</span></span
+              >
               <textarea v-model="form.requirement.jobDescription" rows="2" />
             </label>
 
@@ -67,7 +82,9 @@
             </label>
 
             <label class="form-label">
-              求人の魅力
+              <span class="form-label-head"
+                >求人の魅力 <span class="required-soft">(必須)</span></span
+              >
               <textarea v-model="form.requirement.jobAppeal" rows="2" />
             </label>
 
@@ -166,6 +183,7 @@ import {
   fetchScoutComments,
   fetchScoutDetail,
   resubmitRemandedScout,
+  saveDraftScout,
 } from "../api/scoutApi";
 import type { checkItem } from "../type/checkItem";
 import type {
@@ -189,6 +207,7 @@ const checkItemsError = ref("");
 const scout = ref<ScoutEntity | null>(null);
 const comments = ref<ScoutComment[]>([]);
 const form = ref<ResubmitRemandedPayload | null>(null);
+const isDraftDocument = ref(false);
 
 const pageTitle = ref("文書の編集");
 const submitButtonLabel = ref("修正して再申請");
@@ -273,6 +292,8 @@ async function loadPage() {
       return;
     }
 
+    isDraftDocument.value = detail.status === "draft";
+
     pageTitle.value =
       detail.status === "draft" ? "下書き文書の編集" : "差戻し文書の修正";
     submitButtonLabel.value =
@@ -349,6 +370,41 @@ async function handleResubmit() {
     console.error(error);
     errorMessage.value =
       error?.response?.data?.message || "再申請に失敗しました";
+  } finally {
+    submitting.value = false;
+  }
+}
+
+async function handleSaveDraft() {
+  if (!form.value || !isDraftDocument.value) return;
+
+  if (isFormCompletelyEmpty(form.value)) {
+    window.alert(
+      "入力フォームが未入力です。内容を入力してから操作してください。",
+    );
+    return;
+  }
+
+  if (!form.value.title.trim() || !form.value.body.trim()) {
+    errorMessage.value = "タイトルと本文は必須です";
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "この内容で一時保存します。よろしいですか？",
+  );
+  if (!confirmed) return;
+
+  submitting.value = true;
+  errorMessage.value = "";
+
+  try {
+    await saveDraftScout(scoutId, form.value);
+    await router.push("/list");
+  } catch (error: any) {
+    console.error(error);
+    errorMessage.value =
+      error?.response?.data?.message || "一時保存に失敗しました";
   } finally {
     submitting.value = false;
   }
@@ -531,6 +587,18 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 600;
   color: #475569;
+}
+
+.form-label-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required-soft {
+  color: #e11d48;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 input[type="text"],

@@ -36,7 +36,9 @@
           <form @submit.prevent class="scrollable-form">
             <div class="form-group-row">
               <label class="form-label compact">
-                求人タイトル
+                <span class="form-label-head"
+                  >求人タイトル<span class="required-soft">(必須)</span></span
+                >
                 <input
                   v-model="form.title"
                   type="text"
@@ -195,10 +197,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useScoutStore } from '../store/scoutStore'
-import { useAuthStore } from '../store/authStore'
+import { computed, onMounted, ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useScoutStore } from "../store/scoutStore";
+import { useAuthStore } from "../store/authStore";
 
 import { fetchCheckItems } from "../api/checkItemApi";
 import type { CreateScoutPayload } from "../type/scout";
@@ -211,13 +213,13 @@ type ScoutStatus =
   | "approved"
   | "remanded";
 
-const store = useScoutStore()
-const authStore = useAuthStore()
-const router = useRouter()
+const store = useScoutStore();
+const authStore = useAuthStore();
+const router = useRouter();
 
 const form = reactive<{
-  title: string
-  status: ScoutStatus
+  title: string;
+  status: ScoutStatus;
   requirement: {
     companyName: string;
     jobCategory: string;
@@ -231,8 +233,8 @@ const form = reactive<{
   promptText: string;
   body: string;
 }>({
-  title: '',
-  status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
+  title: "",
+  status: "draft" as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
   requirement: {
     companyName: "",
     jobCategory: "",
@@ -333,10 +335,11 @@ function handleGeneratePrompt() {
 
 //未入力時の確認アラート
 async function handleSubmit(status: ScoutStatus) {
-  const creatorName = authStore.currentUserName?.trim()
+  const creatorName = authStore.currentUserName?.trim();
   if (!creatorName) {
-    generateError.value = '作成者情報が取得できません。再ログインしてください。'
-    return
+    generateError.value =
+      "作成者情報が取得できません。再ログインしてください。";
+    return;
   }
 
   if (status !== "draft" && !allCheckItemsDone.value) {
@@ -382,22 +385,20 @@ async function handleSubmit(status: ScoutStatus) {
     form.status = status;
 
     // 入力項目をクリア
-    form.title = ''
-    form.requirement.companyName = ''
-    form.requirement.jobCategory = ''
-    form.requirement.jobDescription = ''
-    form.requirement.requiredSkills = ''
-    form.requirement.workLocation = ''
-    form.requirement.salaryInfo = ''
-    form.requirement.jobAppeal = ''
-    form.promptText = ''
-    form.body = ''
-    generateError.value = ''
-    checkedItemIds.value = []
+    form.title = "";
+    form.requirement.companyName = "";
+    form.requirement.jobCategory = "";
+    form.requirement.jobDescription = "";
+    form.requirement.requiredSkills = "";
+    form.requirement.workLocation = "";
+    form.requirement.salaryInfo = "";
+    form.requirement.jobAppeal = "";
+    form.promptText = "";
+    form.body = "";
+    generateError.value = "";
+    checkedItemIds.value = [];
 
-    if (status === 'waiting_leader') {
-      await router.push({ name: 'scout-list' })
-    }
+    await router.push({ name: "scout-list" });
   } catch (error) {
     generateError.value = "データの保存に失敗しました。";
     console.error(error);
@@ -405,9 +406,9 @@ async function handleSubmit(status: ScoutStatus) {
 }
 
 onMounted(async () => {
-  authStore.hydrateFromStorage()
-  await Promise.all([store.loadScouts(), loadCheckItems()])
-})
+  authStore.hydrateFromStorage();
+  await Promise.all([store.loadScouts(), loadCheckItems()]);
+});
 </script>
 
 <style scoped>
