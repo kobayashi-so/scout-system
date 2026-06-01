@@ -210,6 +210,18 @@ const showApproveButton = computed(() => {
   return authStore.currentUserRoleType === 'admin' && scout.value.status === 'waiting_admin'
 })
 
+const showRemandButton = computed(() => {
+  if (!scout.value?.status) return false
+
+  if (props.mode === 'leader') {
+    // leaderレビュー画面では waiting_leader のときだけ差戻し可能
+    return authStore.currentUserRoleType === 'leader' && scout.value.status === 'waiting_leader'
+  }
+
+  // adminレビュー画面では waiting_admin のときだけ差戻し可能
+  return authStore.currentUserRoleType === 'admin' && scout.value.status === 'waiting_admin'
+})
+
 const hasPreviousBody = computed(() => {
   return Boolean(scout.value?.previousBody?.trim())
 })
