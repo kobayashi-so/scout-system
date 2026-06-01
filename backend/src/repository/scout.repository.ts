@@ -19,7 +19,7 @@ export class ScoutRepository {
 
   async findAll(includeDeleted = false): Promise<ScoutEntity[]> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at
+      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
        WHERE ($1::boolean = true OR deleted_at IS NULL)
        ORDER BY created_at DESC`,
@@ -31,7 +31,7 @@ export class ScoutRepository {
 
   async findById(scoutId: string): Promise<ScoutEntity | null> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at
+      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
        WHERE id = $1
          AND deleted_at IS NULL
@@ -55,6 +55,7 @@ export class ScoutRepository {
          s.creator,
          s.title,
          s.body,
+         s.previous_body,
          s.status,
          s.first_approver_id,
          s.second_approver_id,
@@ -131,8 +132,8 @@ export class ScoutRepository {
 
     try {
       const insertedScouts = await queryRunner.query(
-        `INSERT INTO scouts (id, creator, title, body, status, first_approver_id, second_approver_id)
-         VALUES ($1, $2, $3, $4, $5, NULL, NULL)
+        `INSERT INTO scouts (id, creator, title, body, previous_body, status, first_approver_id, second_approver_id)
+         VALUES ($1, $2, $3, $4, NULL, $5, NULL, NULL)
          RETURNING *`,
         [scout.id, scout.creator, scout.title, scout.body, scout.status],
       );
@@ -178,9 +179,8 @@ export class ScoutRepository {
            first_approver_id = $3
        WHERE id = $1
          AND status = $4
-         AND deleted_at IS NULL
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "waiting_admin", approverId, "waiting_leader"],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -197,9 +197,8 @@ export class ScoutRepository {
            second_approver_id = $3
        WHERE id = $1
          AND status = $4
-         AND deleted_at IS NULL
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "approved", approverId, "waiting_admin"],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'approved', approverId, 'waiting_admin'],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -215,9 +214,8 @@ export class ScoutRepository {
        SET status = $2
        WHERE id = $1
          AND status = $3
-         AND deleted_at IS NULL
-       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-      [scoutId, "remanded", currentStatus],
+       RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+      [scoutId, 'remanded', currentStatus],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -236,22 +234,15 @@ export class ScoutRepository {
       const updatedRows = await queryRunner.query(
         `UPDATE scouts
          SET title = $2,
+             previous_body = body,
              body = $3,
              status = $4,
              first_approver_id = NULL,
              second_approver_id = NULL
          WHERE id = $1
            AND status = $5
-           AND deleted_at IS NULL
-         RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
-        [
-          scoutId,
-          input.title.trim(),
-          input.body.trim(),
-          "waiting_leader",
-          "remanded",
-          "draft",
-        ],
+         RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded'],
       );
 
       if (updatedRows.length === 0) {
@@ -355,6 +346,7 @@ export class ScoutRepository {
       creator: row.creator,
       title: row.title,
       body: row.body,
+      previousBody: row.previous_body,
       status: row.status as ScoutStatus,
       firstApproverId: row.first_approver_id,
       secondApproverId: row.second_approver_id,

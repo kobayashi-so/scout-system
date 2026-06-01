@@ -28,6 +28,9 @@ export class ScoutEntity {
   @Column({ name: 'body', type: 'text' })
   body: string;
 
+  @Column({ name: 'previous_body', type: 'text', nullable: true })
+  previousBody?: string | null;
+
   @Column({ name: 'status', type: 'varchar', length: 20, default: 'draft' })
   status: ScoutStatus;
 

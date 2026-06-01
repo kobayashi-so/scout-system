@@ -8,6 +8,7 @@ export interface ScoutEntity {
   creator: string
   title: string
   body: string
+  previousBody?: string | null
   status?: ScoutStatus
   firstApproverId?: string | null
   secondApproverId?: string | null
