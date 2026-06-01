@@ -5,12 +5,17 @@
       <div class="auth-header">
         <span class="brand-logo">Scout MANAGER</span>
         <h1>ログイン</h1>
-        <p class="subtitle">登録済みアカウントでスカウト一覧にアクセスできます。</p>
+        <p class="subtitle">
+          登録済みアカウントでスカウト一覧にアクセスできます。
+        </p>
       </div>
 
       <!-- メッセージ表示エリア -->
       <div v-if="registeredMessage" class="message-box success-message">
         <span class="icon">✓</span> {{ registeredMessage }}
+      </div>
+      <div v-if="profileUpdatedMessage" class="message-box success-message">
+        <span class="icon">✓</span> {{ profileUpdatedMessage }}
       </div>
       <div v-if="errorMessage" class="message-box error-message">
         <span class="icon">⚠️</span> {{ errorMessage }}
@@ -19,12 +24,12 @@
       <form @submit.prevent="handleLogin">
         <label class="form-label">
           メールアドレス
-          <input 
-            v-model="form.email" 
-            type="email" 
-            autocomplete="email" 
-            placeholder="example@techvision.com" 
-            required 
+          <input
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            placeholder="example@techvision.com"
+            required
           />
         </label>
 
@@ -41,7 +46,7 @@
         </label>
 
         <button type="submit" class="btn-login" :disabled="authStore.loading">
-          {{ authStore.loading ? '認証中...' : 'ログイン' }}
+          {{ authStore.loading ? "認証中..." : "ログイン" }}
         </button>
       </form>
 
@@ -54,38 +59,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../store/authStore'
+import { computed, reactive, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "../store/authStore";
 
-const authStore = useAuthStore()
-authStore.hydrateFromStorage()
+const authStore = useAuthStore();
+authStore.hydrateFromStorage();
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
 const form = reactive({
-  email: '',
-  password: '',
-})
+  email: "",
+  password: "",
+});
 
-const errorMessage = ref('')
+const errorMessage = ref("");
 
 const registeredMessage = computed(() => {
-  return route.query.registered === '1'
-    ? 'ユーザー登録が完了しました。ログインしてください。'
-    : ''
-})
+  return route.query.registered === "1"
+    ? "ユーザー登録が完了しました。ログインしてください。"
+    : "";
+});
+
+const profileUpdatedMessage = computed(() => {
+  return route.query.profileUpdated === "1"
+    ? "保存成功後、ログイン画面に移動しました。再ログインしてください。"
+    : "";
+});
 
 async function handleLogin() {
-  errorMessage.value = ''
+  errorMessage.value = "";
 
   try {
-    await authStore.login(form.email, form.password)
-    const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : '/list'
-    await router.push(redirectPath)
+    await authStore.login(form.email, form.password);
+    const redirectPath =
+      typeof route.query.redirect === "string" ? route.query.redirect : "/list";
+    await router.push(redirectPath);
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'ログインに失敗しました'
+    errorMessage.value =
+      error instanceof Error ? error.message : "ログインに失敗しました";
   }
 }
 </script>
@@ -99,16 +112,20 @@ async function handleLogin() {
   justify-content: center;
   padding: 24px;
   background: linear-gradient(135deg, #165a45 0%, #146531 40%, #083a13 100%);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: "Helvetica Neue", Arial, sans-serif;
   position: relative;
 }
 
 /* 💡背景にさらに上質な奥行きを出すためのガラス風の抽象的な光（お好みで） */
 .auth-page::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  background: radial-gradient(
+    circle at 20% 20%,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 50%
+  );
   pointer-events: none;
 }
 
@@ -116,7 +133,12 @@ async function handleLogin() {
 .auth-card {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.98); /* ほんの少しだけ透けさせて背景と馴染ませる */
+  background: rgba(
+    255,
+    255,
+    255,
+    0.98
+  ); /* ほんの少しだけ透けさせて背景と馴染ませる */
   border-radius: 20px; /* 少し丸みを広げてさらにモダンに */
   padding: 40px 36px;
   box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
