@@ -50,6 +50,7 @@
 
             <label class="form-label">
               会社名
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.companyName"
                 type="text"
@@ -60,6 +61,7 @@
 
             <label class="form-label">
               職種
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.jobCategory"
                 type="text"
@@ -70,6 +72,7 @@
 
             <label class="form-label">
               業務内容
+              <span class="required-soft">(必須)</span>
               <textarea
                 v-model="form.requirement.jobDescription"
                 placeholder="要件定義〜設計・実装・運用まで担当"
@@ -107,6 +110,7 @@
 
             <label class="form-label">
               求人の魅力
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.jobAppeal"
                 type="text"
@@ -724,5 +728,11 @@ textarea:focus {
 .message.error {
   color: #ef4444;
   font-size: 0.8rem;
+}
+
+.required-soft {
+  color: #ef4444;
+  font-size: 12px;
+  margin-left: 4px;
 }
 </style>
