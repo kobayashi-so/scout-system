@@ -308,8 +308,10 @@ function canOpenAdminReview(status?: ScoutStatus): boolean {
 }
 
 function canOpenDraftEdit(status?: ScoutStatus): boolean {
-  // sales かつ draft の行だけに「編集」ボタンを表示
-  return props.roleType === "sales" && status === "draft";
+  return (
+    props.roleType === "sales" &&
+    (status === "draft" || status === "remanded")
+  );
 }
 </script>
 
