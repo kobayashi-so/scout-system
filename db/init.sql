@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS scouts (
   status VARCHAR(20) NOT NULL DEFAULT 'draft'
     CHECK (status IN ('draft', 'waiting_leader', 'waiting_admin', 'approved', 'remanded')),
   first_approver_id UUID NULL,
-  second_approver_id UUID NULL
+  second_approver_id UUID NULL,
+  deleted_at TIMESTAMP NULL
 );
 
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS first_approver_id UUID NULL;
@@ -44,6 +45,10 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- メールアドレスの大文字小文字/前後空白差を同一扱いにして重複登録を防止
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_normalized_unique_idx
+  ON users (LOWER(BTRIM(email)));
 
 -- 差し戻しコメントテーブル
 CREATE TABLE IF NOT EXISTS comments (

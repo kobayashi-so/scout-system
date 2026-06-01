@@ -26,6 +26,10 @@ const roleLabelMap: Record<RoleType, string> = {
 
 const isAdminUser = computed(() => authStore.currentUserRoleType === "admin");
 
+const isCurrentUser = (user: UserResponse) => {
+  return user.userId === authStore.currentUserId;
+};
+
 const selectedUser = computed(() => {
   return (
     users.value.find((user) => user.userId === selectedUserId.value) ?? null
@@ -90,6 +94,11 @@ const onClickDelete = async (user: UserResponse) => {
     return;
   }
 
+  if (isCurrentUser(user)) {
+    alert("現在ログイン中の自分自身は削除できません。");
+    return;
+  }
+
   const confirmed = window.confirm(
     `「${user.userName}（${roleLabelMap[user.roleType]}）」を削除します。よろしいですか？`,
   );
@@ -151,7 +160,7 @@ onMounted(async () => {
                 </button>
                 <button
                   class="btn-row-delete"
-                  :disabled="!isAdminUser"
+                  :disabled="!isAdminUser || isCurrentUser(user)"
                   @click="onClickDelete(user)"
                 >
                   削除

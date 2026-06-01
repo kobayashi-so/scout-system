@@ -10,7 +10,7 @@
       >
         ダッシュボード
       </RouterLink>
-      
+
       <RouterLink
         to="/create"
         class="block rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-slate-100"
@@ -48,7 +48,8 @@
               active-class="bg-[#1cb05b]"
               style="display: block"
             >
-              <span class="inline-block w-4 text-emerald-600 mr-1">📝</span>営業承認
+              <span class="inline-block w-4 text-emerald-600 mr-1">📝</span
+              >営業承認
             </RouterLink>
             <RouterLink
               to="/approval/final"
@@ -56,7 +57,8 @@
               active-class="bg-[#1cb05b]"
               style="display: block"
             >
-              <span class="inline-block w-4 text-emerald-600 mr-1">📝</span>最終承認
+              <span class="inline-block w-4 text-emerald-600 mr-1">📝</span
+              >最終承認
             </RouterLink>
           </div>
         </div>
@@ -111,47 +113,74 @@
       >
         ログアウト
       </button>
-      <div class="sidebar-user" aria-label="ログインユーザー情報">
-        <div class="sidebar-avatar">{{ userInitial }}</div>
+      <!-- ログインユーザー情報 -->
+      <button
+        type="button"
+        class="sidebar-user w-full text-left"
+        aria-label="ログインユーザー情報"
+        @click="goToMyProfile"
+      >
+        <span class="sidebar-user-icon" aria-hidden="true">👤</span>
         <div class="sidebar-user-meta">
-          <p class="sidebar-user-name">{{ userEmail }}</p>
+          <p class="sidebar-user-name">{{ userName }}</p>
+          <p class="sidebar-user-role">{{ userEmail }}</p>
           <p class="sidebar-user-role">{{ userRole }}</p>
         </div>
-      </div>
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, watchEffect } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
-  userEmail: string
-  userRole: string
-}>()
+  userName: string;
+  userEmail: string;
+  userRole: string;
+}>();
 
 defineEmits<{
-  (e: 'logout'): void
-}>()
+  (e: "logout"): void;
+}>();
 
-const route = useRoute()
-const isApprovalOpen = ref(false)
-const isSettingsOpen = ref(false)
+const route = useRoute();
+const router = useRouter();
+const isApprovalOpen = ref(false);
+const isSettingsOpen = ref(false);
 
-const isApprovalActive = computed(() => route.path.startsWith('/approval'))
-const isSettingsActive = computed(() => route.path.startsWith('/settings'))
-
-const userInitial = computed(() => {
-  const first = props.userEmail.trim().charAt(0)
-  return first || '?'
-})
+const isApprovalActive = computed(() => route.path.startsWith("/approval"));
+const isSettingsActive = computed(() => route.path.startsWith("/settings"));
 
 watchEffect(() => {
-  if (isApprovalActive.value) isApprovalOpen.value = true
-  if (isSettingsActive.value) isSettingsOpen.value = true
-})
+  if (isApprovalActive.value) isApprovalOpen.value = true;
+  if (isSettingsActive.value) isSettingsOpen.value = true;
+});
+
+function goToMyProfile() {
+  router.push("/profile");
+}
 
 // userRoleをpropsから参照できるように
-const userRole = computed(() => props.userRole)
+const userRole = computed(() => props.userRole);
 </script>
+
+<style>
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-user-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+</style>

@@ -8,7 +8,7 @@ import type {
 } from '../type/scout'
 import { apiClient } from './client'
 
-export type ScoutListType = 'my' | 'sales_pending' | 'final_pending'
+export type ScoutListType = 'my' | 'sales_pending' | 'final_pending' | 'trash'
 
 export async function fetchScoutsByType(type: ScoutListType): Promise<ScoutEntity[]> {
   const { data } = await apiClient.get<ScoutEntity[]>('/api/scouts', {
@@ -17,8 +17,12 @@ export async function fetchScoutsByType(type: ScoutListType): Promise<ScoutEntit
   return data
 }
 
-export async function fetchScouts(): Promise<ScoutEntity[]> {
-  const { data } = await apiClient.get<ScoutEntity[]>('/api/scouts')
+export async function fetchScouts(options?: { includeDeleted?: boolean }): Promise<ScoutEntity[]> {
+  const { data } = await apiClient.get<ScoutEntity[]>('/api/scouts', {
+    params: {
+      includeDeleted: options?.includeDeleted ? 'true' : undefined,
+    },
+  })
   return data
 }
 
@@ -63,5 +67,20 @@ export async function resubmitRemandedScout(
 ): Promise<ScoutEntity> {
   // 差戻し編集画面からの再申請API
   const { data } = await apiClient.post<ScoutEntity>(`/api/scouts/${scoutId}/resubmit`, payload)
+  return data
+}
+
+export async function softDeleteScout(scoutId: string): Promise<ScoutEntity> {
+  const { data } = await apiClient.post<ScoutEntity>(`/api/scouts/${scoutId}/delete`)
+  return data
+}
+
+export async function restoreScout(scoutId: string): Promise<ScoutEntity> {
+  const { data } = await apiClient.post<ScoutEntity>(`/api/scouts/${scoutId}/restore`)
+  return data
+}
+
+export async function hardDeleteScout(scoutId: string): Promise<{ deleted: boolean }> {
+  const { data } = await apiClient.delete<{ deleted: boolean }>(`/api/scouts/${scoutId}`)
   return data
 }

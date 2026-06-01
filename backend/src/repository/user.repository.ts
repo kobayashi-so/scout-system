@@ -13,7 +13,7 @@ export class UserRepository {
   // メールアドレスで1件検索（ログイン・重複チェックで利用）
   async findByEmail(email: string): Promise<UserEntity | null> {
     const rows = await this.repository.query(
-      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE email = $1 LIMIT 1",
+      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE LOWER(BTRIM(email)) = LOWER(BTRIM($1)) LIMIT 1",
       [email],
     );
 
@@ -22,7 +22,7 @@ export class UserRepository {
 
   async findById(userId: string): Promise<UserEntity | null> {
     const rows = await this.repository.query(
-      'SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE user_id = $1 LIMIT 1',
+      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE user_id = $1 LIMIT 1",
       [userId],
     );
 
@@ -68,6 +68,29 @@ export class UserRepository {
        WHERE user_id = $1
        RETURNING user_id, user_name, email, password, role_type, created_at, updated_at`,
       [userId, roleType],
+    );
+
+    return rows.length > 0 ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  // ユーザーの基本プロフィール（名前/メール/パスワード）を更新
+  async updateProfile(
+    userId: string,
+    input: {
+      userName: string;
+      email: string;
+      password: string;
+    },
+  ): Promise<UserEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE users
+       SET user_name = $2,
+           email = $3,
+           password = $4,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1
+       RETURNING user_id, user_name, email, password, role_type, created_at, updated_at`,
+      [userId, input.userName, input.email, input.password],
     );
 
     return rows.length > 0 ? this.mapRowToEntity(rows[0]) : null;

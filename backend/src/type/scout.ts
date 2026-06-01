@@ -39,6 +39,9 @@ export class ScoutEntity {
 
   @Column({ name: 'second_approver_id', type: 'uuid', nullable: true })
   secondApproverId?: string | null;
+
+  @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deletedAt?: Date | null;
 }
 
 export interface ScoutJobRequirementInput {

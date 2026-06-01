@@ -125,6 +125,7 @@
 
       <div class="action-row">
         <button
+          v-if="showRemandButton"
           type="button"
           class="btn btn-remand"
           :disabled="submitting"
@@ -316,6 +317,11 @@ async function handleApprove() {
 }
 
 async function handleRemand() {
+  if (!showRemandButton.value) {
+    errorMessage.value = 'この画面では差戻しできません'
+    return
+  }
+
   if (!scout.value?.id || !authStore.currentUserId) {
     errorMessage.value = '差戻しに必要なユーザー情報が不足しています。再ログインしてください。'
     return

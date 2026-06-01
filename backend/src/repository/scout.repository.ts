@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
 import {
   CreateScoutInput,
   ScoutDetail,
   ScoutEntity,
   ScoutStatus,
   UpdateRemandedScoutInput,
-} from '../type/scout';
+} from "../type/scout";
 
 @Injectable()
 export class ScoutRepository {
@@ -17,11 +17,13 @@ export class ScoutRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(): Promise<ScoutEntity[]> {
+  async findAll(includeDeleted = false): Promise<ScoutEntity[]> {
     const rows = await this.repository.query(
       `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
+       WHERE ($1::boolean = true OR deleted_at IS NULL)
        ORDER BY created_at DESC`,
+      [includeDeleted],
     );
 
     return rows.map((row: any) => this.mapRowToEntity(row));
@@ -32,6 +34,7 @@ export class ScoutRepository {
       `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
        FROM scouts
        WHERE id = $1
+         AND deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -56,6 +59,7 @@ export class ScoutRepository {
          s.status,
          s.first_approver_id,
          s.second_approver_id,
+         s.deleted_at,
          r.company_name,
          r.job_category,
          r.job_description,
@@ -67,6 +71,7 @@ export class ScoutRepository {
        FROM scouts s
        LEFT JOIN scout_job_requirements r ON r.scout_id = s.id
        WHERE s.id = $1
+         AND s.deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -90,14 +95,14 @@ export class ScoutRepository {
 
     const fallbackRequirement = {
       // 旧データで求人行が無い場合は、元文書(scouts)の情報を編集初期値として返す
-      companyName: row.creator ?? '',
-      jobCategory: row.title ?? '',
-      jobDescription: row.body ?? '',
-      requiredSkills: '',
-      workLocation: '',
-      salaryInfo: '',
-      jobAppeal: '',
-      tone: 'プロフェッショナル',
+      companyName: row.creator ?? "",
+      jobCategory: row.title ?? "",
+      jobDescription: row.body ?? "",
+      requiredSkills: "",
+      workLocation: "",
+      salaryInfo: "",
+      jobAppeal: "",
+      tone: "プロフェッショナル",
     };
 
     return {
@@ -163,7 +168,10 @@ export class ScoutRepository {
     }
   }
 
-  async approveByLeader(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+  async approveByLeader(
+    scoutId: string,
+    approverId: string,
+  ): Promise<ScoutEntity | null> {
     // 楽観的制御: WHEREで現在statusも条件化し、同時更新競合を防ぐ
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -178,7 +186,10 @@ export class ScoutRepository {
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
   }
 
-  async finalApprove(scoutId: string, approverId: string): Promise<ScoutEntity | null> {
+  async finalApprove(
+    scoutId: string,
+    approverId: string,
+  ): Promise<ScoutEntity | null> {
     // 楽観的制御: waiting_adminのときのみapprovedへ遷移
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -193,7 +204,10 @@ export class ScoutRepository {
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
   }
 
-  async remand(scoutId: string, currentStatus: ScoutStatus): Promise<ScoutEntity | null> {
+  async remand(
+    scoutId: string,
+    currentStatus: ScoutStatus,
+  ): Promise<ScoutEntity | null> {
     // 差戻しも現在status一致時のみ更新
     const rows = await this.repository.query(
       `UPDATE scouts
@@ -216,7 +230,7 @@ export class ScoutRepository {
     await queryRunner.startTransaction();
 
     try {
-      // 差戻し状態の文書だけ更新し、承認者情報は再申請時にクリアする
+      // 差戻し/下書き文書を更新し、再申請時に承認者情報をクリアする
       const updatedRows = await queryRunner.query(
         `UPDATE scouts
          SET title = $2,
@@ -273,6 +287,58 @@ export class ScoutRepository {
     }
   }
 
+  async softDelete(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND deleted_at IS NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async restore(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = NULL
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async hardDelete(scoutId: string): Promise<boolean> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id`,
+      [scoutId],
+    );
+
+    return rows.length > 0;
+  }
+
+  async hardDeleteOlderThanOneYear(): Promise<number> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE deleted_at IS NOT NULL
+         AND deleted_at < (CURRENT_TIMESTAMP - INTERVAL '1 year')
+       RETURNING id`,
+    );
+
+    return rows.length;
+  }
+
+  // 注意: 上記の1年超過条件は実際の運用では'1 year'にしてください。テスト用に短縮しています。
+  //     AND deleted_at <= NOW() - INTERVAL '1 minute'
+
   private mapRowToEntity(row: any): ScoutEntity {
     return {
       id: row.id,
@@ -284,6 +350,7 @@ export class ScoutRepository {
       status: row.status as ScoutStatus,
       firstApproverId: row.first_approver_id,
       secondApproverId: row.second_approver_id,
+      deletedAt: row.deleted_at,
     } as ScoutEntity;
   }
 }
