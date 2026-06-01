@@ -8,11 +8,13 @@ CREATE TABLE IF NOT EXISTS scouts (
   status VARCHAR(20) NOT NULL DEFAULT 'draft'
     CHECK (status IN ('draft', 'waiting_leader', 'waiting_admin', 'approved', 'remanded')),
   first_approver_id UUID NULL,
-  second_approver_id UUID NULL
+  second_approver_id UUID NULL,
+  deleted_at TIMESTAMP NULL
 );
 
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS first_approver_id UUID NULL;
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS second_approver_id UUID NULL;
+ALTER TABLE scouts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
 
 UPDATE scouts SET status = LOWER(status);
 

@@ -38,9 +38,7 @@
               </span>
             </td>
             <td class="px-4 py-3">{{ item.creator }}</td>
-            <td class="px-4 py-3">
-              {{ formatDate(item.createdAt as string | undefined) }}
-            </td>
+            <td class="px-4 py-3">{{ formatDate(item.createdAt) }}</td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
@@ -164,7 +162,14 @@
                     🗎 文章をコピーする
                   </button>
                   <button class="action-btn delete-btn" @click="confirmDelete">
-                    削除
+                    {{ props.isTrashView ? '復元' : '削除' }}
+                  </button>
+                  <button
+                    v-if="props.isTrashView"
+                    class="action-btn hard-delete-btn"
+                    @click="confirmHardDelete"
+                  >
+                    完全削除
                   </button>
                 </div>
               </div>
@@ -186,15 +191,19 @@ import {
 } from "../../type/scout";
 
 const props = defineProps<{
-  rows: ScoutEntity[];
-  roleType: RoleType | null;
-}>();
+  rows: ScoutEntity[]
+  roleType: RoleType | null
+  isTrashView?: boolean
+}>()
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
-defineEmits<{
-  (e: "open-review", row: ScoutEntity): void;
-  (e: "open-edit", row: ScoutEntity): void;
-}>();
+const emit = defineEmits<{
+  (e: 'open-review', row: ScoutEntity): void
+  (e: 'open-remanded-edit', row: ScoutEntity): void
+  (e: 'soft-delete', row: ScoutEntity): void
+  (e: 'restore', row: ScoutEntity): void
+  (e: 'hard-delete', row: ScoutEntity): void
+}>()
 
 // モーダル制御用のリアクティブステート
 const selectedRow = ref<ScoutEntity | null>(null);
@@ -242,7 +251,29 @@ async function copyBody() {
 }
 
 function confirmDelete() {
-  window.confirm('このスカウト文を削除しますか')
+  if (!selectedRow.value) return
+
+  if (props.isTrashView) {
+    if (window.confirm('このスカウト文を元に戻しますか')) {
+      emit('restore', selectedRow.value)
+      closeDetail()
+    }
+    return
+  }
+
+  if (window.confirm('このスカウト文をゴミ箱へ移動しますか')) {
+    emit('soft-delete', selectedRow.value)
+    closeDetail()
+  }
+}
+
+function confirmHardDelete() {
+  if (!selectedRow.value) return
+
+  if (window.confirm('このスカウト文を完全削除します。元に戻せません。実行しますか')) {
+    emit('hard-delete', selectedRow.value)
+    closeDetail()
+  }
 }
 
 function formatDate(value: string | undefined) {
@@ -477,6 +508,17 @@ function canOpenDraftEdit(status?: ScoutStatus): boolean {
   background: #ffe4e6;
   border-color: #fda4af;
   color: #9f1239;
+}
+
+.hard-delete-btn {
+  background: #881337;
+  border-color: #881337;
+  color: #fff;
+}
+
+.hard-delete-btn:hover {
+  background: #6b102b;
+  border-color: #6b102b;
 }
 
 .copy-toast {

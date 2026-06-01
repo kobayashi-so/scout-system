@@ -23,21 +23,31 @@
       v-else
       :rows="displayRows"
       :role-type="roleType"
+      :is-trash-view="activeTab === 'trash'"
       @open-review="openReview"
-      @open-edit="openEdit"
+      @open-remanded-edit="openRemandedEdit"
+      @soft-delete="softDeleteRow"
+      @restore="restoreRow"
+      @hard-delete="hardDeleteRow"
     />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { fetchScouts, type ScoutListType } from "../api/scoutApi";
-import { useAuthStore } from "../store/authStore";
-import { useRouter } from "vue-router";
-import type { ScoutEntity } from "../type/scout";
-import DashboardTabs from "./dashboard/DashboardTabs.vue";
-import StatusCards, { type StatusFilterKey } from "./dashboard/StatusCards.vue";
-import ScoutTable from "./dashboard/ScoutTable.vue";
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  fetchScouts,
+  hardDeleteScout,
+  restoreScout,
+  softDeleteScout,
+  type ScoutListType,
+} from '../api/scoutApi'
+import { useAuthStore } from '../store/authStore'
+import { useRouter } from 'vue-router'
+import type { ScoutEntity } from '../type/scout'
+import DashboardTabs from './dashboard/DashboardTabs.vue'
+import StatusCards, { type StatusFilterKey } from './dashboard/StatusCards.vue'
+import ScoutTable from './dashboard/ScoutTable.vue'
 
 type RoleLevel = 1 | 2 | 3;
 
@@ -52,10 +62,11 @@ const roleLevel = computed<RoleLevel>(() => {
 });
 
 const tabDefs: { key: ScoutListType; label: string; minRole: RoleLevel }[] = [
-  { key: "my", label: "全申請文書", minRole: 1 },
-  { key: "sales_pending", label: "営業承認者承認待ち", minRole: 2 },
-  { key: "final_pending", label: "最終承認待ち", minRole: 3 },
-];
+  { key: 'my', label: '全申請文書', minRole: 1 },
+  { key: 'sales_pending', label: '営業承認者承認待ち', minRole: 2 },
+  { key: 'final_pending', label: '最終承認待ち', minRole: 3 },
+  { key: 'trash', label: 'ゴミ箱', minRole: 1 },
+]
 
 const availableTabs = computed(() =>
   tabDefs
@@ -80,7 +91,7 @@ async function loadRows() {
   loading.value = true;
   error.value = "";
   try {
-    rows.value = await fetchScouts();
+    rows.value = await fetchScouts({ includeDeleted: activeTab.value === 'trash' })
   } catch (e) {
     console.error(e);
     error.value = "スカウト文の取得に失敗しました";
@@ -91,6 +102,12 @@ async function loadRows() {
 
 const displayRows = computed(() => {
   let filteredRows = rows.value;
+
+  if (activeTab.value === 'trash') {
+    return filteredRows.filter((r: ScoutEntity) => !!r.deletedAt)
+  }
+
+  filteredRows = filteredRows.filter((r: ScoutEntity) => !r.deletedAt)
 
   // レビュー対象タブはバックエンド未実装のtypeパラメータを使わず、フロントで絞り込む
   if (activeTab.value === "sales_pending") {
@@ -129,19 +146,14 @@ const displayRows = computed(() => {
 });
 
 const statusStats = computed(() => ({
-  approved: rows.value.filter((r: ScoutEntity) => r.status === "approved")
-    .length,
-  salesPending: rows.value.filter(
-    (r: ScoutEntity) => r.status === "waiting_leader",
-  ).length,
-  finalPending: rows.value.filter(
-    (r: ScoutEntity) => r.status === "waiting_admin",
-  ).length,
-  rejected: rows.value.filter((r: ScoutEntity) => r.status === "remanded")
-    .length,
-}));
+  approved: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'approved').length,
+  salesPending: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'waiting_leader').length,
+  finalPending: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'waiting_admin').length,
+  rejected: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'remanded').length,
+}))
 
-const roleType = computed(() => authStore.currentUserRoleType);
+const roleType = computed(() => authStore.currentUserRoleType)
+
 
 function onClickTab(tab: ScoutListType) {
   if (tab === 'my') {
@@ -151,6 +163,11 @@ function onClickTab(tab: ScoutListType) {
 
   if (tab === 'sales_pending') {
     selectedStatusCard.value = 'salesPending'
+    return
+  }
+
+  if (tab === 'trash') {
+    selectedStatusCard.value = 'all'
     return
   }
 
@@ -190,6 +207,42 @@ async function openEdit(item: ScoutEntity) {
   if (!item.id) return;
   // 編集画面は文書IDでルーティングして、初期値は詳細APIから復元する
   await router.push(`/scouts/${item.id}/remanded-edit`);
+}
+
+async function softDeleteRow(item: ScoutEntity) {
+  if (!item.id) return
+
+  try {
+    await softDeleteScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '削除に失敗しました'
+  }
+}
+
+async function restoreRow(item: ScoutEntity) {
+  if (!item.id) return
+
+  try {
+    await restoreScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '復元に失敗しました'
+  }
+}
+
+async function hardDeleteRow(item: ScoutEntity) {
+  if (!item.id) return
+
+  try {
+    await hardDeleteScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '完全削除に失敗しました'
+  }
 }
 
 watch(activeTab, () => {

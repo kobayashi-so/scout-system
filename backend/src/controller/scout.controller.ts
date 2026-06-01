@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { ScoutService } from '../service/scout.service';
 import {
   CreateScoutInput,
@@ -12,8 +12,9 @@ export class ScoutController {
   constructor(private readonly scoutService: ScoutService) {}
 
   @Get(['scouts', 'api/scouts'])
-  findAll() {
-    return this.scoutService.findAll();
+  findAll(@Query('includeDeleted') includeDeleted?: string) {
+    const shouldIncludeDeleted = includeDeleted === 'true';
+    return this.scoutService.findAll(shouldIncludeDeleted);
   }
 
   @Get(['scouts/:id', 'api/scouts/:id'])
@@ -55,5 +56,20 @@ export class ScoutController {
   ) {
     // 差戻し文書の再申請（修正内容を保存し、承認フローを先頭に戻す）
     return this.scoutService.resubmitRemanded(id, body);
+  }
+
+  @Post(['scouts/:id/delete', 'api/scouts/:id/delete'])
+  softDelete(@Param('id') id: string) {
+    return this.scoutService.softDelete(id);
+  }
+
+  @Post(['scouts/:id/restore', 'api/scouts/:id/restore'])
+  restore(@Param('id') id: string) {
+    return this.scoutService.restore(id);
+  }
+
+  @Delete(['scouts/:id', 'api/scouts/:id'])
+  hardDelete(@Param('id') id: string) {
+    return this.scoutService.hardDelete(id);
   }
 }

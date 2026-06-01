@@ -4,6 +4,7 @@ export type ScoutStatus = 'draft' | 'waiting_leader' | 'waiting_admin' | 'approv
 export interface ScoutEntity {
   id?: string
   createdAt?: string
+  deletedAt?: string | null
   creator: string
   title: string
   body: string
