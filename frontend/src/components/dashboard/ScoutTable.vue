@@ -64,6 +64,13 @@
                 >
                   レビュー
                 </button>
+                <button
+                  v-if="canOpenAdminReview(item.status)"
+                  class="review-button"
+                  @click="$emit('open-review', item)"
+                >
+                  レビュー
+                </button>
               </div>
             </td>
           </tr>

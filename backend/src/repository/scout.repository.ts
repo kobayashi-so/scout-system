@@ -19,7 +19,7 @@ export class ScoutRepository {
 
   async findAll(includeDeleted = false): Promise<ScoutEntity[]> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id
+      `SELECT id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id, deleted_at
        FROM scouts
        WHERE ($1::boolean = true OR deleted_at IS NULL)
        ORDER BY created_at DESC`,
