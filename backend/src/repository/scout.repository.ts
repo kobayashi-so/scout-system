@@ -240,9 +240,10 @@ export class ScoutRepository {
              first_approver_id = NULL,
              second_approver_id = NULL
          WHERE id = $1
-           AND status = $5
+           AND status IN ($5, $6)
+           AND deleted_at IS NULL
          RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
-        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded'],
+        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded', 'draft'],
       );
 
       if (updatedRows.length === 0) {
