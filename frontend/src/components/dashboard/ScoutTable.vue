@@ -52,7 +52,7 @@
                 <button
                   v-if="canOpenDraftEdit(item.status)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
-                  @click="$emit('open-edit', item)"
+                 @click="$emit('open-remanded-edit', item)"
                 >
                   編集
                 </button>

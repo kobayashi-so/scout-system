@@ -235,7 +235,7 @@ async function openReview(item: ScoutEntity) {
   error.value = "このアカウントではレビュー画面を開けません";
 }
 
-async function openEdit(item: ScoutEntity) {
+async function openRemandedEdit(item: ScoutEntity) {
   if (!item.id) return;
   // 編集画面は文書IDでルーティングして、初期値は詳細APIから復元する
   await router.push(`/scouts/${item.id}/remanded-edit`);
