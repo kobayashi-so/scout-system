@@ -154,7 +154,7 @@ const userRole = computed(() => props.userRole);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 24px;
 }
 
 .brand-link {
