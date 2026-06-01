@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS scouts (
   creator VARCHAR(100) NOT NULL,
   title VARCHAR(255) NOT NULL,
   body TEXT NOT NULL,
+  previous_body TEXT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'draft'
     CHECK (status IN ('draft', 'waiting_leader', 'waiting_admin', 'approved', 'remanded')),
   first_approver_id UUID NULL,
@@ -13,6 +14,7 @@ CREATE TABLE IF NOT EXISTS scouts (
 
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS first_approver_id UUID NULL;
 ALTER TABLE scouts ADD COLUMN IF NOT EXISTS second_approver_id UUID NULL;
+ALTER TABLE scouts ADD COLUMN IF NOT EXISTS previous_body TEXT NULL;
 
 UPDATE scouts SET status = LOWER(status);
 
