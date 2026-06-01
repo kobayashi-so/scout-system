@@ -64,14 +64,14 @@
                   class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
                   @click="$emit('open-review', item)"
                 >
-                  営業承認レビュー
+                  営業承認者承認レビュー
                 </button>
                 <button
                   v-if="canOpenAdminReview(item.status)"
                   class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
                   @click="$emit('open-review', item)"
                 >
-                  最終承認レビュー
+                  管理者承認レビュー
                 </button>
               </div>
             </td>

@@ -380,7 +380,7 @@ async function handleSubmit(status: ScoutStatus) {
     return;
   }
 
-  if (!allCheckItemsDone.value) {
+  if (status !== "draft" && !allCheckItemsDone.value) {
     generateError.value = "チェック項目をすべて確認してください。";
     return;
   }

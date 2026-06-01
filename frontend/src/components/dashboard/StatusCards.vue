@@ -15,7 +15,7 @@
       :class="{ 'status-card-active': selectedKey === 'salesPending' }"
       @click="$emit('select', selectedKey === 'salesPending' ? 'all' : 'salesPending')"
     >
-      <p class="text-xs text-slate-500">営業承認待ち件数</p>
+      <p class="text-xs text-slate-500">営業承認者承認待ち件数</p>
       <p class="mt-1 text-2xl font-bold text-amber-600">{{ stats.salesPending }}</p>
     </button>
     <button
@@ -24,7 +24,7 @@
       :class="{ 'status-card-active': selectedKey === 'finalPending' }"
       @click="$emit('select', selectedKey === 'finalPending' ? 'all' : 'finalPending')"
     >
-      <p class="text-xs text-slate-500">最終承認待ち件数</p>
+      <p class="text-xs text-slate-500">管理者承認待ち件数</p>
       <p class="mt-1 text-2xl font-bold text-blue-600">{{ stats.finalPending }}</p>
     </button>
     <button

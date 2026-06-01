@@ -54,7 +54,7 @@ const roleLevel = computed<RoleLevel>(() => {
 const tabDefs: { key: ScoutListType; label: string; minRole: RoleLevel }[] = [
   { key: "my", label: "全申請文書", minRole: 1 },
   { key: "sales_pending", label: "営業承認者承認待ち", minRole: 2 },
-  { key: "final_pending", label: "最終承認待ち", minRole: 3 },
+  { key: "final_pending", label: "管理者承認待ち", minRole: 3 },
 ];
 
 const availableTabs = computed(() =>
