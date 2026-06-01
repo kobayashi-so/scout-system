@@ -39,6 +39,7 @@
       v-else
       :rows="displayRows"
       :role-type="roleType"
+      :current-user-name="authStore.currentUserName"
       :is-trash-view="activeTab === 'trash'"
       @open-review="openReview"
       @open-remanded-edit="openRemandedEdit"

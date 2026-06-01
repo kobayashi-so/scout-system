@@ -50,7 +50,7 @@
 
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
-                  v-if="canOpenDraftEdit(item.status)"
+                  v-if="canOpenDraftEdit(item.status, item.creator)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
                  @click="$emit('open-remanded-edit', item)"
                 >
@@ -194,6 +194,7 @@ import {
 const props = defineProps<{
   rows: ScoutEntity[]
   roleType: RoleType | null
+  currentUserName?: string | null
   isTrashView?: boolean
 }>()
 
@@ -319,11 +320,15 @@ function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === "admin" && status === "waiting_admin";
 }
 
-function canOpenDraftEdit(status?: ScoutStatus): boolean {
-  return (
-    props.roleType === "sales" &&
-    (status === "draft" || status === "remanded")
-  );
+function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
+  if (!status || (status !== "draft" && status !== "remanded")) {
+    return false;
+  }
+
+  const currentUserName = (props.currentUserName || "").trim();
+  const rowCreator = (creator || "").trim();
+
+  return currentUserName.length > 0 && currentUserName === rowCreator;
 }
 </script>
 
