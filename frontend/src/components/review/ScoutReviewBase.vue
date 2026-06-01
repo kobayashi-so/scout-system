@@ -379,6 +379,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 4px;
 }
 
 .review-grid {
@@ -388,10 +389,12 @@ onMounted(() => {
 }
 
 .review-card {
-  background: #ffffff;
-  border: 1px solid #e4e7ec;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   padding: 20px;
 }
 
@@ -416,10 +419,11 @@ onMounted(() => {
 
 .review-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1.3;
-  font-weight: 700;
+  font-weight: 800;
   color: #0f172a;
+  letter-spacing: 0.01em;
 }
 
 .review-status {
@@ -444,10 +448,10 @@ onMounted(() => {
 }
 
 .toggle-previous-btn {
-  border: 1px solid #cbd5e1;
+  border: 1px solid #b8c5d8;
   border-radius: 999px;
   background: #ffffff;
-  color: #334155;
+  color: #1f2937;
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 700;
@@ -485,9 +489,9 @@ onMounted(() => {
 .scout-body-box {
   max-height: 290px;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
+  border: 1px solid #d7e2ee;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f9fbfe 0%, #f4f7fb 100%);
   padding: 14px;
   font-size: 14px;
   line-height: 1.7;
@@ -504,10 +508,11 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d9e3ef;
   border-radius: 8px;
   padding: 12px;
   font-size: 14px;
+  background: #fdfefe;
 }
 
 .check-input {
@@ -521,8 +526,8 @@ onMounted(() => {
 }
 
 .comment-item {
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
   border-radius: 8px;
   padding: 12px;
 }
@@ -551,7 +556,7 @@ onMounted(() => {
   width: 100%;
   min-height: 120px;
   padding: 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #c4d0df;
   border-radius: 8px;
   font-size: 14px;
   resize: vertical;
@@ -559,8 +564,8 @@ onMounted(() => {
 
 .remand-textarea:focus {
   outline: none;
-  border-color: #464feb;
-  box-shadow: 0 0 0 3px rgba(70, 79, 235, 0.12);
+  border-color: #0ea5a4;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
 }
 
 .action-row {
@@ -577,7 +582,7 @@ onMounted(() => {
 
 .btn {
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 11px 20px;
   font-size: 14px;
   font-weight: 700;
@@ -591,7 +596,7 @@ onMounted(() => {
 }
 
 .btn-remand {
-  background: #dc2626;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .btn-remand:hover {
@@ -599,7 +604,7 @@ onMounted(() => {
 }
 
 .btn-approve {
-  background: #16a34a;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .btn-approve:hover {

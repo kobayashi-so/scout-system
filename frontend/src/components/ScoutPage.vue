@@ -271,21 +271,6 @@ const allCheckItemsDone = computed(() => {
   );
 });
 
-function isFormCompletelyEmpty(): boolean {
-  return [
-    form.creator,
-    form.title,
-    form.body,
-    form.requirement.companyName,
-    form.requirement.jobCategory,
-    form.requirement.jobDescription,
-    form.requirement.requiredSkills,
-    form.requirement.workLocation,
-    form.requirement.salaryInfo,
-    form.requirement.jobAppeal,
-  ].every((value) => !value.trim());
-}
-
 function goToDashboard() {
   router.push({ name: "scout-list" });
 }
@@ -436,7 +421,9 @@ onMounted(async () => {
   overflow: hidden;
   box-sizing: border-box;
   padding: 16px 24px;
-  background-color: #ffffff;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
+    linear-gradient(180deg, #f7faf9 0%, #f3f6f9 100%);
 }
 
 .page-header {
@@ -464,9 +451,10 @@ onMounted(async () => {
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.01em;
 }
 
 /* 💡 動的ステータスバッジの汎用スタイル */
@@ -508,24 +496,26 @@ onMounted(async () => {
 
 .btn-secondary {
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  border: 1px solid #b7c4d6;
+  color: #334155;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .btn-primary-green {
-  background-color: #3cb47a;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
   color: #ffffff;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.24);
 }
 
 .workspace {
@@ -537,13 +527,15 @@ onMounted(async () => {
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -551,9 +543,10 @@ onMounted(async () => {
 
 .card h2 {
   margin: 0 0 16px 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #004d34;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #065f46;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
 
@@ -631,8 +624,8 @@ select,
 textarea {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid #c4d0df;
+  border-radius: 8px;
   font-size: 0.85rem;
   color: #1e293b;
   box-sizing: border-box;
@@ -643,7 +636,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #00c77b;
+  border-color: #0ea5a4;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
 }
 
 .actions {
@@ -654,13 +648,14 @@ textarea:focus {
 .btn-ai {
   width: 100%;
   padding: 10px;
-  background-color: #004d34;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
 }
 
 .card-header-row {
