@@ -11,12 +11,8 @@
             <th class="px-4 py-3 font-semibold">
               <div class="flex items-center gap-2">
                 <span>更新日</span>
-                <button
-                  type="button"
-                  class="sort-btn"
-                  @click="toggleDateSort"
-                >
-                  {{ sortOrder === 'asc' ? '昇順' : '降順' }}
+                <button type="button" class="sort-btn" @click="toggleDateSort">
+                  {{ sortOrder === "asc" ? "昇順" : "降順" }}
                 </button>
               </div>
             </th>
@@ -29,15 +25,22 @@
             :key="item.id"
             class="border-t border-slate-100"
           >
-            <td class="px-4 py-3 text-slate-500">{{ item.id || '-' }}</td>
-            <td class="px-4 py-3 font-medium text-slate-800">{{ item.title }}</td>
+            <td class="px-4 py-3 text-slate-500">{{ item.id || "-" }}</td>
+            <td class="px-4 py-3 font-medium text-slate-800">
+              {{ item.title }}
+            </td>
             <td class="px-4 py-3">
-              <span class="rounded-full px-2 py-1 text-xs font-semibold" :class="statusClass(item.status)">
+              <span
+                class="rounded-full px-2 py-1 text-xs font-semibold"
+                :class="statusClass(item.status)"
+              >
                 {{ statusLabel(item.status) }}
               </span>
             </td>
             <td class="px-4 py-3">{{ item.creator }}</td>
-            <td class="px-4 py-3">{{ formatDate(item.createdAt as string | undefined) }}</td>
+            <td class="px-4 py-3">
+              {{ formatDate(item.createdAt as string | undefined) }}
+            </td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
@@ -47,13 +50,13 @@
                   詳細
                 </button>
 
-                <!-- 営業担当が差戻し文書を修正画面へ開く導線 -->
+                <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
-                  v-if="canOpenRemandedEdit(item.status)"
+                  v-if="canOpenDraftEdit(item.status)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
-                  @click="$emit('open-remanded-edit', item)"
+                  @click="$emit('open-edit', item)"
                 >
-                  差戻し編集
+                  編集
                 </button>
 
                 <button
@@ -70,12 +73,13 @@
                 >
                   最終承認レビュー
                 </button>
-
               </div>
             </td>
           </tr>
           <tr v-if="rows.length === 0">
-            <td colspan="6" class="px-4 py-8 text-center text-slate-500">データがありません</td>
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+              データがありません
+            </td>
           </tr>
         </tbody>
       </table>
@@ -84,23 +88,66 @@
     <div v-if="selectedRow" class="overlay" @click.self="closeDetail">
       <div class="modal">
         <button class="close" @click="closeDetail">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
 
         <div class="content">
           <div class="col left-col">
             <h3 class="title">📁 求人情報</h3>
             <div class="info-grid">
-              <div class="info-item"><strong>作成者</strong><p>{{ selectedRow.creator }}</p></div>
-              <div class="info-item"><strong>求人タイトル</strong><p>{{ selectedRow.title }}</p></div>
-              <div class="info-item"><strong>会社名</strong><p>{{ selectedRow.requirement?.companyName }}</p></div>
-              <div class="info-item"><strong>職種</strong><p>{{ selectedRow.requirement?.jobCategory }}</p></div>
-              <div class="info-item"><strong>業務内容</strong><p>{{ selectedRow.requirement?.jobDescription }}</p></div>
-              <div class="info-item"><strong>必須スキル</strong><p>{{ selectedRow.requirement?.requiredSkills }}</p></div>
-              <div class="info-item"><strong>勤務地</strong><p>{{ selectedRow.requirement?.workLocation }}</p></div>
-              <div class="info-item"><strong>給与</strong><p>{{ selectedRow.requirement?.salaryInfo }}</p></div>
-              <div class="info-item"><strong>求人の魅力</strong><p>{{ selectedRow.requirement?.jobAppeal }}</p></div>
-              <div class="info-item"><strong>文章トーン</strong><p>{{ selectedRow.requirement?.tone }}</p></div>
+              <div class="info-item">
+                <strong>作成者</strong>
+                <p>{{ selectedRow.creator }}</p>
+              </div>
+              <div class="info-item">
+                <strong>求人タイトル</strong>
+                <p>{{ selectedRow.title }}</p>
+              </div>
+              <div class="info-item">
+                <strong>会社名</strong>
+                <p>{{ selectedRow.requirement?.companyName }}</p>
+              </div>
+              <div class="info-item">
+                <strong>職種</strong>
+                <p>{{ selectedRow.requirement?.jobCategory }}</p>
+              </div>
+              <div class="info-item">
+                <strong>業務内容</strong>
+                <p>{{ selectedRow.requirement?.jobDescription }}</p>
+              </div>
+              <div class="info-item">
+                <strong>必須スキル</strong>
+                <p>{{ selectedRow.requirement?.requiredSkills }}</p>
+              </div>
+              <div class="info-item">
+                <strong>勤務地</strong>
+                <p>{{ selectedRow.requirement?.workLocation }}</p>
+              </div>
+              <div class="info-item">
+                <strong>給与</strong>
+                <p>{{ selectedRow.requirement?.salaryInfo }}</p>
+              </div>
+              <div class="info-item">
+                <strong>求人の魅力</strong>
+                <p>{{ selectedRow.requirement?.jobAppeal }}</p>
+              </div>
+              <div class="info-item">
+                <strong>文章トーン</strong>
+                <p>{{ selectedRow.requirement?.tone }}</p>
+              </div>
             </div>
           </div>
 
@@ -108,13 +155,15 @@
             <h3 class="title">📝 スカウト文プレビュー</h3>
             <div class="right-body">
               <div class="scout-display-box">
-                {{ selectedRow.body || 'スカウト文がありません。' }}
+                {{ selectedRow.body || "スカウト文がありません。" }}
               </div>
               <div class="footer">
                 <button class="copy-btn" @click="copyBody">
                   🗎 文章をコピーする
                 </button>
-                <span v-if="copyMessage" class="copy-toast">{{ copyMessage }}</span>
+                <span v-if="copyMessage" class="copy-toast">{{
+                  copyMessage
+                }}</span>
               </div>
             </div>
           </div>
@@ -125,99 +174,104 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { RoleType } from '../../type/user'
-import { statusLabel, type ScoutEntity, type ScoutStatus } from '../../type/scout'
+import { computed, ref } from "vue";
+import type { RoleType } from "../../type/user";
+import {
+  statusLabel,
+  type ScoutEntity,
+  type ScoutStatus,
+} from "../../type/scout";
 
 const props = defineProps<{
-  rows: ScoutEntity[]
-  roleType: RoleType | null
-}>()
+  rows: ScoutEntity[];
+  roleType: RoleType | null;
+}>();
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
 defineEmits<{
-  (e: 'open-review', row: ScoutEntity): void
-  (e: 'open-remanded-edit', row: ScoutEntity): void
-}>()
+  (e: "open-review", row: ScoutEntity): void;
+  (e: "open-edit", row: ScoutEntity): void;
+}>();
 
 // モーダル制御用のリアクティブステート
-const selectedRow = ref<ScoutEntity | null>(null)
-const copyMessage = ref('')
-const sortOrder = ref<'asc' | 'desc'>('asc')
+const selectedRow = ref<ScoutEntity | null>(null);
+const copyMessage = ref("");
+const sortOrder = ref<"asc" | "desc">("asc");
 
 const sortedRows = computed(() => {
-  const list = [...props.rows]
+  const list = [...props.rows];
 
   list.sort((a, b) => {
-    const timeA = getRowDateTimestamp(a)
-    const timeB = getRowDateTimestamp(b)
+    const timeA = getRowDateTimestamp(a);
+    const timeB = getRowDateTimestamp(b);
 
-    if (timeA === null && timeB === null) return 0
-    if (timeA === null) return 1
-    if (timeB === null) return -1
+    if (timeA === null && timeB === null) return 0;
+    if (timeA === null) return 1;
+    if (timeB === null) return -1;
 
-    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA
-  })
+    return sortOrder.value === "asc" ? timeA - timeB : timeB - timeA;
+  });
 
-  return list
-})
+  return list;
+});
 
 function openDetail(item: ScoutEntity) {
-  selectedRow.value = item
-  copyMessage.value = ''
+  selectedRow.value = item;
+  copyMessage.value = "";
 }
 
 function closeDetail() {
-  selectedRow.value = null
+  selectedRow.value = null;
 }
 
 function toggleDateSort() {
-  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
 }
 
 async function copyBody() {
   if (selectedRow.value?.body) {
-    await navigator.clipboard.writeText(selectedRow.value.body)
-    copyMessage.value = 'クリップボードにコピーしました！'
+    await navigator.clipboard.writeText(selectedRow.value.body);
+    copyMessage.value = "クリップボードにコピーしました！";
     setTimeout(() => {
-      copyMessage.value = ''
-    }, 3000)
+      copyMessage.value = "";
+    }, 3000);
   }
 }
 
 function formatDate(value: string | undefined) {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('ja-JP')
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("ja-JP");
 }
 
 function getRowDateTimestamp(row: ScoutEntity): number | null {
-  const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
-  if (!source) return null
+  const source =
+    (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt;
+  if (!source) return null;
 
-  const timestamp = Date.parse(source)
-  return Number.isNaN(timestamp) ? null : timestamp
+  const timestamp = Date.parse(source);
+  return Number.isNaN(timestamp) ? null : timestamp;
 }
 
 function statusClass(status?: ScoutStatus) {
-  if (status === 'approved') return 'bg-emerald-100 text-emerald-700'
-  if (status === 'waiting_leader') return 'bg-amber-100 text-amber-700'
-  if (status === 'waiting_admin') return 'bg-blue-100 text-blue-700'
-  if (status === 'remanded') return 'bg-rose-100 text-rose-700'
-  return 'bg-slate-100 text-slate-700'
+  if (status === "approved") return "bg-emerald-100 text-emerald-700";
+  if (status === "waiting_leader") return "bg-amber-100 text-amber-700";
+  if (status === "waiting_admin") return "bg-blue-100 text-blue-700";
+  if (status === "remanded") return "bg-rose-100 text-rose-700";
+  return "bg-slate-100 text-slate-700";
 }
 
 // 💡 権限とステータスに応じたボタンの表示ロジック関数
 function canOpenLeaderReview(status?: ScoutStatus): boolean {
-  return props.roleType === 'leader' && status === 'waiting_leader'
+  return props.roleType === "leader" && status === "waiting_leader";
 }
 
 function canOpenAdminReview(status?: ScoutStatus): boolean {
-  return props.roleType === 'admin' && status === 'waiting_admin'
+  return props.roleType === "admin" && status === "waiting_admin";
 }
 
-function canOpenRemandedEdit(status?: ScoutStatus): boolean {
-  // sales かつ remanded の行だけに「差戻し編集」ボタンを表示
-  return props.roleType === 'sales' && status === 'remanded'
+function canOpenDraftEdit(status?: ScoutStatus): boolean {
+  // sales かつ draft の行だけに「編集」ボタンを表示
+  return props.roleType === "sales" && status === "draft";
 }
 </script>
 
@@ -409,8 +463,14 @@ function canOpenRemandedEdit(status?: ScoutStatus): boolean {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sort-btn {
@@ -444,7 +504,7 @@ function canOpenRemandedEdit(status?: ScoutStatus): boolean {
     max-height: none;
     padding: 20px;
   }
-  
+
   .content {
     flex-direction: column;
     overflow-y: auto;
