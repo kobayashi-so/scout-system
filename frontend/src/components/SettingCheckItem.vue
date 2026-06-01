@@ -182,7 +182,7 @@ onMounted(async () => {
 }
 
 .edit-title {
-  background-color: #1890ff; /* 青四角 */
+  background-color: #43b3a6; /* 青緑四角 */
   color: white;
   padding: 8px;
   border-radius: 4px;
@@ -205,7 +205,7 @@ onMounted(async () => {
 }
 
 .btn-row-edit {
-  background-color: #1890ff;
+  background-color: #43b3a6; /* 青水緑四角 */
   color: white;
   border: none;
   padding: 4px 10px;
@@ -214,7 +214,7 @@ onMounted(async () => {
 }
 
 .btn-row-delete {
-  background-color: #f21010; /* 赤四角 */
+  background-color: #d10202; /* 赤黒四角 */
   color: white;
   border: none;
   padding: 4px 10px;
