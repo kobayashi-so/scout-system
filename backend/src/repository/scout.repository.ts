@@ -345,6 +345,9 @@ export class ScoutRepository {
     return rows.length;
   }
 
+  // 注意: 上記の1年超過条件は実際の運用では'1 year'にしてください。テスト用に短縮しています。
+  //     AND deleted_at <= NOW() - INTERVAL '1 minute'
+
   private mapRowToEntity(row: any): ScoutEntity {
     return {
       id: row.id,
