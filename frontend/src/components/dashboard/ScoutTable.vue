@@ -111,10 +111,15 @@
                 {{ selectedRow.body || 'スカウト文がありません。' }}
               </div>
               <div class="footer">
-                <button class="copy-btn" @click="copyBody">
-                  🗎 文章をコピーする
-                </button>
                 <span v-if="copyMessage" class="copy-toast">{{ copyMessage }}</span>
+                <div class="footer-actions">
+                  <button class="action-btn copy-btn" @click="copyBody">
+                    🗎 文章をコピーする
+                  </button>
+                  <button class="action-btn delete-btn" @click="confirmDelete">
+                    削除
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -183,6 +188,10 @@ async function copyBody() {
       copyMessage.value = ''
     }, 3000)
   }
+}
+
+function confirmDelete() {
+  window.confirm('このスカウト文を削除しますか')
 }
 
 function formatDate(value: string | undefined) {
@@ -375,11 +384,19 @@ function canOpenRemandedEdit(status?: ScoutStatus): boolean {
   margin-top: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  min-height: 42px;
   flex-shrink: 0;
 }
 
-.copy-btn {
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.action-btn {
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
@@ -396,6 +413,18 @@ function canOpenRemandedEdit(status?: ScoutStatus): boolean {
   background: #f8fafc;
   border-color: #94a3b8;
   color: #0f172a;
+}
+
+.delete-btn {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #be123c;
+}
+
+.delete-btn:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  color: #9f1239;
 }
 
 .copy-toast {

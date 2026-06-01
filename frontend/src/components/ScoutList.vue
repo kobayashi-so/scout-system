@@ -127,9 +127,15 @@ const roleType = computed(() => authStore.currentUserRoleType)
 function onClickTab(tab: ScoutListType) {
   if (tab === 'my') {
     selectedStatusCard.value = 'all'
-  } else {
-    selectedStatusCard.value = 'salesPending'
+    return
   }
+
+  if (tab === 'sales_pending') {
+    selectedStatusCard.value = 'salesPending'
+    return
+  }
+
+  selectedStatusCard.value = 'finalPending'
 }
 
 function ensureActorId(): string | null {
