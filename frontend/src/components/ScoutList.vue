@@ -12,8 +12,9 @@
         @tab-click="onClickTab"
       />
 
-      <div v-if="isSalesMyTab" class="mb-4 flex items-center gap-2">
+      <div class="mb-4 flex items-center gap-2">
         <button
+          v-if="isSalesMyTab"
           type="button"
           class="rounded-full px-4 py-2 text-sm font-semibold transition"
           :class="
@@ -25,6 +26,26 @@
         >
           {{ currentUserNameLabel }}
         </button>
+
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="priorityFilter
+            ? 'bg-slate-900 text-white'
+            : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+          @click="priorityFilter = !priorityFilter"
+        >
+          優先（{{ priorityCandidateCount }}）
+        </button>
+
+        <div class="h-10 w-10 flex items-center justify-center" aria-label="優先件数アラート">
+          <span
+            v-if="priorityCandidateCount > 0"
+            class="text-3xl font-extrabold leading-none text-rose-600"
+          >
+            !
+          </span>
+        </div>
       </div>
     </div>
 
@@ -95,9 +116,10 @@ const availableTabs = computed(() =>
     .map((t) => ({ key: t.key, label: t.label })),
 );
 
-const activeTab = ref<ScoutListType>("my");
-const selectedStatusCard = ref<StatusFilterKey>("all");
-const creatorFilter = ref<"all" | "mine">("all");
+const activeTab = ref<ScoutListType>('my')
+const selectedStatusCard = ref<StatusFilterKey>('all')
+const creatorFilter = ref<'all' | 'mine'>('all')
+const priorityFilter = ref(false)
 
 const rows = ref<ScoutEntity[]>([]);
 const loading = ref(false);
@@ -110,6 +132,25 @@ const currentUserNameLabel = computed(
 const isSalesMyTab = computed(() => {
   return authStore.currentUserRoleType === "sales" && activeTab.value === "my";
 });
+
+function getRowUpdatedTimestamp(row: ScoutEntity): number | null {
+  const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
+  if (!source) return null
+
+  const timestamp = Date.parse(source)
+  return Number.isNaN(timestamp) ? null : timestamp
+}
+
+function isPriorityRow(row: ScoutEntity, nowMs: number): boolean {
+  if (!row.status) return false
+  if (row.status === 'draft' || row.status === 'approved') return false
+
+  const updatedAt = getRowUpdatedTimestamp(row)
+  if (updatedAt === null) return false
+
+  const threeDaysMs = 10 * 1000
+  return nowMs - updatedAt >= threeDaysMs
+}
 
 function resolveInitialTab(role: RoleLevel): ScoutListType {
   if (role >= 3) return "final_pending";
@@ -133,6 +174,7 @@ async function loadRows() {
 }
 
 const displayRows = computed(() => {
+  const nowMs = Date.now()
   let filteredRows = rows.value;
 
   if (activeTab.value === "trash") {
@@ -181,8 +223,26 @@ const displayRows = computed(() => {
     });
   }
 
-  return filteredRows;
-});
+  if (priorityFilter.value) {
+    filteredRows = filteredRows.filter((r: ScoutEntity) => isPriorityRow(r, nowMs))
+  }
+
+  return filteredRows
+})
+
+const priorityCandidateCount = computed(() => {
+  const nowMs = Date.now()
+  let candidateRows = rows.value.filter((r: ScoutEntity) => !r.deletedAt)
+
+  if (isSalesMyTab.value && creatorFilter.value === 'mine') {
+    const currentUserName = authStore.currentUserName?.trim()
+    candidateRows = candidateRows.filter((r: ScoutEntity) => {
+      return Boolean(currentUserName) && r.creator.trim() === currentUserName
+    })
+  }
+
+  return candidateRows.filter((r: ScoutEntity) => isPriorityRow(r, nowMs)).length
+})
 
 const statusStats = computed(() => ({
   approved: rows.value.filter(
@@ -202,7 +262,8 @@ const statusStats = computed(() => ({
 const roleType = computed(() => authStore.currentUserRoleType);
 
 function onClickTab(tab: ScoutListType) {
-  creatorFilter.value = "all";
+  creatorFilter.value = 'all'
+  priorityFilter.value = false
 
   if (tab === "my") {
     selectedStatusCard.value = "all";
