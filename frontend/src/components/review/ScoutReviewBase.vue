@@ -115,6 +115,7 @@
 
       <div class="action-row">
         <button
+          v-if="showRemandButton"
           type="button"
           class="btn btn-remand"
           :disabled="submitting"
@@ -197,6 +198,8 @@ const showApproveButton = computed(() => {
   // adminレビュー画面は waiting_admin のときのみ承認ボタンを表示
   return authStore.currentUserRoleType === 'admin' && scout.value.status === 'waiting_admin'
 })
+
+const showRemandButton = computed(() => showApproveButton.value)
 
 function formatDate(value?: string): string {
   if (!value) return '-'
@@ -287,6 +290,11 @@ async function handleApprove() {
 }
 
 async function handleRemand() {
+  if (!showRemandButton.value) {
+    errorMessage.value = 'この画面では差戻しできません'
+    return
+  }
+
   if (!scout.value?.id || !authStore.currentUserId) {
     errorMessage.value = '差戻しに必要なユーザー情報が不足しています。再ログインしてください。'
     return

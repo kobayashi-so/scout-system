@@ -13,7 +13,7 @@ export class UserRepository {
   // メールアドレスで1件検索（ログイン・重複チェックで利用）
   async findByEmail(email: string): Promise<UserEntity | null> {
     const rows = await this.repository.query(
-      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE email = $1 LIMIT 1",
+      "SELECT user_id, user_name, email, password, role_type, created_at, updated_at FROM users WHERE LOWER(BTRIM(email)) = LOWER(BTRIM($1)) LIMIT 1",
       [email],
     );
 

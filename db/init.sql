@@ -43,6 +43,10 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- メールアドレスの大文字小文字/前後空白差を同一扱いにして重複登録を防止
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_normalized_unique_idx
+  ON users (LOWER(BTRIM(email)));
+
 -- 差し戻しコメントテーブル
 CREATE TABLE IF NOT EXISTS comments (
   comment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
