@@ -93,7 +93,6 @@
                 v-model="form.requirement.requiredSkills"
                 placeholder="Java/Kotlin3年以上, AWS, Webアプリ開発"
                 rows="2"
-                required
               ></textarea>
             </label>
 
@@ -103,7 +102,6 @@
                 v-model="form.requirement.workLocation"
                 type="text"
                 placeholder="東京都港区（リモート併用可）"
-                required
               />
             </label>
 
@@ -113,7 +111,6 @@
                 v-model="form.requirement.salaryInfo"
                 type="text"
                 placeholder="年収600万円〜800万円"
-                required
               />
             </label>
 
@@ -362,6 +359,16 @@ async function handleSubmit(status: ScoutStatus) {
         "承認申請できません。入力フォームに内容を入力してください。",
       );
     }
+    return;
+  }
+
+  if (
+    !form.requirement.companyName.trim() ||
+    !form.requirement.jobCategory.trim() ||
+    !form.requirement.jobDescription.trim() ||
+    !form.requirement.jobAppeal.trim()
+  ) {
+    generateError.value = "会社名・職種・業務内容・求人の魅力は必須項目です。";
     return;
   }
 
