@@ -3,21 +3,33 @@
     <header class="page-header">
       <div class="header-left">
         <RouterLink to="/list" class="btn-back">←</RouterLink>
-        <h1>差戻し文書の修正</h1>
+        <h1>{{ pageTitle }}</h1>
       </div>
       <div v-if="!loading && form && scout" class="header-right">
-        <button type="button" class="btn-secondary" :disabled="submitting" @click="goBack">
+        <button
+          type="button"
+          class="btn-secondary"
+          :disabled="submitting"
+          @click="goBack"
+        >
           キャンセル
         </button>
-        <button type="button" class="btn-primary-green" :disabled="submitting" @click="handleResubmit">
-          修正して再申請
+        <button
+          type="button"
+          class="btn-primary-green"
+          :disabled="submitting"
+          @click="handleResubmit"
+        >
+          {{ submitButtonLabel }}
         </button>
       </div>
     </header>
 
     <p v-if="loading" class="check-item-meta">読み込み中...</p>
     <!-- エラー時もフォームは消さず、ユーザーがそのまま編集を続けられるようにする -->
-    <p v-if="!loading && errorMessage" class="message error">{{ errorMessage }}</p>
+    <p v-if="!loading && errorMessage" class="message error">
+      {{ errorMessage }}
+    </p>
 
     <div v-if="!loading && form && scout" class="workspace">
       <section class="card column-input">
@@ -68,7 +80,9 @@
               </select>
             </label>
 
-            <p v-if="generateError" class="message error">{{ generateError }}</p>
+            <p v-if="generateError" class="message error">
+              {{ generateError }}
+            </p>
           </form>
         </div>
 
@@ -98,8 +112,12 @@
         <h2>📊 3. 評価基準チェック</h2>
         <div class="check-scroll-wrapper">
           <p v-if="checkItemsLoading" class="check-item-meta">読み込み中...</p>
-          <p v-else-if="checkItemsError" class="message error">{{ checkItemsError }}</p>
-          <p v-else-if="checkItems.length === 0" class="check-item-meta">チェック項目がありません。</p>
+          <p v-else-if="checkItemsError" class="message error">
+            {{ checkItemsError }}
+          </p>
+          <p v-else-if="checkItems.length === 0" class="check-item-meta">
+            チェック項目がありません。
+          </p>
 
           <div v-else class="check-item-list">
             <label
@@ -126,10 +144,14 @@
             :key="comment.commentId"
             class="comment-item"
           >
-            <p class="comment-meta">{{ formatDate(comment.createdAt) }} / {{ comment.authorId }}</p>
+            <p class="comment-meta">
+              {{ formatDate(comment.createdAt) }} / {{ comment.authorId }}
+            </p>
             <p class="comment-body">{{ comment.content }}</p>
           </article>
-          <p v-if="comments.length === 0" class="check-item-meta">差戻しコメントはありません。</p>
+          <p v-if="comments.length === 0" class="check-item-meta">
+            差戻しコメントはありません。
+          </p>
         </div>
       </section>
     </div>
@@ -137,79 +159,86 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { fetchCheckItems } from '../api/checkItemApi'
+import { onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { fetchCheckItems } from "../api/checkItemApi";
 import {
   fetchScoutComments,
   fetchScoutDetail,
   resubmitRemandedScout,
-} from '../api/scoutApi'
-import type { checkItem } from '../type/checkItem'
-import type { ResubmitRemandedPayload, ScoutComment, ScoutEntity } from '../type/scout'
+} from "../api/scoutApi";
+import type { checkItem } from "../type/checkItem";
+import type {
+  ResubmitRemandedPayload,
+  ScoutComment,
+  ScoutEntity,
+} from "../type/scout";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const loading = ref(false)
-const submitting = ref(false)
-const errorMessage = ref('')
-const generateError = ref('')
-const checkItems = ref<checkItem[]>([])
-const checkedItemIds = ref<string[]>([])
-const checkItemsLoading = ref(false)
-const checkItemsError = ref('')
+const loading = ref(false);
+const submitting = ref(false);
+const errorMessage = ref("");
+const generateError = ref("");
+const checkItems = ref<checkItem[]>([]);
+const checkedItemIds = ref<string[]>([]);
+const checkItemsLoading = ref(false);
+const checkItemsError = ref("");
 
-const scout = ref<ScoutEntity | null>(null)
-const comments = ref<ScoutComment[]>([])
-const form = ref<ResubmitRemandedPayload | null>(null)
+const scout = ref<ScoutEntity | null>(null);
+const comments = ref<ScoutComment[]>([]);
+const form = ref<ResubmitRemandedPayload | null>(null);
 
-const scoutId = String(route.params.id || '')
+const pageTitle = ref("文書の編集");
+const submitButtonLabel = ref("修正して再申請");
+
+const scoutId = String(route.params.id || "");
 
 function formatDate(value?: string) {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('ja-JP')
+  if (!value) return "-";
+  return new Date(value).toLocaleString("ja-JP");
 }
 
 async function loadCheckItems() {
-  checkItemsLoading.value = true
-  checkItemsError.value = ''
+  checkItemsLoading.value = true;
+  checkItemsError.value = "";
   try {
-    checkItems.value = await fetchCheckItems()
+    checkItems.value = await fetchCheckItems();
   } catch (error) {
-    console.error(error)
-    checkItemsError.value = 'チェック項目の取得に失敗しました。'
+    console.error(error);
+    checkItemsError.value = "チェック項目の取得に失敗しました。";
   } finally {
-    checkItemsLoading.value = false
+    checkItemsLoading.value = false;
   }
 }
 
 function handleGeneratePrompt() {
-  if (!form.value) return
+  if (!form.value) return;
 
-  const r = form.value.requirement
+  const r = form.value.requirement;
   if (!r.companyName || !r.jobCategory) {
-    generateError.value = '会社名と職種を入力してから生成してください。'
-    return
+    generateError.value = "会社名と職種を入力してから生成してください。";
+    return;
   }
-  generateError.value = ''
+  generateError.value = "";
 
-  let generatedBody = ''
-  if (form.value.tone === 'カジュアル') {
+  let generatedBody = "";
+  if (form.value.tone === "カジュアル") {
     generatedBody = [
       `${r.companyName}の採用担当です！`,
       `今回は${r.jobCategory}を募集しています。${r.jobDescription}をお任せしたいです。`,
       `スキルは${r.requiredSkills}、勤務地は${r.workLocation}、給与は${r.salaryInfo}です。`,
       `魅力は「${r.jobAppeal}」。まずは気軽にお話しませんか？`,
-    ].join('\n')
-  } else if (form.value.tone === '熱意') {
+    ].join("\n");
+  } else if (form.value.tone === "熱意") {
     generatedBody = [
       `${r.companyName}の採用担当です。`,
       `あなたのご経験に強く惹かれ、${r.jobCategory}としてぜひご活躍いただきたいと考えています。`,
       `${r.jobDescription}を中心に、${r.requiredSkills}を活かせる環境です。`,
       `勤務地は${r.workLocation}、給与は${r.salaryInfo}。`,
       `「${r.jobAppeal}」など、当社ならではの魅力も多数。ご応募を心よりお待ちしています！`,
-    ].join('\n')
+    ].join("\n");
   } else {
     generatedBody = [
       `${r.companyName} 採用担当です。`,
@@ -217,89 +246,118 @@ function handleGeneratePrompt() {
       `必須スキル: ${r.requiredSkills}／勤務地: ${r.workLocation}／給与: ${r.salaryInfo}`,
       `当社の魅力: ${r.jobAppeal}`,
       `ご興味がございましたら、ぜひご連絡ください。`,
-    ].join('\n')
+    ].join("\n");
   }
 
-  form.value.body = generatedBody
+  form.value.body = generatedBody;
 }
 
 async function loadPage() {
   if (!scoutId) {
-    errorMessage.value = '対象IDが不正です'
-    return
+    errorMessage.value = "対象IDが不正です";
+    return;
   }
 
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = "";
 
   try {
     // 差戻し編集に必要な詳細情報とコメント履歴を同時取得
     const [detail, commentRows] = await Promise.all([
       fetchScoutDetail(scoutId),
       fetchScoutComments(scoutId),
-    ])
+    ]);
 
-    if (detail.status !== 'remanded') {
-      errorMessage.value = '差戻し文書のみ編集できます'
-      return
+    if (detail.status !== "remanded" && detail.status !== "draft") {
+      errorMessage.value = "差戻し文書または下書き文書のみ編集できます";
+      return;
     }
 
-    scout.value = detail
-    comments.value = commentRows
+    pageTitle.value =
+      detail.status === "draft" ? "下書き文書の編集" : "差戻し文書の修正";
+    submitButtonLabel.value =
+      detail.status === "draft" ? "更新して申請" : "修正して再申請";
+
+    scout.value = detail;
+    comments.value = commentRows;
     // APIの既存値をそのまま入力欄の初期値へ展開
     form.value = {
       title: detail.title,
       body: detail.body,
-      tone: (detail.requirement?.tone as ResubmitRemandedPayload['tone']) || 'プロフェッショナル',
+      tone:
+        (detail.requirement?.tone as ResubmitRemandedPayload["tone"]) ||
+        "プロフェッショナル",
       requirement: {
-        companyName: detail.requirement?.companyName || '',
-        jobCategory: detail.requirement?.jobCategory || '',
-        jobDescription: detail.requirement?.jobDescription || '',
-        requiredSkills: detail.requirement?.requiredSkills || '',
-        workLocation: detail.requirement?.workLocation || '',
-        salaryInfo: detail.requirement?.salaryInfo || '',
-        jobAppeal: detail.requirement?.jobAppeal || '',
+        companyName: detail.requirement?.companyName || "",
+        jobCategory: detail.requirement?.jobCategory || "",
+        jobDescription: detail.requirement?.jobDescription || "",
+        requiredSkills: detail.requirement?.requiredSkills || "",
+        workLocation: detail.requirement?.workLocation || "",
+        salaryInfo: detail.requirement?.salaryInfo || "",
+        jobAppeal: detail.requirement?.jobAppeal || "",
       },
-    }
+    };
   } catch (error) {
-    console.error(error)
-    errorMessage.value = '画面の初期表示に失敗しました'
+    console.error(error);
+    errorMessage.value = "画面の初期表示に失敗しました";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function goBack() {
-  router.push('/list')
+  router.push("/list");
+}
+
+function isFormCompletelyEmpty(payload: ResubmitRemandedPayload): boolean {
+  return [
+    payload.title,
+    payload.body,
+    payload.requirement.companyName,
+    payload.requirement.jobCategory,
+    payload.requirement.jobDescription,
+    payload.requirement.requiredSkills,
+    payload.requirement.workLocation,
+    payload.requirement.salaryInfo,
+    payload.requirement.jobAppeal,
+  ].every((value) => !value.trim());
 }
 
 async function handleResubmit() {
-  if (!form.value) return
+  if (!form.value) return;
 
-  if (!form.value.title.trim() || !form.value.body.trim()) {
-    errorMessage.value = 'タイトルと本文は必須です'
-    return
+  if (isFormCompletelyEmpty(form.value)) {
+    window.alert(
+      "入力フォームが未入力です。内容を入力してから操作してください。",
+    );
+    return;
   }
 
-  submitting.value = true
-  errorMessage.value = ''
+  if (!form.value.title.trim() || !form.value.body.trim()) {
+    errorMessage.value = "タイトルと本文は必須です";
+    return;
+  }
+
+  submitting.value = true;
+  errorMessage.value = "";
 
   try {
-    // 差戻し文書を修正して再申請（status: remanded -> waiting_leader）
-    await resubmitRemandedScout(scoutId, form.value)
-    await router.push('/list')
+    // 差戻し/下書き文書を更新して再申請（status: remanded|draft -> waiting_leader）
+    await resubmitRemandedScout(scoutId, form.value);
+    await router.push("/list");
   } catch (error: any) {
-    console.error(error)
-    errorMessage.value = error?.response?.data?.message || '再申請に失敗しました'
+    console.error(error);
+    errorMessage.value =
+      error?.response?.data?.message || "再申請に失敗しました";
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 onMounted(() => {
-  loadPage()
-  loadCheckItems()
-})
+  loadPage();
+  loadCheckItems();
+});
 </script>
 
 <style scoped>
@@ -415,9 +473,18 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.column-input { flex: 1.3; min-width: 0; }
-.column-edit { flex: 1.1; min-width: 0; }
-.column-check { flex: 0.9; min-width: 0; }
+.column-input {
+  flex: 1.3;
+  min-width: 0;
+}
+.column-edit {
+  flex: 1.1;
+  min-width: 0;
+}
+.column-check {
+  flex: 0.9;
+  min-width: 0;
+}
 
 .form-scroll-wrapper {
   flex: 1;

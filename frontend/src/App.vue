@@ -3,6 +3,7 @@
     <template v-if="authStore.isAuthenticated">
       <div class="mx-auto flex min-h-screen max-w-[1440px]">
         <AppSidebar
+          :user-name="userName"
           :user-email="userEmail"
           :user-role="userRole"
           @logout="handleLogout"
@@ -29,7 +30,14 @@ import AppSidebar from "./components/layout/AppSidebar.vue";
 const router = useRouter();
 const authStore = useAuthStore();
 
-const userEmail = computed(() => authStore.currentUserEmail || "未ログイン");
+const userName = computed(() => {
+  if (authStore.currentUserName) return authStore.currentUserName;
+  if (authStore.currentUserEmail?.includes("@")) {
+    return authStore.currentUserEmail.split("@")[0];
+  }
+  return "ユーザー";
+});
+const userEmail = computed(() => authStore.currentUserEmail || "-");
 const userRole = computed(() => authStore.currentUserRoleType || "ゲスト");
 
 async function handleLogout() {

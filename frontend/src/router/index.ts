@@ -11,6 +11,7 @@ import LoginPage from "../components/LoginPage.vue";
 import RegisterPage from "../components/RegisterPage.vue";
 import SettingCheckItem from "../components/SettingCheckItem.vue";
 import SettingUserprofile from "../components/SettingUserprofile.vue";
+import MyProfilePage from "../components/MyProfilePage.vue";
 import LeaderReviewPage from "../components/LeaderReviewPage.vue";
 import AdminReviewPage from "../components/AdminReviewPage.vue";
 import SalesApprovalPage from "../components/SalesApprovalPage.vue";
@@ -92,6 +93,12 @@ const routes: RouteRecordRaw[] = [
     path: "/settings/profile",
     name: "settings-profile",
     component: SettingUserprofile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/profile",
+    name: "my-profile",
+    component: MyProfilePage,
     meta: { requiresAuth: true },
   },
 ];
