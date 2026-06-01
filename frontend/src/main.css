@@ -119,6 +119,10 @@ aside nav button,
   cursor: pointer;
 }
 
+#app > div > div > aside > div > button.sidebar-user {
+  padding-left: 12px !important;
+}
+
 aside nav a:hover,
 aside nav button:hover {
   background: var(--sidebar-hover) !important;
