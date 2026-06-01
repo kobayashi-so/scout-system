@@ -50,7 +50,7 @@
 
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
-                  v-if="canOpenDraftEdit(item.status)"
+                  v-if="canOpenDraftEdit(item.status, item.creator)"
                   class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
                   @click="$emit('open-remanded-edit', item)"
                 >
@@ -116,35 +116,35 @@
               </div>
               <div class="info-item">
                 <strong>会社名</strong>
-                <p>{{ selectedRow.requirement?.companyName }}</p>
+                <p>{{ selectedRow.requirement?.companyName || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>職種</strong>
-                <p>{{ selectedRow.requirement?.jobCategory }}</p>
+                <p>{{ selectedRow.requirement?.jobCategory || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>業務内容</strong>
-                <p>{{ selectedRow.requirement?.jobDescription }}</p>
+                <p>{{ selectedRow.requirement?.jobDescription || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>必須スキル</strong>
-                <p>{{ selectedRow.requirement?.requiredSkills }}</p>
+                <p>{{ selectedRow.requirement?.requiredSkills || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>勤務地</strong>
-                <p>{{ selectedRow.requirement?.workLocation }}</p>
+                <p>{{ selectedRow.requirement?.workLocation || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>給与</strong>
-                <p>{{ selectedRow.requirement?.salaryInfo }}</p>
+                <p>{{ selectedRow.requirement?.salaryInfo || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>求人の魅力</strong>
-                <p>{{ selectedRow.requirement?.jobAppeal }}</p>
+                <p>{{ selectedRow.requirement?.jobAppeal || "-" }}</p>
               </div>
               <div class="info-item">
                 <strong>文章トーン</strong>
-                <p>{{ selectedRow.requirement?.tone }}</p>
+                <p>{{ selectedRow.requirement?.tone || "-" }}</p>
               </div>
             </div>
           </div>
@@ -192,6 +192,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { fetchScoutDetail } from "../../api/scoutApi";
 import type { RoleType } from "../../type/user";
 import {
   statusLabel,
@@ -200,10 +201,11 @@ import {
 } from "../../type/scout";
 
 const props = defineProps<{
-  rows: ScoutEntity[];
-  roleType: RoleType | null;
-  isTrashView?: boolean;
-}>();
+  rows: ScoutEntity[]
+  roleType: RoleType | null
+  currentUserName?: string | null
+  isTrashView?: boolean
+}>()
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
 const emit = defineEmits<{
@@ -237,9 +239,20 @@ const sortedRows = computed(() => {
   return list;
 });
 
-function openDetail(item: ScoutEntity) {
-  selectedRow.value = item;
+async function openDetail(item: ScoutEntity) {
   copyMessage.value = "";
+  selectedRow.value = item;
+
+  if (!item.id) {
+    return;
+  }
+
+  try {
+    // 一覧レスポンスでは不足しうる求人情報を詳細APIから再取得
+    selectedRow.value = await fetchScoutDetail(item.id);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function closeDetail() {
@@ -330,10 +343,15 @@ function canOpenAdminReview(status?: ScoutStatus): boolean {
   return props.roleType === "admin" && status === "waiting_admin";
 }
 
-function canOpenDraftEdit(status?: ScoutStatus): boolean {
-  return (
-    props.roleType === "sales" && (status === "draft" || status === "remanded")
-  );
+function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
+  if (!status || (status !== "draft" && status !== "remanded")) {
+    return false;
+  }
+
+  const currentUserName = (props.currentUserName || "").trim();
+  const rowCreator = (creator || "").trim();
+
+  return currentUserName.length > 0 && currentUserName === rowCreator;
 }
 </script>
 
