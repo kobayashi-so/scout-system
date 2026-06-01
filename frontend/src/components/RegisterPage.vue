@@ -14,23 +14,23 @@
       <form @submit.prevent="handleRegister">
         <label class="form-label">
           ユーザー名
-          <input 
-            v-model="form.userName" 
-            type="text" 
-            autocomplete="name" 
-            placeholder="山田 太郎" 
-            required 
+          <input
+            v-model="form.userName"
+            type="text"
+            autocomplete="name"
+            placeholder="山田 太郎"
+            required
           />
         </label>
 
         <label class="form-label">
           メールアドレス
-          <input 
-            v-model="form.email" 
-            type="email" 
-            autocomplete="email" 
-            placeholder="example@techvision.com" 
-            required 
+          <input
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            placeholder="example@techvision.com"
+            required
           />
         </label>
 
@@ -67,8 +67,12 @@
           />
         </label>
 
-        <button type="submit" class="btn-register" :disabled="authStore.loading">
-          {{ authStore.loading ? '登録中...' : '登録する' }}
+        <button
+          type="submit"
+          class="btn-register"
+          :disabled="authStore.loading"
+        >
+          {{ authStore.loading ? "登録中..." : "登録する" }}
         </button>
       </form>
 
@@ -81,29 +85,29 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../store/authStore'
+import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../store/authStore";
 
-const authStore = useAuthStore()
-const router = useRouter()
+const authStore = useAuthStore();
+const router = useRouter();
 
 const form = reactive({
-  userName: '', 
-  email: '', 
-  roleType: 'sales' as 'sales' | 'leader' | 'admin', 
-  password: '', 
-  confirmPassword: '', 
-})
+  userName: "",
+  email: "",
+  roleType: "sales" as "sales" | "leader" | "admin",
+  password: "",
+  confirmPassword: "",
+});
 
-const errorMessage = ref('')
+const errorMessage = ref("");
 
 async function handleRegister() {
-  errorMessage.value = ''
+  errorMessage.value = "";
 
   if (form.password !== form.confirmPassword) {
-    errorMessage.value = 'パスワード確認が一致しません'
-    return
+    errorMessage.value = "パスワード確認が一致しません";
+    return;
   }
 
   try {
@@ -112,10 +116,11 @@ async function handleRegister() {
       email: form.email,
       password: form.password,
       roleType: form.roleType,
-    })
-    await router.push({ name: 'scout-list' })
+    });
+    await router.push({ name: "scout-list" });
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'ユーザー登録に失敗しました'
+    errorMessage.value =
+      error instanceof Error ? error.message : "ユーザー登録に失敗しました";
   }
 }
 </script>
@@ -129,16 +134,20 @@ async function handleRegister() {
   justify-content: center;
   padding: 40px 24px; /* 入力項目増加に伴い上下の余白を担保 */
   background: linear-gradient(135deg, #165a45 0%, #146531 40%, #083a13 100%);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: "Helvetica Neue", Arial, sans-serif;
   position: relative;
 }
 
 /* 💡背景に上質な奥行きを出すための光 */
 .auth-page::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  background: radial-gradient(
+    circle at 20% 20%,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 50%
+  );
   pointer-events: none;
 }
 
@@ -228,9 +237,9 @@ select {
 input:focus,
 select:focus {
   outline: none;
-  border-color: #22c55e; /* 鮮やかな緑 */
+  border-color: #3cb47a;
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 0 0 3px rgba(60, 180, 122, 0.15);
 }
 
 input::placeholder {
@@ -277,7 +286,7 @@ input::placeholder {
 }
 
 .link-row a {
-  color: #22c55e; /* 鮮やかな緑 */
+  color: #3cb47a; /* 鮮やかな緑 */
   font-weight: 600;
   text-decoration: none;
   margin-left: 4px;

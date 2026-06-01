@@ -1,120 +1,89 @@
 <template>
-  <section
-    class="mx-auto w-full max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-  >
-    <header class="mb-6 border-b border-slate-100 pb-4">
-      <h1 class="text-xl font-bold text-slate-900">ユーザー情報</h1>
-      <p class="mt-1 text-sm text-slate-500">
+  <section class="profile-page">
+    <header class="page-header">
+      <h1 class="page-title">ユーザー情報</h1>
+      <p class="page-subtitle">
         名前・メールアドレス・パスワードを編集できます。
       </p>
     </header>
 
-    <p
-      v-if="errorMessage"
-      class="mb-4 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700"
-    >
+    <p v-if="errorMessage" class="message error">
       {{ errorMessage }}
     </p>
-    <p
-      v-if="successMessage"
-      class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-    >
+    <p v-if="successMessage" class="message success">
       {{ successMessage }}
     </p>
 
-    <form class="space-y-4" @submit.prevent="handleSave">
-      <div>
-        <label
-          class="mb-1 block text-sm font-medium text-slate-700"
-          for="user-name"
-        >
-          名前
-        </label>
+    <form class="profile-form" @submit.prevent="handleSave">
+      <div class="form-row">
+        <label class="form-label" for="user-name"> 名前 </label>
         <input
           id="user-name"
           v-model="form.userName"
           type="text"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
+          class="form-input"
           placeholder="山田 太郎"
         />
       </div>
 
-      <div>
-        <label
-          class="mb-1 block text-sm font-medium text-slate-700"
-          for="user-email"
-        >
-          メールアドレス
-        </label>
+      <div class="form-row">
+        <label class="form-label" for="user-email"> メールアドレス </label>
         <input
           id="user-email"
           v-model="form.email"
           type="email"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
+          class="form-input"
           placeholder="example@company.com"
         />
       </div>
 
-      <hr class="border-slate-200" />
+      <hr class="divider" />
 
-      <div>
-        <p class="mb-2 text-sm font-semibold text-slate-800">
+      <p class="password-section-title">
+        <span class="password-section-badge">
           パスワード変更（必要なときのみ入力）
-        </p>
+        </span>
+      </p>
 
-        <label
-          class="mb-1 block text-sm font-medium text-slate-700"
-          for="current-password"
-        >
+      <div class="form-row">
+        <label class="form-label" for="current-password">
           現在のパスワード
         </label>
         <input
           id="current-password"
           v-model="form.currentPassword"
           type="password"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
+          class="form-input"
           placeholder="現在のパスワード"
         />
       </div>
 
-      <div>
-        <label
-          class="mb-1 block text-sm font-medium text-slate-700"
-          for="new-password"
-        >
-          新しいパスワード
-        </label>
+      <div class="form-row">
+        <label class="form-label" for="new-password"> 新しいパスワード </label>
         <input
           id="new-password"
           v-model="form.newPassword"
           type="password"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
+          class="form-input"
           placeholder="6文字以上"
         />
       </div>
 
-      <div>
-        <label
-          class="mb-1 block text-sm font-medium text-slate-700"
-          for="new-password-confirm"
-        >
+      <div class="form-row">
+        <label class="form-label" for="new-password-confirm">
           新しいパスワード（確認）
         </label>
         <input
           id="new-password-confirm"
           v-model="newPasswordConfirm"
           type="password"
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-slate-500"
+          class="form-input"
           placeholder="確認用に再入力"
         />
       </div>
 
-      <div class="pt-2">
-        <button
-          type="submit"
-          :disabled="saving"
-          class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
-        >
+      <div class="actions">
+        <button type="submit" :disabled="saving" class="save-button">
           {{ saving ? "保存中..." : "保存する" }}
         </button>
       </div>
@@ -214,3 +183,142 @@ async function handleSave() {
   }
 }
 </script>
+
+<style scoped>
+.profile-page {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 768px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.page-header {
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.message {
+  margin-bottom: 14px;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+.message.error {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.message.success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.form-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: #64748b;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 6px 0;
+}
+
+.password-section-title {
+  margin: 2px 0;
+}
+
+.password-section-badge {
+  display: inline-block;
+  background-color: #8bf7c3;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.actions {
+  padding-top: 8px;
+}
+
+.save-button {
+  border: none;
+  border-radius: 6px;
+  background: #22c55e;
+  color: #ffffff;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-button:hover {
+  background: #16a34a;
+}
+
+.save-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+</style>

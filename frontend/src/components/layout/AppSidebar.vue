@@ -106,21 +106,12 @@
     </nav>
 
     <div class="sidebar-bottom">
-      <button
-        type="button"
-        class="mb-4 block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        @click="$emit('logout')"
-      >
+      <button type="button" class="logout-button" @click="$emit('logout')">
         ログアウト
       </button>
       <!-- ログインユーザー情報 -->
-      <button
-        type="button"
-        class="sidebar-user w-full text-left"
-        aria-label="ログインユーザー情報"
-        @click="goToMyProfile"
-      >
-        <span class="sidebar-user-icon" aria-hidden="true">👤</span>
+      <button type="button" class="sidebar-user" @click="goToMyProfile">
+        <div class="sidebar-avatar">{{ userInitial }}</div>
         <div class="sidebar-user-meta">
           <p class="sidebar-user-name">{{ userName }}</p>
           <p class="sidebar-user-role">{{ userEmail }}</p>
@@ -153,6 +144,11 @@ const isSettingsOpen = ref(false);
 const isApprovalActive = computed(() => route.path.startsWith("/approval"));
 const isSettingsActive = computed(() => route.path.startsWith("/settings"));
 
+const userInitial = computed(() => {
+  const first = props.userEmail.trim().charAt(0);
+  return first || "?";
+});
+
 watchEffect(() => {
   if (isApprovalActive.value) isApprovalOpen.value = true;
   if (isSettingsActive.value) isSettingsOpen.value = true;
@@ -166,21 +162,34 @@ function goToMyProfile() {
 const userRole = computed(() => props.userRole);
 </script>
 
-<style>
+<style scoped>
+.logout-button {
+  margin-bottom: 1rem;
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #f1f5f9;
+}
+
 .sidebar-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
 }
 
-.sidebar-user-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  font-size: 20px;
-  line-height: 1;
+.sidebar-user::before {
+  display: none;
 }
 </style>
