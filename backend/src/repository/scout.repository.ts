@@ -180,7 +180,7 @@ export class ScoutRepository {
        WHERE id = $1
          AND status = $4
        RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
+      [scoutId, "waiting_admin", approverId, "waiting_leader"],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -198,7 +198,7 @@ export class ScoutRepository {
        WHERE id = $1
          AND status = $4
        RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'approved', approverId, 'waiting_admin'],
+      [scoutId, "approved", approverId, "waiting_admin"],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -215,7 +215,7 @@ export class ScoutRepository {
        WHERE id = $1
          AND status = $3
        RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
-      [scoutId, 'remanded', currentStatus],
+      [scoutId, "remanded", currentStatus],
     );
 
     return rows[0] ? this.mapRowToEntity(rows[0]) : null;
@@ -243,7 +243,14 @@ export class ScoutRepository {
            AND status IN ($5, $6)
            AND deleted_at IS NULL
          RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
-        [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded', 'draft'],
+        [
+          scoutId,
+          input.title.trim(),
+          input.body.trim(),
+          "waiting_leader",
+          "remanded",
+          "draft",
+        ],
       );
 
       if (updatedRows.length === 0) {
@@ -280,6 +287,124 @@ export class ScoutRepository {
 
       await queryRunner.commitTransaction();
       return this.mapRowToEntity(updatedRows[0]);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async saveDraftScout(
+    scoutId: string,
+    input: UpdateRemandedScoutInput,
+  ): Promise<ScoutEntity | null> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const updatedRows = await queryRunner.query(
+        `UPDATE scouts
+         SET title = $2,
+             previous_body = body,
+             body = $3,
+             status = $4
+         WHERE id = $1
+           AND status = $5
+           AND deleted_at IS NULL
+         RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+        [scoutId, input.title.trim(), input.body.trim(), "draft", "draft"],
+      );
+
+      if (updatedRows.length === 0) {
+        await queryRunner.rollbackTransaction();
+        return null;
+      }
+
+      const r = input.requirement;
+      await queryRunner.query(
+        `UPDATE scout_job_requirements
+         SET company_name = $2,
+             job_category = $3,
+             job_description = $4,
+             required_skills = $5,
+             work_location = $6,
+             salary_info = $7,
+             job_appeal = $8,
+             tone = $9,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE scout_id = $1`,
+        [
+          scoutId,
+          r.companyName.trim(),
+          r.jobCategory.trim(),
+          r.jobDescription.trim(),
+          r.requiredSkills.trim(),
+          r.workLocation.trim(),
+          r.salaryInfo.trim(),
+          r.jobAppeal.trim(),
+          input.tone,
+        ],
+      );
+
+      await queryRunner.commitTransaction();
+      return this.mapRowToEntity(updatedRows[0]);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async duplicateScoutAsDraft(
+    sourceScoutId: string,
+    duplicatedScoutId: string,
+    creatorName: string,
+  ): Promise<ScoutEntity | null> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const duplicatedRows = await queryRunner.query(
+        `INSERT INTO scouts (id, creator, title, body, previous_body, status, first_approver_id, second_approver_id)
+         SELECT $2, $3, title, body, NULL, $4, NULL, NULL
+         FROM scouts
+         WHERE id = $1
+           AND deleted_at IS NULL
+         RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
+        [sourceScoutId, duplicatedScoutId, creatorName, "draft"],
+      );
+
+      if (duplicatedRows.length === 0) {
+        await queryRunner.rollbackTransaction();
+        return null;
+      }
+
+      await queryRunner.query(
+        `INSERT INTO scout_job_requirements
+         (scout_id, company_name, job_category, job_description, required_skills, work_location, salary_info, job_appeal, tone)
+         SELECT
+           $2,
+           COALESCE(r.company_name, s.creator),
+           COALESCE(r.job_category, s.title),
+           COALESCE(r.job_description, s.body),
+           COALESCE(r.required_skills, ''),
+           COALESCE(r.work_location, ''),
+           COALESCE(r.salary_info, ''),
+           COALESCE(r.job_appeal, ''),
+           COALESCE(r.tone, 'プロフェッショナル')
+         FROM scouts s
+         LEFT JOIN scout_job_requirements r ON r.scout_id = s.id
+         WHERE s.id = $1
+           AND s.deleted_at IS NULL`,
+        [sourceScoutId, duplicatedScoutId],
+      );
+
+      await queryRunner.commitTransaction();
+      return this.mapRowToEntity(duplicatedRows[0]);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
