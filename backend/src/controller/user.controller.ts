@@ -59,6 +59,21 @@ export class UserController {
     return this.userService.updateRole(id, body.roleType, body.actorRoleType);
   }
 
+  // 本人のプロフィール情報（名前/メール/パスワード）を更新
+  @Patch(":id/profile")
+  updateProfile(
+    @Param("id") id: string,
+    @Body()
+    body: {
+      userName?: string;
+      email?: string;
+      currentPassword?: string;
+      newPassword?: string;
+    },
+  ): Promise<UserResponse> {
+    return this.userService.updateProfile(id, body);
+  }
+
   // 管理者のみ、ユーザーを削除可能
   @Delete(":id")
   remove(

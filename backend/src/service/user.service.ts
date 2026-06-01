@@ -23,6 +23,13 @@ interface LoginUserInput {
   password: string;
 }
 
+interface UpdateProfileInput {
+  userName?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export interface UserResponse {
   userId?: string;
   userName: string;
@@ -128,6 +135,81 @@ export class UserService {
     }
 
     return { success: true };
+  }
+
+  // 本人のプロフィール更新（userName/email/password）
+  async updateProfile(
+    userId: string,
+    input: UpdateProfileInput,
+  ): Promise<UserResponse> {
+    if (!userId?.trim()) {
+      throw new BadRequestException("ユーザーIDは必須です");
+    }
+
+    const targetUser = await this.userRepository.findById(userId.trim());
+    if (!targetUser) {
+      throw new NotFoundException("対象ユーザーが見つかりません");
+    }
+
+    const nextUserName =
+      input.userName !== undefined
+        ? input.userName.trim()
+        : targetUser.userName;
+    const nextEmail =
+      input.email !== undefined
+        ? input.email.trim().toLowerCase()
+        : targetUser.email;
+
+    if (!nextUserName) {
+      throw new BadRequestException("ユーザー名は必須です");
+    }
+
+    if (!nextEmail) {
+      throw new BadRequestException("メールアドレスは必須です");
+    }
+
+    if (nextEmail !== targetUser.email) {
+      const existing = await this.userRepository.findByEmail(nextEmail);
+      if (existing && existing.userId !== targetUser.userId) {
+        throw new BadRequestException(
+          "このメールアドレスは既に登録されています",
+        );
+      }
+    }
+
+    let nextPassword = targetUser.password;
+    const wantsToChangePassword =
+      input.currentPassword !== undefined || input.newPassword !== undefined;
+
+    if (wantsToChangePassword) {
+      if (!input.currentPassword) {
+        throw new BadRequestException("現在のパスワードを入力してください");
+      }
+
+      if (input.currentPassword !== targetUser.password) {
+        throw new UnauthorizedException("現在のパスワードが正しくありません");
+      }
+
+      if (!input.newPassword || input.newPassword.length < 6) {
+        throw new BadRequestException(
+          "新しいパスワードは6文字以上で入力してください",
+        );
+      }
+
+      nextPassword = input.newPassword;
+    }
+
+    const updated = await this.userRepository.updateProfile(userId.trim(), {
+      userName: nextUserName,
+      email: nextEmail,
+      password: nextPassword,
+    });
+
+    if (!updated) {
+      throw new NotFoundException("対象ユーザーが見つかりません");
+    }
+
+    return this.toUserResponse(updated);
   }
 
   private validateRegisterInput(input: RegisterUserInput) {

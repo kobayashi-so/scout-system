@@ -1,6 +1,8 @@
 <template>
   <section>
-    <h2 class="mb-4 text-2xl font-bold text-slate-900">全ステータスのスカウト文</h2>
+    <h2 class="mb-4 text-2xl font-bold text-slate-900">
+      全ステータスのスカウト文
+    </h2>
 
     <div class="mb-4 flex flex-wrap items-start gap-3">
       <DashboardTabs
@@ -37,15 +39,25 @@
       v-else
       :rows="displayRows"
       :role-type="roleType"
+      :is-trash-view="activeTab === 'trash'"
       @open-review="openReview"
       @open-remanded-edit="openRemandedEdit"
+      @soft-delete="softDeleteRow"
+      @restore="restoreRow"
+      @hard-delete="hardDeleteRow"
     />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { fetchScouts, type ScoutListType } from '../api/scoutApi'
+import {
+  fetchScouts,
+  hardDeleteScout,
+  restoreScout,
+  softDeleteScout,
+  type ScoutListType,
+} from '../api/scoutApi'
 import { useAuthStore } from '../store/authStore'
 import { useRouter } from 'vue-router'
 import type { ScoutEntity } from '../type/scout'
@@ -53,37 +65,38 @@ import DashboardTabs from './dashboard/DashboardTabs.vue'
 import StatusCards, { type StatusFilterKey } from './dashboard/StatusCards.vue'
 import ScoutTable from './dashboard/ScoutTable.vue'
 
-type RoleLevel = 1 | 2 | 3
+type RoleLevel = 1 | 2 | 3;
 
-const authStore = useAuthStore()
-const router = useRouter()
+const authStore = useAuthStore();
+const router = useRouter();
 
 const roleLevel = computed<RoleLevel>(() => {
   // 画面タブ制御用にroleを段階値へ変換
-  if (authStore.currentUserRoleType === 'admin') return 3
-  if (authStore.currentUserRoleType === 'leader') return 2
-  return 1
-})
+  if (authStore.currentUserRoleType === "admin") return 3;
+  if (authStore.currentUserRoleType === "leader") return 2;
+  return 1;
+});
 
 const tabDefs: { key: ScoutListType; label: string; minRole: RoleLevel }[] = [
   { key: 'my', label: '全申請文書', minRole: 1 },
   { key: 'sales_pending', label: '営業承認者承認待ち', minRole: 2 },
   { key: 'final_pending', label: '最終承認待ち', minRole: 3 },
+  { key: 'trash', label: 'ゴミ箱', minRole: 1 },
 ]
 
 const availableTabs = computed(() =>
   tabDefs
-    .filter(t => roleLevel.value >= t.minRole)
-    .map(t => ({ key: t.key, label: t.label })),
-)
+    .filter((t) => roleLevel.value >= t.minRole)
+    .map((t) => ({ key: t.key, label: t.label })),
+);
 
 const activeTab = ref<ScoutListType>('my')
 const selectedStatusCard = ref<StatusFilterKey>('all')
 const creatorFilter = ref<'all' | 'mine'>('all')
 
-const rows = ref<ScoutEntity[]>([])
-const loading = ref(false)
-const error = ref('')
+const rows = ref<ScoutEntity[]>([]);
+const loading = ref(false);
+const error = ref("");
 
 const currentUserNameLabel = computed(() => authStore.currentUserName || 'ユーザー名')
 
@@ -92,46 +105,64 @@ const isSalesMyTab = computed(() => {
 })
 
 function resolveInitialTab(role: RoleLevel): ScoutListType {
-  if (role >= 3) return 'final_pending'
-  if (role >= 2) return 'sales_pending'
-  return 'my'
+  if (role >= 3) return "final_pending";
+  if (role >= 2) return "sales_pending";
+  return "my";
 }
 
 async function loadRows() {
-  loading.value = true
-  error.value = ''
+  loading.value = true;
+  error.value = "";
   try {
-    rows.value = await fetchScouts()
+    rows.value = await fetchScouts({ includeDeleted: activeTab.value === 'trash' })
   } catch (e) {
-    console.error(e)
-    error.value = 'スカウト文の取得に失敗しました'
+    console.error(e);
+    error.value = "スカウト文の取得に失敗しました";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 const displayRows = computed(() => {
-  let filteredRows = rows.value
+  let filteredRows = rows.value;
+
+  if (activeTab.value === 'trash') {
+    return filteredRows.filter((r: ScoutEntity) => !!r.deletedAt)
+  }
+
+  filteredRows = filteredRows.filter((r: ScoutEntity) => !r.deletedAt)
 
   // レビュー対象タブはバックエンド未実装のtypeパラメータを使わず、フロントで絞り込む
-  if (activeTab.value === 'sales_pending') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'waiting_leader')
+  if (activeTab.value === "sales_pending") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "waiting_leader",
+    );
   }
-  if (activeTab.value === 'final_pending') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'waiting_admin')
+  if (activeTab.value === "final_pending") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "waiting_admin",
+    );
   }
 
-  if (selectedStatusCard.value === 'approved') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'approved')
+  if (selectedStatusCard.value === "approved") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "approved",
+    );
   }
-  if (selectedStatusCard.value === 'salesPending') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'waiting_leader')
+  if (selectedStatusCard.value === "salesPending") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "waiting_leader",
+    );
   }
-  if (selectedStatusCard.value === 'finalPending') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'waiting_admin')
+  if (selectedStatusCard.value === "finalPending") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "waiting_admin",
+    );
   }
-  if (selectedStatusCard.value === 'rejected') {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => r.status === 'remanded')
+  if (selectedStatusCard.value === "rejected") {
+    filteredRows = filteredRows.filter(
+      (r: ScoutEntity) => r.status === "remanded",
+    );
   }
 
   if (isSalesMyTab.value && creatorFilter.value === 'mine') {
@@ -145,10 +176,10 @@ const displayRows = computed(() => {
 })
 
 const statusStats = computed(() => ({
-  approved: rows.value.filter((r: ScoutEntity) => r.status === 'approved').length,
-  salesPending: rows.value.filter((r: ScoutEntity) => r.status === 'waiting_leader').length,
-  finalPending: rows.value.filter((r: ScoutEntity) => r.status === 'waiting_admin').length,
-  rejected: rows.value.filter((r: ScoutEntity) => r.status === 'remanded').length,
+  approved: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'approved').length,
+  salesPending: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'waiting_leader').length,
+  finalPending: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'waiting_admin').length,
+  rejected: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'remanded').length,
 }))
 
 const roleType = computed(() => authStore.currentUserRoleType)
@@ -167,52 +198,92 @@ function onClickTab(tab: ScoutListType) {
     return
   }
 
+  if (tab === 'trash') {
+    selectedStatusCard.value = 'all'
+    return
+  }
+
   selectedStatusCard.value = 'finalPending'
 }
 
 function ensureActorId(): string | null {
   // 旧セッション（userId未保存）を明示的に検知
   if (!authStore.currentUserId) {
-    error.value = 'ユーザー情報が古いため、再ログインしてください'
-    return null
+    error.value = "ユーザー情報が古いため、再ログインしてください";
+    return null;
   }
 
-  return authStore.currentUserId
+  return authStore.currentUserId;
 }
 
 async function openReview(item: ScoutEntity) {
-  if (!item.id) return
-  const actorId = ensureActorId()
-  if (!actorId) return
+  if (!item.id) return;
+  const actorId = ensureActorId();
+  if (!actorId) return;
 
   // ロールに応じて同一UIの別モード画面へ遷移
-  if (authStore.currentUserRoleType === 'leader') {
-    await router.push(`/reviews/leader/${item.id}`)
-    return
+  if (authStore.currentUserRoleType === "leader") {
+    await router.push(`/reviews/leader/${item.id}`);
+    return;
   }
 
-  if (authStore.currentUserRoleType === 'admin') {
-    await router.push(`/reviews/admin/${item.id}`)
-    return
+  if (authStore.currentUserRoleType === "admin") {
+    await router.push(`/reviews/admin/${item.id}`);
+    return;
   }
 
-  error.value = 'このアカウントではレビュー画面を開けません'
+  error.value = "このアカウントではレビュー画面を開けません";
 }
 
-async function openRemandedEdit(item: ScoutEntity) {
+async function openEdit(item: ScoutEntity) {
+  if (!item.id) return;
+  // 編集画面は文書IDでルーティングして、初期値は詳細APIから復元する
+  await router.push(`/scouts/${item.id}/remanded-edit`);
+}
+
+async function softDeleteRow(item: ScoutEntity) {
   if (!item.id) return
-  // 差戻し編集画面は文書IDでルーティングして、初期値は詳細APIから復元する
-  await router.push(`/scouts/${item.id}/remanded-edit`)
+
+  try {
+    await softDeleteScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '削除に失敗しました'
+  }
+}
+
+async function restoreRow(item: ScoutEntity) {
+  if (!item.id) return
+
+  try {
+    await restoreScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '復元に失敗しました'
+  }
+}
+
+async function hardDeleteRow(item: ScoutEntity) {
+  if (!item.id) return
+
+  try {
+    await hardDeleteScout(item.id)
+    await loadRows()
+  } catch (e) {
+    console.error(e)
+    error.value = '完全削除に失敗しました'
+  }
 }
 
 watch(activeTab, () => {
-  loadRows()
-})
+  loadRows();
+});
 
 onMounted(() => {
-  authStore.hydrateFromStorage()
-  activeTab.value = resolveInitialTab(roleLevel.value)
-  loadRows()
-})
-
+  authStore.hydrateFromStorage();
+  activeTab.value = resolveInitialTab(roleLevel.value);
+  loadRows();
+});
 </script>
