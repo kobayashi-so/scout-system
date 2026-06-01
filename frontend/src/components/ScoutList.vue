@@ -4,11 +4,27 @@
       全ステータスのスカウト文
     </h2>
 
-    <DashboardTabs
-      v-model="activeTab"
-      :tabs="availableTabs"
-      @tab-click="onClickTab"
-    />
+    <div class="mb-4 flex flex-wrap items-start gap-3">
+      <DashboardTabs
+        v-if="availableTabs.length > 0"
+        v-model="activeTab"
+        :tabs="availableTabs"
+        @tab-click="onClickTab"
+      />
+
+      <div v-if="isSalesMyTab" class="mb-4 flex items-center gap-2">
+        <button
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-semibold transition"
+          :class="creatorFilter === 'mine'
+            ? 'bg-slate-900 text-white'
+            : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+          @click="creatorFilter = creatorFilter === 'mine' ? 'all' : 'mine'"
+        >
+          {{ currentUserNameLabel }}
+        </button>
+      </div>
+    </div>
 
     <StatusCards
       :stats="statusStats"
@@ -74,12 +90,19 @@ const availableTabs = computed(() =>
     .map((t) => ({ key: t.key, label: t.label })),
 );
 
-const activeTab = ref<ScoutListType>("my");
-const selectedStatusCard = ref<StatusFilterKey>("all");
+const activeTab = ref<ScoutListType>('my')
+const selectedStatusCard = ref<StatusFilterKey>('all')
+const creatorFilter = ref<'all' | 'mine'>('all')
 
 const rows = ref<ScoutEntity[]>([]);
 const loading = ref(false);
 const error = ref("");
+
+const currentUserNameLabel = computed(() => authStore.currentUserName || 'ユーザー名')
+
+const isSalesMyTab = computed(() => {
+  return authStore.currentUserRoleType === 'sales' && activeTab.value === 'my'
+})
 
 function resolveInitialTab(role: RoleLevel): ScoutListType {
   if (role >= 3) return "final_pending";
@@ -142,8 +165,15 @@ const displayRows = computed(() => {
     );
   }
 
-  return filteredRows;
-});
+  if (isSalesMyTab.value && creatorFilter.value === 'mine') {
+    const currentUserName = authStore.currentUserName?.trim()
+    filteredRows = filteredRows.filter((r: ScoutEntity) => {
+      return Boolean(currentUserName) && r.creator.trim() === currentUserName
+    })
+  }
+
+  return filteredRows
+})
 
 const statusStats = computed(() => ({
   approved: rows.value.filter((r: ScoutEntity) => !r.deletedAt && r.status === 'approved').length,
@@ -156,6 +186,8 @@ const roleType = computed(() => authStore.currentUserRoleType)
 
 
 function onClickTab(tab: ScoutListType) {
+  creatorFilter.value = 'all'
+
   if (tab === 'my') {
     selectedStatusCard.value = 'all'
     return
