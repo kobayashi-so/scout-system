@@ -59,14 +59,7 @@
 
                 <button
                   v-if="canOpenLeaderReview(item.status)"
-                  class="review-action-btn"
-                  @click="$emit('open-review', item)"
-                >
-                  レビュー
-                </button>
-                <button
-                  v-if="canOpenAdminReview(item.status)"
-                  class="review-action-btn"
+                  class="review-button"
                   @click="$emit('open-review', item)"
                 >
                   レビュー
@@ -482,6 +475,22 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
   min-height: 0;
 }
 
+.review-button {
+  border: none;
+  border-radius: 6px;
+  background: #c4b5fd;
+  color: #312e81;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.review-button:hover {
+  background: #a78bfa;
+}
+
 .scout-display-box {
   width: 100%;
   flex: 1;
@@ -532,19 +541,6 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.review-action-btn {
-  border-radius: 0.375rem;
-  background: #dbeafe;
-  color: #1d4ed8;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.review-action-btn:hover {
-  background: #bfdbfe;
 }
 
 .copy-btn:hover {
