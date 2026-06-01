@@ -3,7 +3,7 @@
     <div class="auth-card">
       <!-- アプリのロゴを模したヘッダー -->
       <div class="auth-header">
-        <span class="brand-logo">Scout MANAGER</span>
+        <span class="brand-logo">ScoutForge</span>
         <h1>ログイン</h1>
         <p class="subtitle">
           登録済みアカウントでスカウト一覧にアクセスできます。
@@ -112,7 +112,7 @@ async function handleLogin() {
   justify-content: center;
   padding: 24px;
   background: linear-gradient(135deg, #165a45 0%, #146531 40%, #083a13 100%);
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-family: "Manrope", "Noto Sans JP", sans-serif;
   position: relative;
 }
 
@@ -217,7 +217,7 @@ input::placeholder {
   margin-top: 8px;
   border: none;
   border-radius: 8px;
-  background: #165a45; /* メイン深緑 */
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
   color: white;
   font-weight: 600;
   font-size: 0.9rem;
@@ -228,7 +228,7 @@ input::placeholder {
 }
 
 .btn-login:hover {
-  background: #22c55e;
+  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
   transform: translateY(-1px); /* ホバー時にわずかに浮かす微細なエフェクト */
   box-shadow: 0 6px 16px rgba(22, 90, 69, 0.3);
 }
@@ -252,7 +252,7 @@ input::placeholder {
 }
 
 .link-row a {
-  color: #22c55e; /* 鮮やかな緑 */
+  color: #0f766e;
   font-weight: 600;
   text-decoration: none;
   margin-left: 4px;
@@ -261,7 +261,7 @@ input::placeholder {
 
 .link-row a:hover {
   text-decoration: underline;
-  color: #165a45;
+  color: #134e4a;
 }
 
 /* 通知メッセージボックス */

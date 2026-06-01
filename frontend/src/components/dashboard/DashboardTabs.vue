@@ -1,13 +1,11 @@
 <template>
-  <div class="mb-4 flex flex-wrap items-center gap-2">
+  <div class="tabs-wrap">
     <button
       v-for="tab in tabs"
       :key="tab.key"
       type="button"
-      class="rounded-full px-4 py-2 text-sm font-semibold transition"
-      :class="tab.key === modelValue
-        ? 'bg-slate-900 text-white'
-        : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+      class="tab-btn"
+      :class="{ 'is-active': tab.key === modelValue }"
       @click="onClickTab(tab.key)"
     >
       {{ tab.label }}
@@ -36,3 +34,35 @@ function onClickTab(tabKey: TabItem['key']) {
   emit('tab-click', tabKey)
 }
 </script>
+
+<style scoped>
+.tabs-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  border: 1px solid #d8e4de;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #37544c;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab-btn:hover {
+  background: #f3f8f5;
+}
+
+.tab-btn.is-active {
+  border-color: #0f766e;
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(4, 120, 87, 0.22);
+}
+</style>

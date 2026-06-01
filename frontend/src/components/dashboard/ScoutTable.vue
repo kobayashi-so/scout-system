@@ -31,7 +31,7 @@
             </td>
             <td class="px-4 py-3">
               <span
-                class="rounded-full px-2 py-1 text-xs font-semibold"
+                class="i-block rounded-full px-4 py-1 text-xs font-semibold"
                 :class="statusClass(item.status)"
               >
                 {{ statusLabel(item.status) }}
@@ -42,7 +42,7 @@
             <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
-                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
+                  class="mini-action-btn"
                   @click="openDetail(item)"
                 >
                   詳細
@@ -51,7 +51,7 @@
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
                   v-if="canOpenDraftEdit(item.status, item.creator)"
-                  class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium hover:bg-slate-200 text-slate-700"
+                  class="mini-action-btn"
                   @click="$emit('open-remanded-edit', item)"
                 >
                   編集
@@ -484,18 +484,35 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 
 .review-button {
   border: none;
-  border-radius: 6px;
-  background: #c4b5fd;
-  color: #312e81;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  color: #ffffff;
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.16s ease;
+  transition: all 0.16s ease;
 }
 
 .review-button:hover {
-  background: #a78bfa;
+  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
+}
+
+.mini-action-btn {
+  border: 1px solid #d4e4dd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #33534a;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.mini-action-btn:hover {
+  background: #f4faf7;
+  border-color: #b8d1c7;
 }
 
 .scout-display-box {

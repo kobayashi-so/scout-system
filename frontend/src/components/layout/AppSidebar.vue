@@ -369,6 +369,10 @@ const userRole = computed(() => props.userRole);
   margin: 0;
 }
 
+.sidebar-user-meta {
+  text-align: left;
+}
+
 .sidebar-user-name {
   color: #ecfeff;
   font-size: 12px;

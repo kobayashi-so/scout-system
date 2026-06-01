@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section class="scout-list-page">
     <h2 class="mb-4 text-2xl font-bold text-slate-900">
       全ステータスのスカウト文
     </h2>
@@ -38,10 +38,10 @@
           優先（{{ priorityCandidateCount }}）
         </button>
 
-        <div class="h-10 w-10 flex items-center justify-center" aria-label="優先件数アラート">
+        <div class="priority-alert" aria-label="優先件数アラート">
           <span
             v-if="priorityCandidateCount > 0"
-            class="text-3xl font-extrabold leading-none text-rose-600"
+            class="priority-symbol"
           >
             !
           </span>
@@ -385,3 +385,24 @@ onMounted(() => {
   loadRows();
 });
 </script>
+
+<style scoped>
+.scout-list-page {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 255, 252, 0.88) 100%);
+}
+
+.priority-alert {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.priority-symbol {
+  font-size: 30px;
+  font-weight: 900;
+  color: #dc2626;
+  line-height: 1;
+}
+</style>

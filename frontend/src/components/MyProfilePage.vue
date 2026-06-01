@@ -194,11 +194,11 @@ async function handleSave() {
   margin: 0 auto;
   width: 100%;
   max-width: 768px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
+  border: 1px solid #d8e4de;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
   padding: 24px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
 }
 
 .page-header {
@@ -258,9 +258,9 @@ async function handleSave() {
 
 .form-input {
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 8px 12px;
+  border: 1px solid #c8d8d1;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 0.875rem;
   color: #0f172a;
   outline: none;
@@ -268,7 +268,8 @@ async function handleSave() {
 }
 
 .form-input:focus {
-  border-color: #64748b;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
 }
 
 .divider {
@@ -297,8 +298,8 @@ async function handleSave() {
 
 .save-button {
   border: none;
-  border-radius: 6px;
-  background: #22c55e;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
   color: #ffffff;
   padding: 8px 16px;
   font-size: 0.875rem;
@@ -308,7 +309,7 @@ async function handleSave() {
 }
 
 .save-button:hover {
-  background: #16a34a;
+  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
 }
 
 .save-button:disabled {

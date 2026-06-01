@@ -31,9 +31,7 @@ const isCurrentUser = (user: UserResponse) => {
 };
 
 const selectedUser = computed(() => {
-  return (
-    users.value.find((user) => user.userId === selectedUserId.value) ?? null
-  );
+  return users.value.find((user) => user.userId === selectedUserId.value) ?? null;
 });
 
 const resetForm = () => {
@@ -141,10 +139,10 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr v-if="isLoading">
-              <td colspan="4">読み込み中...</td>
+              <td colspan="4" class="state-row">読み込み中...</td>
             </tr>
             <tr v-else-if="users.length === 0">
-              <td colspan="4">ユーザーがありません。</td>
+              <td colspan="4" class="state-row">ユーザーがありません。</td>
             </tr>
             <tr v-for="user in users" :key="user.userId || user.email">
               <td>{{ user.userName }}</td>
@@ -152,6 +150,7 @@ onMounted(async () => {
               <td>{{ roleLabelMap[user.roleType] }}</td>
               <td class="action-cell">
                 <button
+                  type="button"
                   class="btn-row-edit"
                   :disabled="!isAdminUser"
                   @click="onClickEdit(user)"
@@ -159,6 +158,7 @@ onMounted(async () => {
                   編集
                 </button>
                 <button
+                  type="button"
                   class="btn-row-delete"
                   :disabled="!isAdminUser || isCurrentUser(user)"
                   @click="onClickDelete(user)"
@@ -207,6 +207,7 @@ onMounted(async () => {
         </div>
 
         <button
+          type="button"
           class="btn-save"
           :disabled="!isAdminUser || !selectedUserId"
           @click="onClickSave"
@@ -220,106 +221,77 @@ onMounted(async () => {
 
 <style scoped>
 .management-container {
-  padding: 20px;
-  font-family: sans-serif;
+  padding: 24px;
+  border: 1px solid #d8e4de;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
+}
+
+.management-container h2 {
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: 800;
+  color: #10342d;
 }
 
 .content-layout {
-  display: flex;
-  gap: 40px;
-  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  gap: 20px;
+  margin-top: 18px;
 }
 
 .table-section {
-  flex: 2;
+  border: 1px solid #d8e4de;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 .form-section {
-  flex: 1;
-  border: 1px solid #ccc;
+  border: 1px solid #d8e4de;
   padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  background-color: #f5faf7;
+  border-radius: 12px;
 }
 
 .add-title {
-  background-color: #3cb474;
-  color: white;
-  padding: 8px;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 8px;
   display: inline-block;
 }
 
 .edit-title {
-  background-color: #43b3a6; /* 青緑四角 　編集用*/
-  color: white;
-  padding: 8px;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 8px;
   display: inline-block;
 }
 
 .form-group {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #31564b;
 }
 
 .selected-user-text {
   margin: 0;
-  color: #334155;
+  color: #37544c;
 }
 
 .hint-text {
   margin-top: 6px;
-  color: #64748b;
+  color: #567168;
   font-size: 12px;
-}
-
-.btn-row-edit {
-  background-color: #43b3a6; /* 青緑四角 　編集用*/
-  color: white;
-  border: none;
-  padding: 4px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.btn-row-edit:disabled {
-  background-color: #a2a3a4; /* 灰色 管理者ではない人に表示される */
-  cursor: not-allowed;
-}
-
-.btn-row-delete:disabled {
-  background-color: #a2a3a4; /* 灰色 管理者ではない人に表示される */
-  cursor: not-allowed;
-}
-
-.btn-row-delete {
-  background-color: #d10202; /* 赤黒四角 */
-  color: white;
-  border: none;
-  padding: 4px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.btn-save {
-  background-color: #05ad54; /* 緑四角 */
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  width: 100%;
-  cursor: pointer;
-  margin-top: 12px;
-}
-
-.btn-save:disabled {
-  background-color: #a2a3a4; /* 灰色 管理者ではない人に表示される */
-  cursor: not-allowed;
 }
 
 .item-table {
@@ -329,24 +301,86 @@ onMounted(async () => {
 
 .item-table th,
 .item-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: 1px solid #e6efea;
+  padding: 10px 12px;
   text-align: left;
 }
 
 .item-table th {
-  background-color: #f2f2f2;
+  background-color: #f2f8f5;
+  color: #31564b;
+}
+
+.state-row {
+  text-align: center;
+  color: #567168;
 }
 
 .action-cell {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-row-edit {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  border: none;
+  padding: 6px 11px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.btn-row-delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  padding: 6px 11px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.btn-row-edit:disabled,
+.btn-row-delete:disabled,
+.btn-save:disabled {
+  background: #b6c1bc;
+  cursor: not-allowed;
 }
 
 select {
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 8px;
+  border: 1px solid #c8d8d1;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .management-container {
+    padding: 18px;
+  }
 }
 </style>

@@ -171,11 +171,11 @@ onMounted(() => {
 
 .summary-card {
   max-width: 24rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
+  border: 1px solid #d8e4de;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
   padding: 20px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
 }
 
 .summary-content {
@@ -220,9 +220,10 @@ onMounted(() => {
 
 .table-wrapper {
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
+  border: 1px solid #d8e4de;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
 }
 
 .approval-table {
@@ -233,7 +234,7 @@ onMounted(() => {
 }
 
 .approval-table thead {
-  background: #f8fafc;
+  background: #f2f8f5;
   color: #475569;
 }
 
@@ -267,9 +268,9 @@ onMounted(() => {
 
 .review-button {
   border: none;
-  border-radius: 6px;
-  background: #c4b5fd;
-  color: #312e81;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  color: #ffffff;
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
@@ -278,6 +279,6 @@ onMounted(() => {
 }
 
 .review-button:hover {
-  background: #a78bfa;
+  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
 }
 </style>
