@@ -31,8 +31,8 @@ export class ScoutService {
     private readonly commentRepository: CommentRepository,
   ) {}
 
-  findAll(): Promise<ScoutEntity[]> {
-    return this.scoutRepository.findAll();
+  findAll(includeDeleted = false): Promise<ScoutEntity[]> {
+    return this.scoutRepository.findAll(includeDeleted);
   }
 
   async findDetailById(scoutId: string): Promise<ScoutDetail> {
@@ -186,6 +186,32 @@ export class ScoutService {
     }
 
     return updated;
+  }
+
+  async softDelete(scoutId: string): Promise<ScoutEntity> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const deleted = await this.scoutRepository.softDelete(normalizedScoutId);
+    if (!deleted) {
+      throw new NotFoundException('対象スカウトが見つかりません');
+    }
+
+    return deleted;
+  }
+
+  async restore(scoutId: string): Promise<ScoutEntity> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const restored = await this.scoutRepository.restore(normalizedScoutId);
+    if (!restored) {
+      throw new NotFoundException('対象スカウトが見つかりません');
+    }
+
+    return restored;
+  }
+
+  async hardDelete(scoutId: string): Promise<{ deleted: boolean }> {
+    const normalizedScoutId = this.requireText(scoutId, 'scoutIdは必須です');
+    const deleted = await this.scoutRepository.hardDelete(normalizedScoutId);
+    return { deleted };
   }
 
   private generateId(): string {

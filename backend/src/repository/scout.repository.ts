@@ -17,11 +17,13 @@ export class ScoutRepository {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(): Promise<ScoutEntity[]> {
+  async findAll(includeDeleted = false): Promise<ScoutEntity[]> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at
        FROM scouts
+       WHERE ($1::boolean = true OR deleted_at IS NULL)
        ORDER BY created_at DESC`,
+      [includeDeleted],
     );
 
     return rows.map((row: any) => this.mapRowToEntity(row));
@@ -29,9 +31,10 @@ export class ScoutRepository {
 
   async findById(scoutId: string): Promise<ScoutEntity | null> {
     const rows = await this.repository.query(
-      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id
+      `SELECT id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at
        FROM scouts
        WHERE id = $1
+         AND deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -55,6 +58,7 @@ export class ScoutRepository {
          s.status,
          s.first_approver_id,
          s.second_approver_id,
+         s.deleted_at,
          r.company_name,
          r.job_category,
          r.job_description,
@@ -66,6 +70,7 @@ export class ScoutRepository {
        FROM scouts s
        LEFT JOIN scout_job_requirements r ON r.scout_id = s.id
        WHERE s.id = $1
+         AND s.deleted_at IS NULL
        LIMIT 1`,
       [scoutId],
     );
@@ -170,6 +175,7 @@ export class ScoutRepository {
            first_approver_id = $3
        WHERE id = $1
          AND status = $4
+         AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
       [scoutId, 'waiting_admin', approverId, 'waiting_leader'],
     );
@@ -185,6 +191,7 @@ export class ScoutRepository {
            second_approver_id = $3
        WHERE id = $1
          AND status = $4
+         AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
       [scoutId, 'approved', approverId, 'waiting_admin'],
     );
@@ -199,6 +206,7 @@ export class ScoutRepository {
        SET status = $2
        WHERE id = $1
          AND status = $3
+         AND deleted_at IS NULL
        RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
       [scoutId, 'remanded', currentStatus],
     );
@@ -225,6 +233,7 @@ export class ScoutRepository {
              second_approver_id = NULL
          WHERE id = $1
            AND status = $5
+           AND deleted_at IS NULL
          RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id`,
         [scoutId, input.title.trim(), input.body.trim(), 'waiting_leader', 'remanded'],
       );
@@ -271,6 +280,44 @@ export class ScoutRepository {
     }
   }
 
+  async softDelete(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND deleted_at IS NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async restore(scoutId: string): Promise<ScoutEntity | null> {
+    const rows = await this.repository.query(
+      `UPDATE scouts
+       SET deleted_at = NULL
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id, created_at, creator, title, body, status, first_approver_id, second_approver_id, deleted_at`,
+      [scoutId],
+    );
+
+    return rows[0] ? this.mapRowToEntity(rows[0]) : null;
+  }
+
+  async hardDelete(scoutId: string): Promise<boolean> {
+    const rows = await this.repository.query(
+      `DELETE FROM scouts
+       WHERE id = $1
+         AND deleted_at IS NOT NULL
+       RETURNING id`,
+      [scoutId],
+    );
+
+    return rows.length > 0;
+  }
+
   private mapRowToEntity(row: any): ScoutEntity {
     return {
       id: row.id,
@@ -281,6 +328,7 @@ export class ScoutRepository {
       status: row.status as ScoutStatus,
       firstApproverId: row.first_approver_id,
       secondApproverId: row.second_approver_id,
+      deletedAt: row.deleted_at,
     } as ScoutEntity;
   }
 }

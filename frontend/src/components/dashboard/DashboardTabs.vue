@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 interface TabItem {
-  key: 'my' | 'sales_pending' | 'final_pending'
+  key: 'my' | 'sales_pending' | 'final_pending' | 'trash'
   label: string
 }
 
