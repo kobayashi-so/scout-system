@@ -566,7 +566,8 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 .mini-edit-btn {
   border: 1px solid #d4e4dd;
   border-radius: 7px;
-  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
+  /* 編集ボタンをブルー系に変更（他と統一） */
+  background: linear-gradient(135deg, #2b8aef 0%, #1b6fd8 100%);
   color: #ffffff;
   padding: 6px 10px;
   font-size: 12px;
@@ -576,8 +577,8 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 }
 
 .mini-edit-btn:hover {
-  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
-  border-color: #b8d1c7;
+  background: linear-gradient(135deg, #1f6ee6 0%, #165fc2 100%);
+  box-shadow: 0 6px 14px rgba(27, 111, 216, 0.14);
 }
 
 .scout-display-box {

@@ -212,7 +212,7 @@
     <!-- フォーム全体のエラーを目立たせる固定表示（ページ下部、オーバーレイ） -->
     <div v-if="generateError" class="form-error-bar" role="alert" aria-live="assertive">
       <svg class="error-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-        <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z"/>
+        <path fill="currentColor" d="M11.001 8h2v5h-2zM11 14h2v2h-2z"/>
         <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
       </svg>
       <div class="form-error-text">{{ generateError }}</div>
@@ -859,7 +859,7 @@ textarea:focus {
 /* フォーム最下部に表示する目立つエラーバー */
 .form-error-bar {
   position: absolute;
-  left: 24px;
+  left: 50%;
   right: 24px;
   bottom: 24px;
   display: flex;
