@@ -12,7 +12,12 @@
         />
 
         <main class="min-w-0 flex-1 p-4 md:p-6">
-          <RouterView />
+          <RouterView v-slot="{ Component }">
+            <component v-if="suppressAuthTransitionOnce" :is="Component" />
+            <Transition v-else name="app-page" mode="out-in">
+              <component :is="Component" />
+            </Transition>
+          </RouterView>
         </main>
       </div>
     </template>
@@ -24,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "./store/authStore";
 import AppSidebar from "./components/layout/AppSidebar.vue";
@@ -32,6 +37,21 @@ import AppSidebar from "./components/layout/AppSidebar.vue";
 const router = useRouter();
 const authStore = useAuthStore();
 const isSidebarCollapsed = ref(false);
+const suppressAuthTransitionOnce = ref(false);
+
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (!isAuthenticated) return;
+    suppressAuthTransitionOnce.value = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        suppressAuthTransitionOnce.value = false;
+      });
+    });
+  },
+  { immediate: true },
+);
 
 const userName = computed(() => {
   if (authStore.currentUserName) return authStore.currentUserName;

@@ -176,6 +176,7 @@ export class ScoutRepository {
     const rows = await this.repository.query(
       `UPDATE scouts
        SET status = $2,
+           created_at = CURRENT_TIMESTAMP,
            first_approver_id = $3
        WHERE id = $1
          AND status = $4
@@ -194,6 +195,7 @@ export class ScoutRepository {
     const rows = await this.repository.query(
       `UPDATE scouts
        SET status = $2,
+           created_at = CURRENT_TIMESTAMP,
            second_approver_id = $3
        WHERE id = $1
          AND status = $4
@@ -211,7 +213,8 @@ export class ScoutRepository {
     // 差戻しも現在status一致時のみ更新
     const rows = await this.repository.query(
       `UPDATE scouts
-       SET status = $2
+       SET status = $2,
+           created_at = CURRENT_TIMESTAMP
        WHERE id = $1
          AND status = $3
        RETURNING id, created_at, creator, title, body, previous_body, status, first_approver_id, second_approver_id`,
@@ -237,6 +240,7 @@ export class ScoutRepository {
              previous_body = body,
              body = $3,
              status = $4,
+             created_at = CURRENT_TIMESTAMP,
              first_approver_id = NULL,
              second_approver_id = NULL
          WHERE id = $1
