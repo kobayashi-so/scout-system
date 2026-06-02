@@ -29,23 +29,35 @@
 
         <button
           type="button"
-          class="rounded-full px-4 py-2 text-sm font-semibold transition"
-          :class="priorityFilter
-            ? 'bg-slate-900 text-white'
-            : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+          class="priority-alert"
+          :class="{
+            'priority-alert--active': priorityCandidateCount > 0,
+            'priority-alert--filtered': priorityFilter,
+          }"
+          :aria-label="priorityFilter
+            ? `優先表示中（${priorityCandidateCount}件）`
+            : `優先表示を切り替え（${priorityCandidateCount}件）`"
           @click="priorityFilter = !priorityFilter"
         >
-          優先（{{ priorityCandidateCount }}）
-        </button>
-
-        <div class="priority-alert" aria-label="優先件数アラート">
+          <span class="priority-bell" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path
+                d="M12 3a4 4 0 00-4 4v1.4a6.9 6.9 0 01-1.6 4.4L5 14.5c-.4.5-.1 1.3.5 1.3h13c.6 0 .9-.8.5-1.3l-1.4-1.7A6.9 6.9 0 0116 8.4V7a4 4 0 00-4-4zm0 18a2.5 2.5 0 002.4-2h-4.8A2.5 2.5 0 0012 21z"
+              />
+            </svg>
+          </span>
           <span
             v-if="priorityCandidateCount > 0"
-            class="priority-symbol"
+            class="priority-count"
           >
-            !
+            {{ priorityCandidateCount }}
           </span>
-        </div>
+        </button>
+
+        <p class="priority-hint" :class="{ 'priority-hint--active': priorityFilter }">
+          <strong>{{ priorityFilter ? '優先表示中' : '優先ルール' }}</strong>
+          <span>最終更新から3日以上経過した未完了の申請を表示</span>
+        </p>
       </div>
     </div>
 
@@ -392,17 +404,115 @@ onMounted(() => {
 }
 
 .priority-alert {
-  width: 40px;
-  height: 40px;
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: radial-gradient(circle at 28% 24%, #f8fafc 0%, #e2e8f0 65%, #cbd5e1 100%);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-.priority-symbol {
-  font-size: 30px;
-  font-weight: 900;
+.priority-alert:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.16);
+}
+
+.priority-alert:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.32), 0 10px 18px rgba(15, 23, 42, 0.12);
+}
+
+.priority-bell {
+  display: inline-flex;
+  color: #475569;
+}
+
+.priority-bell svg {
+  width: 1.18rem;
+  height: 1.18rem;
+  fill: currentColor;
+}
+
+.priority-alert--active {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: radial-gradient(circle at 28% 24%, #fff7ed 0%, #fee2e2 60%, #fecaca 100%);
+}
+
+.priority-alert--active .priority-bell {
   color: #dc2626;
-  line-height: 1;
+}
+
+.priority-alert--filtered {
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22), 0 10px 18px rgba(15, 23, 42, 0.14);
+}
+
+.priority-count {
+  position: absolute;
+  top: -0.24rem;
+  right: -0.24rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  padding: 0 0.28rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 1.5px solid #fff;
+  animation: priorityPulse 1.8s ease-in-out infinite;
+}
+
+.priority-hint {
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(241, 245, 249, 0.88) 100%);
+  color: #475569;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.36rem;
+  white-space: nowrap;
+}
+
+.priority-hint strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.priority-hint--active {
+  border-color: rgba(20, 184, 166, 0.38);
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.94) 0%, rgba(209, 250, 229, 0.9) 100%);
+  color: #0f766e;
+}
+
+@media (max-width: 760px) {
+  .priority-hint {
+    white-space: normal;
+    max-width: 100%;
+  }
+}
+
+@keyframes priorityPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.36);
+  }
+  50% {
+    transform: scale(1.07);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
 }
 </style>
