@@ -355,6 +355,9 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 <style scoped>
 .table-shell {
   overflow-x: auto;
+  overflow-y: auto;
+  /* テーブル領域内で縦スクロール可能にする（高さは画面に合わせて調整） */
+  max-height: 52vh;
   border: 1px solid #d3e5de;
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
@@ -378,6 +381,14 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
   padding: 12px 16px;
   border-bottom: 1px solid #e3eee9;
   vertical-align: middle;
+}
+
+/* ヘッダーをテーブル領域のスクロール内で固定表示 */
+.scout-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #f3faf7; /* table head の背景に合わせる */
 }
 
 .scout-table th {

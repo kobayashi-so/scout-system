@@ -11,7 +11,7 @@
           @logout="handleLogout"
         />
 
-        <main class="min-w-0 flex-1 p-4 md:p-6">
+        <main :style="mainStyle" class="min-w-0 flex-1 p-4 md:p-6">
           <RouterView v-slot="{ Component }">
             <component v-if="suppressAuthTransitionOnce" :is="Component" />
             <Transition v-else name="app-page" mode="out-in">
@@ -38,6 +38,10 @@ const router = useRouter();
 const authStore = useAuthStore();
 const isSidebarCollapsed = ref(false);
 const suppressAuthTransitionOnce = ref(false);
+
+const mainStyle = computed(() => {
+  return { marginLeft: isSidebarCollapsed.value ? "84px" : "276px" };
+});
 
 watch(
   () => authStore.isAuthenticated,

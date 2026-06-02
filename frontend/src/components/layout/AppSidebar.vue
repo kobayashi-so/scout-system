@@ -211,7 +211,11 @@ const userRole = computed(() => props.userRole);
   --ui-base: 0.32s;
   width: 276px;
   min-width: 276px;
-  height: auto;
+  /* 固定表示にして、画面高さいっぱいに収める */
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100dvh;
   padding: 14px 14px 12px !important;
   border-right: 1px solid rgba(148, 163, 184, 0.16);
   background: linear-gradient(170deg, #0f3d2e 0%, #0e2f25 52%, #0b231c 100%) !important;
@@ -219,6 +223,7 @@ const userRole = computed(() => props.userRole);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .app-sidebar.collapsed {
