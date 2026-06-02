@@ -3,7 +3,7 @@
     <div class="auth-card">
       <!-- アプリのロゴを模したヘッダー -->
       <div class="auth-header">
-        <span class="brand-logo">ScoutForge</span>
+        <span class="brand-logo">Scout MANAGER</span>
         <h1>ログイン</h1>
         <p class="subtitle">
           登録済みアカウントでスカウト一覧にアクセスできます。

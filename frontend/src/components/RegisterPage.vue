@@ -2,7 +2,7 @@
   <section class="auth-page">
     <div class="auth-card">
       <div class="auth-header">
-        <span class="brand-logo">ScoutForge</span>
+        <span class="brand-logo">Scout MANAGER</span>
         <h1>ユーザー登録</h1>
         <p class="subtitle">新規ユーザーを登録してからログインしてください。</p>
       </div>
