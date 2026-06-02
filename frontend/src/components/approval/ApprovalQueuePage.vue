@@ -269,7 +269,7 @@ onMounted(() => {
 .review-button {
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  background: linear-gradient(135deg, #9d40e4 0%, #bb5fcb 100%);
   color: #ffffff;
   padding: 6px 12px;
   font-size: 12px;
@@ -279,6 +279,6 @@ onMounted(() => {
 }
 
 .review-button:hover {
-  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
+  background: linear-gradient(135deg, #8b0aed 0%, #41034b 100%);
 }
 </style>

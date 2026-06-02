@@ -31,7 +31,9 @@ const isCurrentUser = (user: UserResponse) => {
 };
 
 const selectedUser = computed(() => {
-  return users.value.find((user) => user.userId === selectedUserId.value) ?? null;
+  return (
+    users.value.find((user) => user.userId === selectedUserId.value) ?? null
+  );
 });
 
 const resetForm = () => {
@@ -257,7 +259,7 @@ onMounted(async () => {
 }
 
 .add-title {
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  background: linear-gradient(135deg, #02664a 0%, #039d88 100%);
   color: #ffffff;
   padding: 8px 10px;
   border-radius: 8px;
@@ -265,7 +267,7 @@ onMounted(async () => {
 }
 
 .edit-title {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
   color: #ffffff;
   padding: 8px 10px;
   border-radius: 8px;
@@ -323,7 +325,7 @@ onMounted(async () => {
 }
 
 .btn-row-edit {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
   color: #ffffff;
   border: none;
   padding: 6px 11px;
@@ -332,14 +334,23 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+.btn-row-edit:hover {
+  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
+  border-color: #b8d1c7;
+}
+
 .btn-row-delete {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #8a2828 0%, #d10202 100%);
   color: #ffffff;
   border: none;
   padding: 6px 11px;
   cursor: pointer;
   border-radius: 6px;
   font-weight: 700;
+}
+
+.btn-row-delete:hover {
+  background: linear-gradient(135deg, #ed3a04 0%, #ff0e06 100%);
 }
 
 .btn-row-edit:disabled,
@@ -362,8 +373,9 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
 }
 
+/* 保存ボタン */
 .btn-save {
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  background: linear-gradient(135deg, #02664a 0%, #039d88 100%);
   color: #ffffff;
   border: none;
   padding: 10px 16px;
@@ -372,6 +384,11 @@ select:focus {
   margin-top: 12px;
   border-radius: 8px;
   font-weight: 700;
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
+  border-color: #b8d1c7;
 }
 
 @media (max-width: 1080px) {

@@ -41,17 +41,14 @@
             <td class="px-4 py-3">{{ formatDate(item.createdAt) }}</td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
-                <button
-                  class="mini-action-btn"
-                  @click="openDetail(item)"
-                >
+                <button class="mini-action-btn" @click="openDetail(item)">
                   詳細
                 </button>
 
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
                   v-if="canOpenDraftEdit(item.status, item.creator)"
-                  class="mini-action-btn"
+                  class="mini-edit-btn"
                   @click="$emit('open-remanded-edit', item)"
                 >
                   編集
@@ -201,11 +198,11 @@ import {
 } from "../../type/scout";
 
 const props = defineProps<{
-  rows: ScoutEntity[]
-  roleType: RoleType | null
-  currentUserName?: string | null
-  isTrashView?: boolean
-}>()
+  rows: ScoutEntity[];
+  roleType: RoleType | null;
+  currentUserName?: string | null;
+  isTrashView?: boolean;
+}>();
 
 // エミット定義（2個目のレビュー画面行き専用に統一）
 const emit = defineEmits<{
@@ -485,7 +482,7 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 .review-button {
   border: none;
   border-radius: 7px;
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+  background: linear-gradient(135deg, #9d40e4 0%, #bb5fcb 100%);
   color: #ffffff;
   padding: 6px 12px;
   font-size: 12px;
@@ -495,14 +492,14 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 }
 
 .review-button:hover {
-  background: linear-gradient(135deg, #03624a 0%, #0ea571 100%);
+  background: linear-gradient(135deg, #8b0aed 0%, #41034b 100%);
 }
 
 .mini-action-btn {
   border: 1px solid #d4e4dd;
   border-radius: 7px;
-  background: #ffffff;
-  color: #33534a;
+  background: linear-gradient(135deg, #158142 0%, #03a08e 100%);
+  color: #ffffff;
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -511,7 +508,24 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 }
 
 .mini-action-btn:hover {
-  background: #f4faf7;
+  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
+  border-color: #b8d1c7;
+}
+
+.mini-edit-btn {
+  border: 1px solid #d4e4dd;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
+  color: #ffffff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.mini-edit-btn:hover {
+  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
   border-color: #b8d1c7;
 }
 

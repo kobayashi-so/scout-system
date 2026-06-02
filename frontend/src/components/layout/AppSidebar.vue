@@ -5,8 +5,21 @@
         <div class="brand-logo" aria-hidden="true">
           <svg viewBox="0 0 36 36" class="brand-logo-svg" role="img">
             <rect x="2" y="2" width="32" height="32" rx="10" fill="#14b8a6" />
-            <path d="M13 8.8V24.2H24" fill="none" stroke="#042f2e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M20.6 9.2L24.8 13.4" fill="none" stroke="#99f6e4" stroke-width="2.2" stroke-linecap="round" />
+            <path
+              d="M13 8.8V24.2H24"
+              fill="none"
+              stroke="#042f2e"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M20.6 9.2L24.8 13.4"
+              fill="none"
+              stroke="#99f6e4"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            />
             <circle cx="24.8" cy="13.4" r="1.2" fill="#ccfbf1" />
           </svg>
         </div>
@@ -16,8 +29,12 @@
         </div>
       </RouterLink>
 
-      <button type="button" class="collapse-toggle" @click="$emit('toggle-collapse')">
-        {{ collapsed ? '›' : '‹' }}
+      <button
+        type="button"
+        class="collapse-toggle"
+        @click="$emit('toggle-collapse')"
+      >
+        {{ collapsed ? "›" : "‹" }}
       </button>
     </div>
 
@@ -60,7 +77,7 @@
 
           <Transition name="submenu">
             <div v-show="isApprovalOpen" class="sub-list">
-              <RouterLink to="/approval/sales" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">営業承認</RouterLink>
+              <RouterLink to="/approval/sales" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">営業承認者承認</RouterLink>
               <RouterLink to="/approval/final" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">管理者承認</RouterLink>
             </div>
           </Transition>
@@ -366,7 +383,11 @@ const userRole = computed(() => props.userRole);
 }
 
 .nav-item.is-active {
-  background: linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(13, 148, 136, 0.2));
+  background: linear-gradient(
+    90deg,
+    rgba(20, 184, 166, 0.35),
+    rgba(13, 148, 136, 0.2)
+  );
   color: #ffffff !important;
 }
 
