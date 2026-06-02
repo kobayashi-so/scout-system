@@ -53,7 +53,7 @@
         </button>
 
         <p class="priority-hint" :class="{ 'priority-hint--active': priorityFilter }">
-          <strong>{{ priorityFilter ? '優先表示中' : '優先ルール' }}</strong>
+          <strong>{{ priorityFilter ? '通知表示中' : '通知ルール' }}</strong>
           <span>最終更新から3日以上経過した未完了の申請を表示</span>
         </p>
       </div>
