@@ -334,6 +334,11 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+.btn-row-edit:hover {
+  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
+  border-color: #b8d1c7;
+}
+
 .btn-row-delete {
   background: linear-gradient(135deg, #8a2828 0%, #d10202 100%);
   color: #ffffff;
@@ -342,6 +347,10 @@ onMounted(async () => {
   cursor: pointer;
   border-radius: 6px;
   font-weight: 700;
+}
+
+.btn-row-delete:hover {
+  background: linear-gradient(135deg, #ed3a04 0%, #ff0e06 100%);
 }
 
 .btn-row-edit:disabled,
@@ -375,6 +384,11 @@ select:focus {
   margin-top: 12px;
   border-radius: 8px;
   font-weight: 700;
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
+  border-color: #b8d1c7;
 }
 
 @media (max-width: 1080px) {

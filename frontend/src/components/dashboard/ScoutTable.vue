@@ -48,7 +48,7 @@
                 <!-- 営業担当が下書き文書を編集画面へ開く導線 -->
                 <button
                   v-if="canOpenDraftEdit(item.status, item.creator)"
-                  class="mini-action-btn"
+                  class="mini-edit-btn"
                   @click="$emit('open-remanded-edit', item)"
                 >
                   編集
@@ -498,7 +498,7 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 .mini-action-btn {
   border: 1px solid #d4e4dd;
   border-radius: 7px;
-  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
+  background: linear-gradient(135deg, #158142 0%, #03a08e 100%);
   color: #ffffff;
   padding: 6px 10px;
   font-size: 12px;
@@ -508,7 +508,24 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 }
 
 .mini-action-btn:hover {
-  background: linear-gradient(135deg, #02664a 0%, #039d88 100%);
+  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
+  border-color: #b8d1c7;
+}
+
+.mini-edit-btn {
+  border: 1px solid #d4e4dd;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
+  color: #ffffff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.mini-edit-btn:hover {
+  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
   border-color: #b8d1c7;
 }
 

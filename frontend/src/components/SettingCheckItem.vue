@@ -221,6 +221,11 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
+.btn-row-edit:hover {
+  background: linear-gradient(135deg, #07afa1 0%, #0665a5 100%);
+  border-color: #b8d1c7;
+}
+
 .btn-row-delete {
   background: linear-gradient(135deg, #8a2828 0%, #d10202 100%); /* 赤黒四角 */
   color: white;
@@ -228,6 +233,10 @@ onMounted(async () => {
   padding: 4px 10px;
   cursor: pointer;
   border-radius: 4px;
+}
+
+.btn-row-delete:hover {
+  background: linear-gradient(135deg, #ed3a04 0%, #ff0e06 100%);
 }
 
 .btn-save {
@@ -238,6 +247,11 @@ onMounted(async () => {
   width: 100%;
   cursor: pointer;
   margin-top: 10px;
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
+  border-color: #b8d1c7;
 }
 
 .item-table {
