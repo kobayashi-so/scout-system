@@ -1,7 +1,7 @@
 <template>
   <section class="scout-list-page">
     <h2 class="mb-4 text-2xl font-bold text-slate-900">
-      全ステータスのスカウト文
+      ダッシュボード
     </h2>
 
     <div class="mb-4 flex flex-wrap items-start gap-3">
@@ -12,16 +12,23 @@
         @tab-click="onClickTab"
       >
         <template #right>
-          <button
-            v-if="canUseCreatorFilter"
-            type="button"
-            class="tab-btn"
-            :class="{ 'is-active': creatorFilter === 'mine' }"
-            :aria-pressed="creatorFilter === 'mine'"
-            @click="creatorFilter = creatorFilter === 'mine' ? 'all' : 'mine'"
-          >
-            {{ currentUserNameLabel }}
-          </button>
+          <div v-if="canUseCreatorFilter" class="creator-filter-wrap">
+            <label class="creator-filter-label" for="creator-filter">作成者</label>
+            <select
+              id="creator-filter"
+              v-model="creatorFilter"
+              class="creator-filter-select"
+            >
+              <option value="all">全員</option>
+              <option
+                v-for="creator in creatorOptions"
+                :key="creator"
+                :value="creator"
+              >
+                {{ creator }}
+              </option>
+            </select>
+          </div>
         </template>
       </DashboardTabs>
       <div class="mb-4 flex items-center gap-2">
@@ -64,6 +71,46 @@
       :selected-key="selectedStatusCard"
       @select="selectedStatusCard = $event"
     />
+
+    <div class="search-panel">
+      <div class="search-panel-head">
+        <p class="search-title">検索</p>
+        <p class="search-meta" v-if="hasSearchQuery">
+          一致 {{ searchResultSummary }}
+        </p>
+        <p class="search-meta" v-else>
+          対象: ID・タイトル・作成者・会社名・本文
+        </p>
+      </div>
+
+      <div class="search-row">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path
+              d="M15.8 14.4h-.7l-.3-.3a6.2 6.2 0 10-.7.7l.3.3v.7l4.2 4.2 1.3-1.3-4.1-4.3zM10 14.5A4.5 4.5 0 1110 5a4.5 4.5 0 010 9.5z"
+            />
+          </svg>
+        </span>
+
+        <input
+          v-model.trim="searchQuery"
+          type="search"
+          class="search-input"
+          placeholder="キーワードを入力"
+          aria-label="スカウト検索"
+          @keydown.esc="searchQuery = ''"
+        />
+
+        <button
+          type="button"
+          class="search-clear-btn"
+          :disabled="!hasSearchQuery"
+          @click="searchQuery = ''"
+        >
+          クリア
+        </button>
+      </div>
+    </div>
 
     <p v-if="loading" class="mb-3 text-sm text-slate-500">読み込み中...</p>
     <p v-else-if="error" class="mb-3 text-sm text-rose-600">{{ error }}</p>
@@ -116,21 +163,23 @@ const availableTabs = computed(() => tabDefs.map((t) => ({ key: t.key, label: t.
 
 const activeTab = ref<ScoutListType>('my')
 const selectedStatusCard = ref<StatusFilterKey>('all')
-const creatorFilter = ref<'all' | 'mine'>('all')
+const creatorFilter = ref<string>('all')
 const priorityFilter = ref(false)
+const searchQuery = ref("")
 
 const rows = ref<ScoutEntity[]>([]);
 const loading = ref(false);
 const error = ref("");
 
-const currentUserNameLabel = computed(
-  () => authStore.currentUserName || "ユーザー名",
-);
+const creatorOptions = computed(() => {
+  const creators = rows.value
+    .map((row: ScoutEntity) => row.creator?.trim() || "")
+    .filter((creator) => creator.length > 0);
 
-const currentUserNameTrimmed = computed(
-  () => authStore.currentUserName?.trim() || "",
-);
-const canUseCreatorFilter = computed(() => currentUserNameTrimmed.value.length > 0);
+  return [...new Set(creators)].sort((a, b) => a.localeCompare(b, "ja"));
+});
+
+const canUseCreatorFilter = computed(() => creatorOptions.value.length > 0);
 
 function getRowUpdatedTimestamp(row: ScoutEntity): number | null {
   const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
@@ -153,42 +202,42 @@ function isPriorityRow(row: ScoutEntity, nowMs: number): boolean {
   return nowMs - updatedAt >= threeDaysMs
 }
 
-// 初期タブは常に `my`（全申請文書）とする
-
-async function loadRows() {
-  loading.value = true;
-  error.value = "";
-  try {
-    rows.value = await fetchScouts({
-      includeDeleted: activeTab.value === "trash",
-    });
-  } catch (e) {
-    console.error(e);
-    error.value = "スカウト文の取得に失敗しました";
-  } finally {
-    loading.value = false;
-  }
+function normalizeSearchText(value: string | undefined | null): string {
+  return (value || "").toLowerCase();
 }
 
-const displayRows = computed(() => {
-  const nowMs = Date.now()
+function matchesSearchQuery(row: ScoutEntity, keyword: string): boolean {
+  if (!keyword) return true;
+
+  const searchTargets = [
+    row.id,
+    row.title,
+    row.creator,
+    row.body,
+    row.requirement?.companyName,
+  ];
+
+  return searchTargets.some((target) => normalizeSearchText(target).includes(keyword));
+}
+
+function filterByCreator(rowsToFilter: ScoutEntity[]): ScoutEntity[] {
+  if (creatorFilter.value === "all") {
+    return rowsToFilter;
+  }
+
+  return rowsToFilter.filter((r: ScoutEntity) => r.creator.trim() === creatorFilter.value);
+}
+
+function getBaseFilteredRows(nowMs: number): ScoutEntity[] {
   let filteredRows = rows.value;
 
   if (activeTab.value === "trash") {
     filteredRows = filteredRows.filter((r: ScoutEntity) => !!r.deletedAt);
-
-    if (creatorFilter.value === "mine") {
-      filteredRows = filteredRows.filter((r: ScoutEntity) => {
-        return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value;
-      });
-    }
-
-    return filteredRows;
+    return filterByCreator(filteredRows);
   }
 
   filteredRows = filteredRows.filter((r: ScoutEntity) => !r.deletedAt);
 
-  // レビュー対象タブはバックエンド未実装のtypeパラメータを使わず、フロントで絞り込む
   if (activeTab.value === "sales_pending") {
     filteredRows = filteredRows.filter(
       (r: ScoutEntity) => r.status === "waiting_leader",
@@ -221,26 +270,63 @@ const displayRows = computed(() => {
     );
   }
 
-  if (creatorFilter.value === "mine") {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => {
-      return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value;
-    });
-  }
+  filteredRows = filterByCreator(filteredRows);
 
   if (priorityFilter.value) {
-    filteredRows = filteredRows.filter((r: ScoutEntity) => isPriorityRow(r, nowMs))
+    filteredRows = filteredRows.filter((r: ScoutEntity) => isPriorityRow(r, nowMs));
   }
 
-  return filteredRows
+  return filteredRows;
+}
+
+const hasSearchQuery = computed(() => searchQuery.value.trim().length > 0);
+
+const searchResultSummary = computed(() => {
+  const keyword = normalizeSearchText(searchQuery.value.trim());
+  const baseRows = getBaseFilteredRows(Date.now());
+  if (!keyword) {
+    return `${baseRows.length}件`;
+  }
+
+  const matchedCount = baseRows.filter((r: ScoutEntity) => matchesSearchQuery(r, keyword)).length;
+  return `${matchedCount}件 / ${baseRows.length}件`;
+});
+
+// 初期タブは常に `my`（全申請文書）とする
+
+async function loadRows() {
+  loading.value = true;
+  error.value = "";
+  try {
+    rows.value = await fetchScouts({
+      includeDeleted: activeTab.value === "trash",
+    });
+  } catch (e) {
+    console.error(e);
+    error.value = "スカウト文の取得に失敗しました";
+  } finally {
+    loading.value = false;
+  }
+}
+
+const displayRows = computed(() => {
+  const keyword = normalizeSearchText(searchQuery.value.trim());
+  const baseRows = getBaseFilteredRows(Date.now());
+
+  if (!keyword) {
+    return baseRows;
+  }
+
+  return baseRows.filter((r: ScoutEntity) => matchesSearchQuery(r, keyword));
 })
 
 const priorityCandidateCount = computed(() => {
   const nowMs = Date.now()
   let candidateRows = rows.value.filter((r: ScoutEntity) => !r.deletedAt)
 
-  if (creatorFilter.value === 'mine') {
+  if (creatorFilter.value !== 'all') {
     candidateRows = candidateRows.filter((r: ScoutEntity) => {
-      return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value
+      return r.creator.trim() === creatorFilter.value
     })
   }
 
@@ -391,6 +477,126 @@ onMounted(() => {
 <style scoped>
 .scout-list-page {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 255, 252, 0.88) 100%);
+}
+
+.search-row {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-panel {
+  margin: 12px 0;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+}
+
+.search-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.search-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.search-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #475569;
+}
+
+.search-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.search-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.creator-filter-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.creator-filter-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #37544c;
+}
+
+.creator-filter-select {
+  min-width: 140px;
+  border: 1px solid #cfe2da;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #37544c;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.creator-filter-select:focus-visible {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
+}
+
+.search-input {
+  width: min(100%, 460px);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.search-input:focus-visible {
+  outline: none;
+  border-color: rgba(20, 184, 166, 0.62);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+}
+
+.search-clear-btn {
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.search-clear-btn:hover {
+  background: #f8fafc;
+}
+
+.search-clear-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .priority-alert {

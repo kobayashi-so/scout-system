@@ -47,7 +47,6 @@ function onClickTab(tabKey: TabItem['key']) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
   padding: 8px;
   border: 1px solid #d3e5de;
   border-radius: 14px;
