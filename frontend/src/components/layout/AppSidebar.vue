@@ -139,10 +139,13 @@ const userRole = computed(() => props.userRole);
 .app-sidebar {
   width: 276px;
   min-width: 276px;
+  height: 100dvh;
   padding: 14px 14px 12px !important;
   border-right: 1px solid rgba(148, 163, 184, 0.16);
   background: linear-gradient(170deg, #0f3d2e 0%, #0e2f25 52%, #0b231c 100%) !important;
   transition: width 0.22s ease, min-width 0.22s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-sidebar.collapsed {
@@ -218,6 +221,10 @@ const userRole = computed(() => props.userRole);
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 12px;
 }
 
 .nav-item {
@@ -275,7 +282,7 @@ const userRole = computed(() => props.userRole);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 4px 0 2px;
+  margin: 8px 0 10px;
   padding-left: 30px;
 }
 
@@ -301,6 +308,7 @@ const userRole = computed(() => props.userRole);
   margin-top: auto;
   border-top: 1px solid rgba(148, 163, 184, 0.2);
   padding-top: 12px;
+  flex: 0 0 auto;
 }
 
 .logout-button {
