@@ -11,6 +11,10 @@
   --brand-500: #10b981;
   --brand-400: #34d399;
   --shadow-soft: 0 10px 24px rgba(6, 34, 28, 0.08);
+  --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --motion-fast: 0.22s;
+  --motion-base: 0.32s;
 }
 
 * {
@@ -273,7 +277,42 @@ body {
 }
 
 .transition {
-  transition: all 0.18s ease;
+  transition: all var(--motion-fast) var(--motion-ease-standard);
+}
+
+/* Global motion foundation for consistent UI feel */
+:where(button, a, input, select, textarea, summary, [role="button"], [class*="btn"], [class*="button"]) {
+  transition:
+    color var(--motion-fast) var(--motion-ease-standard),
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-base) var(--motion-ease-soft),
+    transform var(--motion-fast) var(--motion-ease-standard),
+    opacity var(--motion-fast) var(--motion-ease-standard);
+}
+
+tbody tr {
+  transition: background-color var(--motion-fast) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+/* Route-level transition used by App.vue RouterView */
+.app-page-enter-active,
+.app-page-leave-active {
+  transition: opacity var(--motion-base) var(--motion-ease-soft), transform var(--motion-base) var(--motion-ease-soft), filter var(--motion-base) var(--motion-ease-soft);
+}
+
+.app-page-enter-from,
+.app-page-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.996);
+  filter: saturate(0.96);
+}
+
+.app-page-enter-to,
+.app-page-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: saturate(1);
 }
 
 .bg-slate-900 {
@@ -396,5 +435,17 @@ tbody tr:hover {
   td {
     font-size: 13px;
     padding: 10px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, a, input, select, textarea, summary, [role="button"], [class*="btn"], [class*="button"]) {
+    transition: none !important;
+  }
+
+  tbody tr,
+  .app-page-enter-active,
+  .app-page-leave-active {
+    transition: none !important;
   }
 }

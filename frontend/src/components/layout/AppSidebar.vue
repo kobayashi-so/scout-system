@@ -1,5 +1,5 @@
 <template>
-  <aside class="app-sidebar" :class="{ collapsed }">
+  <aside class="app-sidebar" :class="{ collapsed, 'peek-open': isPeekOpen }">
     <div class="brand-row">
       <RouterLink to="/list" class="brand-link">
         <div class="brand-logo" aria-hidden="true">
@@ -10,7 +10,7 @@
             <circle cx="24.8" cy="13.4" r="1.2" fill="#ccfbf1" />
           </svg>
         </div>
-        <div v-if="!collapsed" class="brand-copy">
+        <div v-if="showExpandedContent" class="brand-copy">
           <p class="brand-title">Scout MANAGER</p>
           <p class="brand-subtitle">Recruiting Workflow</p>
         </div>
@@ -22,14 +22,26 @@
     </div>
 
     <nav class="nav-list" aria-label="Main">
-      <RouterLink to="/list" class="nav-item" active-class="is-active" :title="collapsed ? 'ダッシュボード' : ''">
+      <RouterLink
+        to="/list"
+        class="nav-item"
+        active-class="is-active"
+        :title="isCompact ? 'ダッシュボード' : ''"
+        @click="handleNavSelection"
+      >
         <span class="nav-icon">▦</span>
-        <span v-if="!collapsed" class="nav-label">ダッシュボード</span>
+        <span v-if="showExpandedContent" class="nav-label">ダッシュボード</span>
       </RouterLink>
 
-      <RouterLink to="/create" class="nav-item" active-class="is-active" :title="collapsed ? 'スカウト新規作成' : ''">
+      <RouterLink
+        to="/create"
+        class="nav-item"
+        active-class="is-active"
+        :title="isCompact ? 'スカウト新規作成' : ''"
+        @click="handleNavSelection"
+      >
         <span class="nav-icon">✎</span>
-        <span v-if="!collapsed" class="nav-label">スカウト新規作成</span>
+        <span v-if="showExpandedContent" class="nav-label">スカウト新規作成</span>
       </RouterLink>
 
       <template v-if="userRole === 'leader' || userRole === 'admin'">
@@ -38,18 +50,20 @@
             type="button"
             class="nav-item nav-group-toggle"
             :class="{ 'is-active': isApprovalActive || isApprovalOpen }"
-            :title="collapsed ? '承認' : ''"
-            @click="isApprovalOpen = !isApprovalOpen"
+            :title="isCompact ? '承認' : ''"
+            @click="toggleApproval"
           >
             <span class="nav-icon">✓</span>
-            <span v-if="!collapsed" class="nav-label">承認</span>
-            <span v-if="!collapsed" class="caret" :class="{ open: isApprovalOpen }">⌄</span>
+            <span v-if="showExpandedContent" class="nav-label">承認</span>
+            <span v-if="showExpandedContent" class="caret" :class="{ open: isApprovalOpen }" aria-hidden="true"></span>
           </button>
 
-          <div v-show="isApprovalOpen && !collapsed" class="sub-list">
-            <RouterLink to="/approval/sales" class="sub-item" active-class="is-active-sub">営業承認</RouterLink>
-            <RouterLink to="/approval/final" class="sub-item" active-class="is-active-sub">管理者承認</RouterLink>
-          </div>
+          <Transition name="submenu">
+            <div v-show="isApprovalOpen" class="sub-list">
+              <RouterLink to="/approval/sales" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">営業承認</RouterLink>
+              <RouterLink to="/approval/final" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">管理者承認</RouterLink>
+            </div>
+          </Transition>
         </div>
       </template>
 
@@ -58,30 +72,32 @@
           type="button"
           class="nav-item nav-group-toggle"
           :class="{ 'is-active': isSettingsActive || isSettingsOpen }"
-          :title="collapsed ? '設定' : ''"
-          @click="isSettingsOpen = !isSettingsOpen"
+          :title="isCompact ? '設定' : ''"
+          @click="toggleSettings"
         >
           <span class="nav-icon">⚙</span>
-          <span v-if="!collapsed" class="nav-label">設定</span>
-          <span v-if="!collapsed" class="caret" :class="{ open: isSettingsOpen }">⌄</span>
+          <span v-if="showExpandedContent" class="nav-label">設定</span>
+          <span v-if="showExpandedContent" class="caret" :class="{ open: isSettingsOpen }" aria-hidden="true"></span>
         </button>
 
-        <div v-show="isSettingsOpen && !collapsed" class="sub-list">
-          <RouterLink to="/settings/evaluations" class="sub-item" active-class="is-active-sub">評価基準・チェック項目管理</RouterLink>
-          <RouterLink to="/settings/profile" class="sub-item" active-class="is-active-sub">ユーザー情報編集</RouterLink>
-        </div>
+        <Transition name="submenu">
+          <div v-show="isSettingsOpen" class="sub-list">
+            <RouterLink to="/settings/evaluations" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">評価基準・チェック項目管理</RouterLink>
+            <RouterLink to="/settings/profile" class="sub-item" active-class="is-active-sub" @click="handleNavSelection">ユーザー情報編集</RouterLink>
+          </div>
+        </Transition>
       </div>
     </nav>
 
     <div class="sidebar-bottom">
-      <button type="button" class="logout-button" @click="$emit('logout')" :title="collapsed ? 'ログアウト' : ''">
+      <button type="button" class="logout-button" @click="$emit('logout')" :title="isCompact ? 'ログアウト' : ''">
         <span class="nav-icon">⇥</span>
-        <span v-if="!collapsed">ログアウト</span>
+        <span v-if="showExpandedContent">ログアウト</span>
       </button>
 
-      <button type="button" class="sidebar-user" @click="goToMyProfile" :title="collapsed ? userName : ''">
+      <button type="button" class="sidebar-user" @click="goToMyProfile" :title="isCompact ? userName : ''">
         <div class="sidebar-avatar">{{ userInitial }}</div>
-        <div v-if="!collapsed" class="sidebar-user-meta">
+        <div v-if="showExpandedContent" class="sidebar-user-meta">
           <p class="sidebar-user-name">{{ userName }}</p>
           <p class="sidebar-user-role">{{ userEmail }}</p>
           <p class="sidebar-user-role">{{ userRole }}</p>
@@ -92,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
@@ -121,11 +137,47 @@ const userInitial = computed(() => {
 });
 
 const collapsed = computed(() => Boolean(props.collapsed));
+const isPeekOpen = computed(
+  () => collapsed.value && (isApprovalOpen.value || isSettingsOpen.value),
+);
+const showExpandedContent = computed(() => !collapsed.value || isPeekOpen.value);
+const isCompact = computed(() => collapsed.value && !isPeekOpen.value);
 
 watchEffect(() => {
+  if (collapsed.value) return;
   if (isApprovalActive.value) isApprovalOpen.value = true;
   if (isSettingsActive.value) isSettingsOpen.value = true;
 });
+
+watch(
+  collapsed,
+  (isNowCollapsed) => {
+    if (!isNowCollapsed) return;
+    isApprovalOpen.value = false;
+    isSettingsOpen.value = false;
+  },
+  { immediate: true },
+);
+
+function toggleApproval() {
+  isApprovalOpen.value = !isApprovalOpen.value;
+  if (isApprovalOpen.value) {
+    isSettingsOpen.value = false;
+  }
+}
+
+function toggleSettings() {
+  isSettingsOpen.value = !isSettingsOpen.value;
+  if (isSettingsOpen.value) {
+    isApprovalOpen.value = false;
+  }
+}
+
+function handleNavSelection() {
+  if (!collapsed.value) return;
+  isApprovalOpen.value = false;
+  isSettingsOpen.value = false;
+}
 
 function goToMyProfile() {
   router.push("/profile");
@@ -137,20 +189,29 @@ const userRole = computed(() => props.userRole);
 
 <style scoped>
 .app-sidebar {
+  --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-fast: 0.22s;
+  --ui-base: 0.32s;
   width: 276px;
   min-width: 276px;
   height: 100dvh;
   padding: 14px 14px 12px !important;
   border-right: 1px solid rgba(148, 163, 184, 0.16);
   background: linear-gradient(170deg, #0f3d2e 0%, #0e2f25 52%, #0b231c 100%) !important;
-  transition: width 0.22s ease, min-width 0.22s ease;
+  transition: width var(--ui-base) var(--ui-ease), min-width var(--ui-base) var(--ui-ease), border-color var(--ui-base) var(--ui-ease), background var(--ui-base) var(--ui-ease);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .app-sidebar.collapsed {
   width: 84px;
   min-width: 84px;
+}
+
+.app-sidebar.collapsed.peek-open {
+  width: 276px;
+  min-width: 276px;
 }
 
 .brand-row {
@@ -160,11 +221,36 @@ const userRole = computed(() => props.userRole);
   margin-bottom: 24px;
 }
 
+.app-sidebar.collapsed .brand-row {
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.app-sidebar.collapsed.peek-open .brand-row {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0;
+  margin-bottom: 24px;
+}
+
 .brand-link {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+  transition: opacity var(--ui-fast) var(--ui-ease);
+}
+
+.app-sidebar.collapsed .brand-link {
+  justify-content: center;
+  gap: 0;
+}
+
+.app-sidebar.collapsed.peek-open .brand-link {
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 .brand-logo {
@@ -176,6 +262,14 @@ const userRole = computed(() => props.userRole);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform var(--ui-base) var(--ui-ease), background-color var(--ui-base) var(--ui-ease), border-color var(--ui-base) var(--ui-ease), box-shadow var(--ui-base) var(--ui-ease);
+}
+
+.brand-link:hover .brand-logo {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(153, 246, 228, 0.35);
+  box-shadow: 0 8px 16px rgba(3, 29, 24, 0.24);
 }
 
 .brand-logo-svg {
@@ -211,10 +305,21 @@ const userRole = computed(() => props.userRole);
   color: #d1fae5;
   font-size: 16px;
   cursor: pointer;
+  transition: background-color var(--ui-fast) var(--ui-ease), border-color var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease), color var(--ui-fast) var(--ui-ease);
 }
 
 .collapse-toggle:hover {
   background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(94, 234, 212, 0.42);
+  transform: translateY(-1px);
+}
+
+.app-sidebar.collapsed .collapse-toggle {
+  margin-top: 2px;
+}
+
+.app-sidebar.collapsed.peek-open .collapse-toggle {
+  margin-top: 0;
 }
 
 .nav-list {
@@ -224,6 +329,7 @@ const userRole = computed(() => props.userRole);
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 12px;
 }
 
@@ -241,6 +347,7 @@ const userRole = computed(() => props.userRole);
   font-weight: 700;
   background: transparent;
   cursor: pointer;
+  transition: background-color var(--ui-fast) var(--ui-ease), color var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease), box-shadow var(--ui-fast) var(--ui-ease);
 }
 
 .app-sidebar.collapsed .nav-item {
@@ -248,8 +355,14 @@ const userRole = computed(() => props.userRole);
   padding: 10px 6px !important;
 }
 
+.app-sidebar.collapsed.peek-open .nav-item {
+  justify-content: flex-start;
+  padding: 10px 12px !important;
+}
+
 .nav-item:hover {
   background: rgba(45, 212, 191, 0.13) !important;
+  transform: translateX(2px);
 }
 
 .nav-item.is-active {
@@ -262,6 +375,13 @@ const userRole = computed(() => props.userRole);
   text-align: center;
   color: #a7f3d0;
   font-size: 13px;
+  transition: color var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease);
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.is-active .nav-icon {
+  color: #d1fae5;
+  transform: scale(1.04);
 }
 
 .nav-label {
@@ -270,12 +390,19 @@ const userRole = computed(() => props.userRole);
 
 .caret {
   margin-left: auto;
-  font-size: 12px;
-  transition: transform 0.2s ease;
+  width: 8px;
+  height: 8px;
+  border-right: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  transform: rotate(45deg);
+  transform-origin: 56% 56%;
+  opacity: 0.9;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .caret.open {
-  transform: rotate(180deg);
+  transform: rotate(225deg);
+  opacity: 1;
 }
 
 .sub-list {
@@ -286,6 +413,28 @@ const userRole = computed(() => props.userRole);
   padding-left: 30px;
 }
 
+.submenu-enter-active,
+.submenu-leave-active {
+  transition: max-height var(--ui-base) var(--ui-ease), opacity var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease), margin var(--ui-fast) var(--ui-ease);
+  overflow: hidden;
+}
+
+.submenu-enter-from,
+.submenu-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.submenu-enter-to,
+.submenu-leave-from {
+  max-height: 180px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .sub-item {
   border-radius: 8px;
   color: #d1fae5;
@@ -293,10 +442,12 @@ const userRole = computed(() => props.userRole);
   font-weight: 600;
   text-decoration: none;
   padding: 7px 10px;
+  transition: background-color var(--ui-fast) var(--ui-ease), color var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease);
 }
 
 .sub-item:hover {
   background: rgba(45, 212, 191, 0.1);
+  transform: translateX(2px);
 }
 
 .sub-item.is-active-sub {
@@ -309,6 +460,7 @@ const userRole = computed(() => props.userRole);
   border-top: 1px solid rgba(148, 163, 184, 0.2);
   padding-top: 12px;
   flex: 0 0 auto;
+  transition: border-color var(--ui-base) var(--ui-ease);
 }
 
 .logout-button {
@@ -324,16 +476,23 @@ const userRole = computed(() => props.userRole);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color var(--ui-fast) var(--ui-ease), color var(--ui-fast) var(--ui-ease), transform var(--ui-fast) var(--ui-ease);
 }
 
 .logout-button:hover {
   background: rgba(244, 63, 94, 0.15) !important;
   color: #ffe4e6;
+  transform: translateX(2px);
 }
 
 .app-sidebar.collapsed .logout-button {
   justify-content: center;
   padding: 10px 6px !important;
+}
+
+.app-sidebar.collapsed.peek-open .logout-button {
+  justify-content: flex-start;
+  padding: 10px 12px !important;
 }
 
 .sidebar-user {
@@ -347,15 +506,24 @@ const userRole = computed(() => props.userRole);
   background: rgba(255, 255, 255, 0.04);
   padding: 10px;
   cursor: pointer;
+  transition: background-color var(--ui-base) var(--ui-ease), border-color var(--ui-base) var(--ui-ease), transform var(--ui-fast) var(--ui-ease), box-shadow var(--ui-base) var(--ui-ease);
 }
 
 .sidebar-user:hover {
   background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(94, 234, 212, 0.38);
+  box-shadow: 0 10px 18px rgba(3, 29, 24, 0.2);
+  transform: translateY(-1px);
 }
 
 .app-sidebar.collapsed .sidebar-user {
   justify-content: center;
   padding: 10px 6px;
+}
+
+.app-sidebar.collapsed.peek-open .sidebar-user {
+  justify-content: flex-start;
+  padding: 10px;
 }
 
 .sidebar-avatar {
@@ -370,6 +538,13 @@ const userRole = computed(() => props.userRole);
   color: #f0fdfa;
   font-size: 13px;
   font-weight: 700;
+  transition: transform var(--ui-fast) var(--ui-ease), background-color var(--ui-base) var(--ui-ease), border-color var(--ui-base) var(--ui-ease);
+}
+
+.sidebar-user:hover .sidebar-avatar {
+  transform: scale(1.04);
+  background: rgba(20, 184, 166, 0.34);
+  border-color: rgba(153, 246, 228, 0.74);
 }
 
 .sidebar-user-name,
@@ -392,6 +567,25 @@ const userRole = computed(() => props.userRole);
   color: #9bd6cc;
   font-size: 11px;
   line-height: 1.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar,
+  .brand-link,
+  .brand-logo,
+  .collapse-toggle,
+  .nav-item,
+  .nav-icon,
+  .caret,
+  .sub-item,
+  .submenu-enter-active,
+  .submenu-leave-active,
+  .sidebar-bottom,
+  .logout-button,
+  .sidebar-user,
+  .sidebar-avatar {
+    transition: none !important;
+  }
 }
 
 /* main.css の汎用疑似アイコンを打ち消し */

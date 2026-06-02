@@ -12,13 +12,21 @@
         />
 
         <main class="min-w-0 flex-1 p-4 md:p-6">
-          <RouterView />
+          <RouterView v-slot="{ Component }">
+            <Transition name="app-page" mode="out-in" appear>
+              <component :is="Component" />
+            </Transition>
+          </RouterView>
         </main>
       </div>
     </template>
 
     <template v-else>
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="app-page" mode="out-in" appear>
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </template>
   </div>
 </template>
