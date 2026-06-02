@@ -3,9 +3,16 @@
     <header class="page-header">
       <div class="header-left">
         <RouterLink to="/list" class="btn-back">←</RouterLink>
-        <h1>{{ pageTitle }}</h1>
+        <div class="title-block">
+          <p class="eyebrow">SCOUT EDITOR</p>
+          <h1>{{ pageTitle }}</h1>
+          <p class="title-description">
+            求人情報と文面を修正し、チェック完了後に再申請できます。
+          </p>
+        </div>
       </div>
       <div v-if="!loading && form && scout" class="header-right">
+        
         <button
           type="button"
           class="btn-secondary"
@@ -42,7 +49,7 @@
 
     <div v-if="!loading && form && scout" class="workspace">
       <section class="card column-input">
-        <h2>📁 1. 求人情報入力</h2>
+        <h2>1. 求人情報入力</h2>
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
             <label class="form-label">
@@ -112,7 +119,7 @@
 
       <section class="card column-edit">
         <div class="card-header-row">
-          <h2>⌨️ 2. 文面編集</h2>
+          <h2>2. 文面編集</h2>
           <span class="edit-notice">※直接編集可</span>
         </div>
         <div class="output-container">
@@ -126,7 +133,7 @@
       </section>
 
       <section class="card column-check">
-        <h2>📊 3. 評価基準チェック</h2>
+        <h2>3. 評価基準チェック</h2>
         <div class="check-scroll-wrapper">
           <p v-if="checkItemsLoading" class="check-item-meta">読み込み中...</p>
           <p v-else-if="checkItemsError" class="message error">
@@ -154,7 +161,7 @@
           </div>
 
           <hr class="separator" />
-          <h3 class="sub-title">💬 差戻しコメント履歴</h3>
+          <h3 class="sub-title">差戻しコメント履歴</h3>
 
           <article
             v-for="comment in comments"
@@ -426,55 +433,98 @@ onMounted(() => {
   max-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 16px 24px;
-  background:
-    radial-gradient(120% 120% at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
-    linear-gradient(180deg, #f7faf9 0%, #f3f6f9 100%);
+  padding: 10px;
+  background: transparent;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
   flex-shrink: 0;
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
+  padding: 14px 16px;
 }
 
 .header-left {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  color: #0d9488;
+  font-weight: 800;
+}
+
+.title-description {
+  margin: 0;
+  font-size: 12px;
+  color: #4a6a60;
 }
 
 .btn-back {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+  background: #ffffff;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
   cursor: pointer;
-  color: #64748b;
+  color: #31564b;
   padding: 0;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.12rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #10342d;
   letter-spacing: 0.01em;
 }
 
 .header-right {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #c7ddd5;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #2f564b;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .btn-secondary {
   background-color: #ffffff;
-  border: 1px solid #b7c4d6;
+  border: 1px solid #c7ddd5;
   color: #334155;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 9px 16px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -485,8 +535,8 @@ onMounted(() => {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
   color: #ffffff;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 9px 16px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -499,7 +549,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -508,32 +558,30 @@ onMounted(() => {
 
 .workspace {
   display: flex;
-  gap: 20px;
+  gap: 14px;
   flex: 1;
   min-height: 0;
   height: calc(100% - 60px);
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid #dbe4ef;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  border: 1px solid #d3e5de;
   border-radius: 14px;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .card h2 {
-  margin: 0 0 16px 0;
-  font-size: 0.92rem;
+  margin: 0 0 14px 0;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #065f46;
+  color: #0f3d2e;
   letter-spacing: 0.02em;
   flex-shrink: 0;
 }
@@ -583,10 +631,10 @@ onMounted(() => {
 .form-label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
+  gap: 5px;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: #475569;
+  color: #31564b;
 }
 
 .form-label-head {
@@ -605,11 +653,11 @@ input[type="text"],
 select,
 textarea {
   width: 100%;
-  padding: 6px 10px;
-  border: 1px solid #c4d0df;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
   font-size: 0.85rem;
-  color: #1e293b;
+  color: #12352d;
   box-sizing: border-box;
   background-color: #ffffff;
 }
@@ -637,21 +685,22 @@ textarea:focus {
 .edit-notice {
   font-size: 0.75rem;
   color: #00c77b;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .output-container {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 10px;
   min-height: 0;
 }
 
 .body-textarea {
   flex: 1;
   resize: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
   padding: 12px;
   font-size: 0.85rem;
   line-height: 1.6;
@@ -680,11 +729,12 @@ textarea:focus {
 
 .check-item-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #334155;
+  color: #31564b;
+  line-height: 1.45;
 }
 
 .check-item-row input[type="checkbox"] {
@@ -711,10 +761,10 @@ textarea:focus {
 }
 
 .comment-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #d9e7e1;
+  border-radius: 10px;
   padding: 12px;
-  background: #f3f4f6;
+  background: #f7fcfa;
   margin-bottom: 10px;
 }
 
@@ -735,7 +785,7 @@ textarea:focus {
 }
 
 .check-item-meta {
-  color: #64748b;
+  color: #567168;
   font-size: 0.8rem;
 }
 
@@ -749,6 +799,16 @@ textarea:focus {
     height: auto;
     max-height: none;
     overflow: auto;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
   }
 
   .workspace {

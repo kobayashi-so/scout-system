@@ -41,10 +41,15 @@ function onClickTab(tabKey: TabItem['key']) {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
+  padding: 8px;
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 8px 18px rgba(7, 34, 28, 0.06);
 }
 
 .tab-btn {
-  border: 1px solid #d8e4de;
+  border: 1px solid #cfe2da;
   border-radius: 999px;
   background: #ffffff;
   color: #37544c;
@@ -52,11 +57,13 @@ function onClickTab(tabKey: TabItem['key']) {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 .tab-btn:hover {
   background: #f3f8f5;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(7, 34, 28, 0.08);
 }
 
 .tab-btn.is-active {

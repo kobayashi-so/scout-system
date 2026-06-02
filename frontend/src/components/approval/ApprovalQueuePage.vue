@@ -1,18 +1,23 @@
 <template>
   <section class="approval-queue">
     <header class="page-header">
-      <h2 class="page-title">{{ pageTitle }}</h2>
-      <p class="page-description">{{ pageDescription }}</p>
+      <div>
+        <p class="eyebrow">APPROVAL</p>
+        <h2 class="page-title">{{ pageTitle }}</h2>
+        <p class="page-description">{{ pageDescription }}</p>
+      </div>
+      <div class="header-badge">
+        <span class="header-badge__label">待機件数</span>
+        <strong>{{ filteredRows.length }}</strong>
+        <p class="header-badge__description">{{ cardDescription }}</p>
+      </div>
     </header>
 
-    <div class="summary-card">
-      <div class="summary-content">
-        <span class="summary-icon">●</span>
-        <div>
-          <p class="summary-count">{{ filteredRows.length }}</p>
-          <p class="summary-description">{{ cardDescription }}</p>
-        </div>
-      </div>
+    <div class="status-panel">
+      <div class="status-panel__dot" aria-hidden="true"></div>
+      <p class="status-panel__text">
+        表示中: {{ props.mode === "sales" ? "営業承認" : "管理者承認" }}
+      </p>
     </div>
 
     <p v-if="loading" class="status-message">読み込み中...</p>
@@ -38,11 +43,7 @@
             <td>{{ formatDate(row.createdAt) }}</td>
             <td>{{ formatDate(row.updatedAt || row.createdAt) }}</td>
             <td>
-              <button
-                type="button"
-                class="review-button"
-                @click="openReview(row)"
-              >
+              <button type="button" class="review-button" @click="openReview(row)">
                 レビュー
               </button>
             </td>
@@ -145,67 +146,94 @@ onMounted(() => {
 
 <style scoped>
 .approval-queue {
+  padding: 24px;
   display: grid;
-  gap: 24px;
+  gap: 14px;
 }
 
 .page-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  color: #0d9488;
+  font-weight: 800;
 }
 
 .page-title {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: #10342d;
 }
 
 .page-description {
-  margin: 0;
-  font-size: 14px;
-  color: #64748b;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #46665c;
 }
 
-.summary-card {
-  max-width: 24rem;
-  border: 1px solid #d8e4de;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 20px;
-  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
+.header-badge {
+  flex-shrink: 0;
+  min-width: 138px;
+  max-width: 250px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.95) 0%, rgba(209, 250, 229, 0.88) 100%);
 }
 
-.summary-content {
+.header-badge__label {
+  display: block;
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.header-badge strong {
+  margin-top: 2px;
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+  color: #065f46;
+}
+
+.header-badge__description {
+  margin: 8px 0 0;
+  color: #3f6359;
+  font-size: 12px;
+}
+
+.status-panel {
+  border: 1px solid #d3e5de;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.summary-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
+.status-panel__dot {
+  width: 9px;
+  height: 9px;
   border-radius: 9999px;
-  background: #d1fae5;
-  color: #047857;
+  background: #10b981;
+  box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.14);
 }
 
-.summary-count {
+.status-panel__text {
   margin: 0;
-  font-size: 30px;
+  color: #31564b;
+  font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
-}
-
-.summary-description {
-  margin: 0;
-  font-size: 14px;
-  color: #64748b;
 }
 
 .status-message {
@@ -220,10 +248,10 @@ onMounted(() => {
 
 .table-wrapper {
   overflow-x: auto;
-  border: 1px solid #d8e4de;
+  border: 1px solid #d3e5de;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
 }
 
 .approval-table {
@@ -234,21 +262,19 @@ onMounted(() => {
 }
 
 .approval-table thead {
-  background: #f2f8f5;
-  color: #475569;
+  background: #f3faf7;
+  color: #0f3d2e;
 }
 
 .approval-table th,
 .approval-table td {
   padding: 12px 16px;
+  border-bottom: 1px solid #e3eee9;
 }
 
 .approval-table th {
   font-weight: 600;
-}
-
-.approval-table tbody tr {
-  border-top: 1px solid #f1f5f9;
+  font-size: 13px;
 }
 
 .cell-id {
@@ -280,5 +306,16 @@ onMounted(() => {
 
 .review-button:hover {
   background: linear-gradient(135deg, #8b0aed 0%, #41034b 100%);
+}
+
+@media (max-width: 980px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-badge {
+    max-width: none;
+  }
 }
 </style>

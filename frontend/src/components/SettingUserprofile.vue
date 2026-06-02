@@ -36,6 +36,10 @@ const selectedUser = computed(() => {
   );
 });
 
+const adminUserCount = computed(
+  () => users.value.filter((user) => user.roleType === "admin").length,
+);
+
 const resetForm = () => {
   selectedUserId.value = null;
   selectedRoleType.value = "sales";
@@ -126,7 +130,25 @@ onMounted(async () => {
 
 <template>
   <div class="management-container">
-    <h2>ユーザー情報編集</h2>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">SETTINGS</p>
+        <h2>ユーザー情報編集</h2>
+        <p class="page-description">
+          ユーザーのロール変更と削除を行います。編集・削除は管理者のみ実行できます。
+        </p>
+      </div>
+      <div class="header-badges">
+        <div class="header-badge">
+          <span class="header-badge__label">登録ユーザー</span>
+          <strong>{{ users.length }}</strong>
+        </div>
+        <div class="header-badge">
+          <span class="header-badge__label">管理者</span>
+          <strong>{{ adminUserCount }}</strong>
+        </div>
+      </div>
+    </header>
 
     <div class="content-layout">
       <div class="table-section">
@@ -149,7 +171,9 @@ onMounted(async () => {
             <tr v-for="user in users" :key="user.userId || user.email">
               <td>{{ user.userName }}</td>
               <td>{{ user.email }}</td>
-              <td>{{ roleLabelMap[user.roleType] }}</td>
+              <td>
+                <span class="role-chip">{{ roleLabelMap[user.roleType] }}</span>
+              </td>
               <td class="action-cell">
                 <button
                   type="button"
@@ -208,14 +232,25 @@ onMounted(async () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          class="btn-save"
-          :disabled="!isAdminUser || !selectedUserId"
-          @click="onClickSave"
-        >
-          保存
-        </button>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-save"
+            :disabled="!isAdminUser || !selectedUserId"
+            @click="onClickSave"
+          >
+            保存
+          </button>
+
+          <button
+            v-if="selectedUserId"
+            type="button"
+            class="btn-cancel"
+            @click="resetForm"
+          >
+            キャンセル
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -224,70 +259,123 @@ onMounted(async () => {
 <style scoped>
 .management-container {
   padding: 24px;
-  border: 1px solid #d8e4de;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
 }
 
-.management-container h2 {
-  margin: 0;
-  font-size: 1.24rem;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  color: #0d9488;
   font-weight: 800;
-  color: #10342d;
+}
+
+h2 {
+  margin: 0;
+}
+
+.page-description {
+  margin: 8px 0 0;
+  color: #46665c;
+  font-size: 13px;
+}
+
+.header-badges {
+  display: flex;
+  gap: 10px;
+}
+
+.header-badge {
+  flex-shrink: 0;
+  min-width: 90px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.95) 0%, rgba(209, 250, 229, 0.88) 100%);
+  text-align: center;
+}
+
+.header-badge__label {
+  display: block;
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.header-badge strong {
+  margin-top: 2px;
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+  color: #065f46;
 }
 
 .content-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  display: flex;
+  align-items: flex-start;
   gap: 20px;
-  margin-top: 18px;
 }
 
 .table-section {
-  border: 1px solid #d8e4de;
-  border-radius: 12px;
+  flex: 2;
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
   overflow: hidden;
-  background: #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
 }
 
 .form-section {
-  border: 1px solid #d8e4de;
-  padding: 20px;
-  background-color: #f5faf7;
-  border-radius: 12px;
+  flex: 1;
+  border: 1px solid #cfe4dc;
+  padding: 18px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 250, 246, 0.9) 100%);
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
 }
 
 .add-title {
+  margin-top: 0;
   background: linear-gradient(135deg, #02664a 0%, #039d88 100%);
   color: #ffffff;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   display: inline-block;
+  box-shadow: 0 8px 16px rgba(2, 102, 74, 0.24);
 }
 
 .edit-title {
+  margin-top: 0;
   background: linear-gradient(135deg, #41ba73 0%, #43b3a6 100%);
   color: #ffffff;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   display: inline-block;
+  box-shadow: 0 8px 16px rgba(41, 153, 113, 0.22);
 }
 
 .form-group {
-  margin-top: 14px;
+  margin: 16px 0 6px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 6px;
   font-weight: 700;
-  color: #31564b;
+  color: #184339;
 }
 
 .selected-user-text {
   margin: 0;
   color: #37544c;
+  line-height: 1.5;
 }
 
 .hint-text {
@@ -303,19 +391,35 @@ onMounted(async () => {
 
 .item-table th,
 .item-table td {
-  border: 1px solid #e6efea;
-  padding: 10px 12px;
+  border-bottom: 1px solid #e3eee9;
+  padding: 11px 12px;
   text-align: left;
 }
 
 .item-table th {
-  background-color: #f2f8f5;
-  color: #31564b;
+  background: #f3faf7;
+  color: #0f3d2e;
+  font-size: 13px;
+}
+
+.item-table tbody tr:hover {
+  background: #f8fcfa;
 }
 
 .state-row {
   text-align: center;
   color: #567168;
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .action-cell {
@@ -362,9 +466,11 @@ onMounted(async () => {
 
 select {
   width: 100%;
-  border: 1px solid #c8d8d1;
-  border-radius: 8px;
+  border: 1px solid #c7ddd5;
+  border-radius: 10px;
   padding: 10px 12px;
+  background: #ffffff;
+  color: #12352d;
 }
 
 select:focus {
@@ -381,23 +487,57 @@ select:focus {
   padding: 10px 16px;
   width: 100%;
   cursor: pointer;
-  margin-top: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .btn-save:hover {
-  background: linear-gradient(135deg, #02664a 0%, #046d5f 100%);
-  border-color: #b8d1c7;
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 16px rgba(5, 120, 87, 0.24);
+}
+
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-cancel {
+  border: 1px solid #c7ddd5;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #31574d;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #f3faf7;
+  color: #17473c;
 }
 
 @media (max-width: 1080px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-badges {
+    flex-wrap: wrap;
+  }
+
   .content-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .management-container {
-    padding: 18px;
+    padding: 6px;
   }
 }
 </style>

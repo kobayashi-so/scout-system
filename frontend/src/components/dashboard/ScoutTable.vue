@@ -1,14 +1,14 @@
 <template>
   <div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-      <table class="min-w-full text-left text-sm">
-        <thead class="bg-slate-50 text-slate-600">
+    <div class="table-shell">
+      <table class="scout-table">
+        <thead class="table-head">
           <tr>
-            <th class="px-4 py-3 font-semibold">ID</th>
-            <th class="px-4 py-3 font-semibold">求人タイトル</th>
-            <th class="px-4 py-3 font-semibold">ステータス</th>
-            <th class="px-4 py-3 font-semibold">作成者</th>
-            <th class="px-4 py-3 font-semibold">
+            <th>ID</th>
+            <th>求人タイトル</th>
+            <th>ステータス</th>
+            <th>作成者</th>
+            <th>
               <div class="flex items-center gap-2">
                 <span>更新日</span>
                 <button type="button" class="sort-btn" @click="toggleDateSort">
@@ -16,20 +16,20 @@
                 </button>
               </div>
             </th>
-            <th class="px-4 py-3 font-semibold">アクション</th>
+            <th>アクション</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="item in sortedRows"
             :key="item.id"
-            class="border-t border-slate-100"
+            class="row-line"
           >
-            <td class="px-4 py-3 text-slate-500">{{ item.id || "-" }}</td>
-            <td class="px-4 py-3 font-medium text-slate-800">
+            <td class="cell-muted">{{ item.id || "-" }}</td>
+            <td class="cell-title">
               {{ item.title }}
             </td>
-            <td class="px-4 py-3">
+            <td>
               <span
                 class="i-block rounded-full px-4 py-1 text-xs font-semibold"
                 :class="statusClass(item.status)"
@@ -37,9 +37,9 @@
                 {{ statusLabel(item.status) }}
               </span>
             </td>
-            <td class="px-4 py-3">{{ item.creator }}</td>
-            <td class="px-4 py-3">{{ formatDate(item.createdAt) }}</td>
-            <td class="px-4 py-3">
+            <td>{{ item.creator }}</td>
+            <td>{{ formatDate(item.createdAt) }}</td>
+            <td>
               <div class="flex gap-2">
                 <button class="mini-action-btn" @click="openDetail(item)">
                   詳細
@@ -72,7 +72,7 @@
             </td>
           </tr>
           <tr v-if="rows.length === 0">
-            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+            <td colspan="6" class="empty-row">
               データがありません
             </td>
           </tr>
@@ -353,6 +353,57 @@ function canOpenDraftEdit(status?: ScoutStatus, creator?: string): boolean {
 </script>
 
 <style scoped>
+.table-shell {
+  overflow-x: auto;
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
+}
+
+.scout-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.table-head {
+  background: #f3faf7;
+  color: #0f3d2e;
+}
+
+.scout-table th,
+.scout-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e3eee9;
+  vertical-align: middle;
+}
+
+.scout-table th {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.row-line:hover {
+  background: #f8fcfa;
+}
+
+.cell-muted {
+  color: #64748b;
+}
+
+.cell-title {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.empty-row {
+  padding: 30px 16px;
+  text-align: center;
+  color: #64748b;
+}
+
 /* モーダルおよびパーツデザイン用のクリーンなCSSスタイル */
 .overlay {
   position: fixed;

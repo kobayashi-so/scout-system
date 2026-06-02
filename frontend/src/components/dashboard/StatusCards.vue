@@ -66,14 +66,27 @@ defineEmits<{
 }
 
 .status-card {
-  border: 1px solid #d8e4de;
+  border: 1px solid #d3e5de;
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 8px 20px rgba(6, 34, 28, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 253, 250, 0.96) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
   text-align: left;
   padding: 16px;
   cursor: pointer;
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.85), rgba(20, 184, 166, 0.75));
+  opacity: 0.45;
 }
 
 .status-card:hover {
@@ -114,6 +127,10 @@ defineEmits<{
   border-color: #0f766e;
   box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
   background: linear-gradient(180deg, #ffffff 0%, #f5fcf9 100%);
+}
+
+.status-card-active::before {
+  opacity: 1;
 }
 
 @media (min-width: 640px) {

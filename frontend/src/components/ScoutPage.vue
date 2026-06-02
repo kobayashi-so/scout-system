@@ -3,13 +3,22 @@
     <header class="page-header">
       <div class="header-left">
         <button type="button" class="btn-back" @click="goToDashboard">←</button>
-        <h1>スカウト文新規作成</h1>
+        <div class="title-block">
+          <p class="eyebrow">SCOUT BUILDER</p>
+          <h1>スカウト文新規作成</h1>
+          <p class="title-description">
+            求人情報入力から文面作成、評価チェックまでを一画面で完了できます。
+          </p>
+        </div>
 
         <span :class="['badge-status', form.status]">
           {{ currentStatusLabel }}
         </span>
       </div>
       <div class="header-right">
+        <span class="progress-badge">
+          チェック {{ checkedItemIds.length }} / {{ checkItems.length }}
+        </span>
         <button
           type="button"
           class="btn-secondary"
@@ -31,7 +40,7 @@
 
     <div class="workspace">
       <section class="card column-input">
-        <h2>📁 1. 求人情報入力</h2>
+        <h2>1. 求人情報入力</h2>
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
             <div class="form-group-row">
@@ -143,7 +152,7 @@
 
       <section class="card column-edit">
         <div class="card-header-row">
-          <h2>⌨️ 2. 文面編集</h2>
+          <h2>2. 文面編集</h2>
           <span class="edit-notice">※直接編集可</span>
         </div>
         <div class="output-container">
@@ -158,7 +167,7 @@
       </section>
 
       <section class="card column-check">
-        <h2>📊 3. 評価基準チェック</h2>
+        <h2>3. 評価基準チェック</h2>
         <div class="check-scroll-wrapper">
           <p v-if="checkItemsLoading" class="check-item-meta">読み込み中...</p>
           <p v-else-if="checkItemsError" class="message error">
@@ -468,48 +477,77 @@ onMounted(async () => {
   max-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 16px 24px;
-  background-color: #ffffff;
+  padding: 24px;
+  background: transparent;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
   flex-shrink: 0;
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
+  padding: 14px 16px;
 }
 
 .header-left {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  color: #0d9488;
+  font-weight: 800;
+}
+
+.title-description {
+  margin: 0;
+  font-size: 12px;
+  color: #4a6a60;
 }
 
 .btn-back {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+  background: #ffffff;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
   cursor: pointer;
-  color: #64748b;
+  color: #31564b;
   padding: 0;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #10342d;
 }
 
 /* 💡 動的ステータスバッジの汎用スタイル */
 .badge-status {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-weight: 600;
+  font-size: 0.74rem;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
   background-color: #f1f5f9;
   color: #64748b;
+  margin-top: 2px;
 }
 
 /* 💡 各ステータスに応じたカラー定義（お好みに合わせて微調整してください） */
@@ -536,15 +574,29 @@ onMounted(async () => {
 
 .header-right {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.progress-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #c7ddd5;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #2f564b;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .btn-secondary {
   background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #c7ddd5;
   color: #475569;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 9px 16px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -554,8 +606,8 @@ onMounted(async () => {
   background-color: #00c77b;
   border: none;
   color: #ffffff;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 9px 16px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -563,30 +615,30 @@ onMounted(async () => {
 
 .workspace {
   display: flex;
-  gap: 20px;
+  gap: 14px;
   flex: 1;
   min-height: 0;
   height: calc(100% - 60px);
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 253, 250, 0.94) 100%);
+  border: 1px solid #d3e5de;
+  border-radius: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 22px rgba(7, 34, 28, 0.07);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .card h2 {
-  margin: 0 0 16px 0;
-  font-size: 0.9rem;
+  margin: 0 0 14px 0;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #004d34;
+  color: #0f3d2e;
   flex-shrink: 0;
 }
 
@@ -636,10 +688,10 @@ onMounted(async () => {
 .form-label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
+  gap: 5px;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: #475569;
+  color: #31564b;
 }
 
 .form-label.compact {
@@ -657,11 +709,11 @@ input[type="text"],
 select,
 textarea {
   width: 100%;
-  padding: 6px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
   font-size: 0.85rem;
-  color: #1e293b;
+  color: #12352d;
   box-sizing: border-box;
   background-color: #ffffff;
 }
@@ -684,7 +736,7 @@ textarea:focus {
   background-color: #004d34;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 9px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -703,7 +755,7 @@ textarea:focus {
 .edit-notice {
   font-size: 0.75rem;
   color: #00c77b;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .output-container {
@@ -716,8 +768,8 @@ textarea:focus {
 .body-textarea {
   flex: 1;
   resize: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid #c7ddd5;
+  border-radius: 9px;
   padding: 12px;
   font-size: 0.85rem;
   line-height: 1.6;
@@ -745,11 +797,12 @@ textarea:focus {
 
 .check-item-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #334155;
+  color: #31564b;
+  line-height: 1.45;
 }
 
 .check-item-row input[type="checkbox"] {
@@ -771,5 +824,34 @@ textarea:focus {
   color: #ef4444;
   font-size: 12px;
   margin-left: 4px;
+}
+
+@media (max-width: 1200px) {
+  .workspace {
+    flex-direction: column;
+    height: auto;
+    overflow: auto;
+  }
+
+  .card {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 860px) {
+  .page-fixed-container {
+    height: auto;
+    max-height: none;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+  }
 }
 </style>
