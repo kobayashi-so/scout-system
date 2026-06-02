@@ -390,7 +390,7 @@ async function handleApprove() {
         userId: authStore.currentUserId,
       });
 
-      await playFinalApprovalEffects();
+      // await playFinalApprovalEffects();
     }
 
     await router.push("/list");
@@ -402,10 +402,10 @@ async function handleApprove() {
   }
 }
 
-async function playFinalApprovalEffects() {
-  // テキスト演出と効果音を同時に開始。音声が使えない環境でも処理は継続する。
-  await Promise.allSettled([playApprovalTextEffect(), playApprovalSoundEffect()]);
-}
+// async function playFinalApprovalEffects() {
+//   // テキスト演出と効果音を同時に開始。音声が使えない環境でも処理は継続する。
+//   await Promise.allSettled([playApprovalTextEffect(), playApprovalSoundEffect()]);
+// }
 
 async function playApprovalTextEffect() {
   showApprovalTextEffect.value = true;

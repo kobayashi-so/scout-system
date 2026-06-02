@@ -21,13 +21,17 @@
         <span class="icon">⚠️</span> {{ errorMessage }}
       </div>
 
-      <form @submit.prevent="handleLogin">
+      <form @submit.prevent="handleLogin" autocomplete="on">
         <label class="form-label">
           メールアドレス
           <input
             v-model="form.email"
             type="email"
+            name="email"
             autocomplete="email"
+            inputmode="email"
+            autocapitalize="none"
+            spellcheck="false"
             placeholder="example@techvision.com"
             required
           />
@@ -38,6 +42,7 @@
           <input
             v-model="form.password"
             type="password"
+            name="password"
             autocomplete="current-password"
             minlength="6"
             placeholder="••••••••"
