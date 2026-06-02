@@ -44,8 +44,11 @@
         <div class="form-scroll-wrapper">
           <form @submit.prevent class="scrollable-form">
             <div class="form-group-row">
-              <label class="form-label compact">
-                求人タイトル
+              <label class="form-label">
+                <span class="form-label-head">
+                  求人タイトル
+                  <span class="required-soft">(必須)</span>
+                </span>
                 <input
                   v-model="form.title"
                   type="text"
@@ -145,9 +148,8 @@
               </select>
             </label>
 
-            <p v-if="generateError" class="message error">
-              {{ generateError }}
-            </p>
+            <hr class="separator" />
+
           </form>
         </div>
 
@@ -206,6 +208,15 @@
           </div>
         </div>
       </section>
+    </div>
+    <!-- フォーム全体のエラーを目立たせる固定表示（ページ下部、オーバーレイ） -->
+    <div v-if="generateError" class="form-error-bar" role="alert" aria-live="assertive">
+      <svg class="error-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path fill="currentColor" d="M11.001 10h2v5h-2zM11 16h2v2h-2z"/>
+        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+      </svg>
+      <div class="form-error-text">{{ generateError }}</div>
+      <button type="button" class="form-error-close" @click="generateError = ''" aria-label="エラーを閉じる">✕</button>
     </div>
   </div>
 </template>
@@ -470,7 +481,7 @@ async function handleSubmit(status: ScoutStatus) {
     generateError.value = ''
     checkedItemIds.value = []
 
-    if (status === 'waiting_leader') {
+    if (status === 'waiting_leader' || status === 'draft') {
       await router.push({ name: 'scout-list' })
     }
   } catch (error) {
@@ -497,6 +508,7 @@ onMounted(async () => {
   box-sizing: border-box;
   padding: 24px;
   background: transparent;
+  position: relative;
 }
 
 .page-header {
@@ -842,6 +854,48 @@ textarea:focus {
 .message.error {
   color: #ef4444;
   font-size: 0.8rem;
+}
+
+/* フォーム最下部に表示する目立つエラーバー */
+.form-error-bar {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.18);
+  z-index: 60;
+  font-weight: 700;
+  animation: slideUpFade 220ms ease-out;
+}
+.form-error-bar .error-icon {
+  flex: 0 0 auto;
+  color: rgba(255,255,255,0.95);
+}
+.form-error-bar .form-error-text {
+  flex: 1 1 auto;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+.form-error-close {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@keyframes slideUpFade {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .required-soft {
