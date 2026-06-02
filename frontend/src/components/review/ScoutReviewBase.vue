@@ -634,12 +634,11 @@ onMounted(() => {
 
 <style scoped>
 .review-page {
-  max-width: 1120px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 4px;
+  padding: 24px;
 }
 
 .review-grid {

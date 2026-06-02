@@ -139,9 +139,9 @@ onMounted(async () => {
         <table class="item-table">
           <thead>
             <tr>
-              <th>表示順</th>
-              <th>チェック項目名</th>
-              <th>操作</th>
+              <th class="col-order">表示順</th>
+              <th class="col-title">チェック項目名</th>
+              <th class="col-action">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -153,7 +153,9 @@ onMounted(async () => {
             </tr>
             <tr v-for="item in items" :key="item.id">
               <td>{{ item.display_order }}</td>
-              <td>{{ item.checkTitle }}</td>
+              <td>
+                <div class="check-title-scroll">{{ item.checkTitle }}</div>
+              </td>
               <td class="action-cell">
                 <button class="btn-row-edit" @click="onClickEdit(item)">
                   編集
@@ -372,6 +374,15 @@ h2 {
 .item-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.col-order {
+  width: 88px;
+}
+
+.col-action {
+  width: 170px;
 }
 
 .item-table th,
@@ -395,6 +406,23 @@ h2 {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.check-title-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.check-title-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.check-title-scroll::-webkit-scrollbar-thumb {
+  background-color: #bfd7ce;
+  border-radius: 9999px;
 }
 
 .form-group {
