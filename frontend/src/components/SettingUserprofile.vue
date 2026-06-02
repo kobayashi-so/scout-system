@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { deleteUser, fetchUsers, updateUserRole } from "../api/userApi";
 import { useAuthStore } from "../store/authStore";
 import type { RoleType, UserResponse } from "../type/user";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const users = ref<UserResponse[]>([]);
 const isLoading = ref(false);
@@ -98,11 +100,6 @@ const onClickDelete = async (user: UserResponse) => {
     return;
   }
 
-  if (isCurrentUser(user)) {
-    alert("現在ログイン中の自分自身は削除できません。");
-    return;
-  }
-
   const confirmed = window.confirm(
     `「${user.userName}（${roleLabelMap[user.roleType]}）」を削除します。よろしいですか？`,
   );
@@ -111,7 +108,15 @@ const onClickDelete = async (user: UserResponse) => {
   }
 
   try {
+    const deletedSelf = isCurrentUser(user);
     await deleteUser(user.userId, authStore.currentUserRoleType as RoleType);
+
+    if (deletedSelf) {
+      authStore.logout();
+      await router.push("/login");
+      return;
+    }
+
     await loadUsers();
 
     if (selectedUserId.value === user.userId) {
@@ -186,7 +191,7 @@ onMounted(async () => {
                 <button
                   type="button"
                   class="btn-row-delete"
-                  :disabled="!isAdminUser || isCurrentUser(user)"
+                  :disabled="!isAdminUser"
                   @click="onClickDelete(user)"
                 >
                   削除
