@@ -601,6 +601,11 @@ async function handleRemand() {
     return;
   }
 
+  const confirmed = window.confirm("差戻しをしますか？");
+  if (!confirmed) {
+    return;
+  }
+
   submitting.value = true;
   errorMessage.value = "";
 
@@ -611,8 +616,7 @@ async function handleRemand() {
       comment: remandComment.value.trim(),
     });
 
-    // 差戻し後は画面遷移せず、その場で最新状態を再取得する
-    await loadReviewData();
+    await router.push("/list");
   } catch (error) {
     console.error(error);
     const statusCode = (error as any)?.response?.status;
