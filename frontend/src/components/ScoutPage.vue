@@ -506,7 +506,7 @@ onMounted(async () => {
   max-height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 0;
   background: transparent;
   position: relative;
 }
