@@ -182,7 +182,7 @@ onMounted(() => {
 .header-badge {
   flex-shrink: 0;
   min-width: 138px;
-  max-width: 250px;
+  max-width: 260px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(16, 185, 129, 0.25);

@@ -10,23 +10,21 @@
         v-model="activeTab"
         :tabs="availableTabs"
         @tab-click="onClickTab"
-      />
-
+      >
+        <template #right>
+          <button
+            v-if="canUseCreatorFilter"
+            type="button"
+            class="tab-btn"
+            :class="{ 'is-active': creatorFilter === 'mine' }"
+            :aria-pressed="creatorFilter === 'mine'"
+            @click="creatorFilter = creatorFilter === 'mine' ? 'all' : 'mine'"
+          >
+            {{ currentUserNameLabel }}
+          </button>
+        </template>
+      </DashboardTabs>
       <div class="mb-4 flex items-center gap-2">
-        <button
-          v-if="isSalesMyTab"
-          type="button"
-          class="rounded-full px-4 py-2 text-sm font-semibold transition"
-          :class="
-            creatorFilter === 'mine'
-              ? 'bg-slate-900 text-white'
-              : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
-          "
-          @click="creatorFilter = creatorFilter === 'mine' ? 'all' : 'mine'"
-        >
-          {{ currentUserNameLabel }}
-        </button>
-
         <button
           type="button"
           class="priority-alert"
@@ -103,30 +101,18 @@ import DashboardTabs from "./dashboard/DashboardTabs.vue";
 import StatusCards, { type StatusFilterKey } from "./dashboard/StatusCards.vue";
 import ScoutTable from "./dashboard/ScoutTable.vue";
 
-type RoleLevel = 1 | 2 | 3;
-
 const authStore = useAuthStore();
 const router = useRouter();
 
-const roleLevel = computed<RoleLevel>(() => {
-  // 画面タブ制御用にroleを段階値へ変換
-  if (authStore.currentUserRoleType === "admin") return 3;
-  if (authStore.currentUserRoleType === "leader") return 2;
-  return 1;
-});
-
-const tabDefs: { key: ScoutListType; label: string; minRole: RoleLevel }[] = [
-  { key: "my", label: "全申請文書", minRole: 1 },
-  { key: "sales_pending", label: "営業承認者承認待ち", minRole: 2 },
-  { key: "final_pending", label: "最終承認待ち", minRole: 3 },
-  { key: "trash", label: "ゴミ箱", minRole: 1 },
+const tabDefs: { key: ScoutListType; label: string }[] = [
+  { key: "my", label: "全申請文書" },
+  { key: "sales_pending", label: "営業承認者承認待ち" },
+  { key: "final_pending", label: "最終承認待ち" },
+  { key: "trash", label: "ゴミ箱" },
 ];
 
-const availableTabs = computed(() =>
-  tabDefs
-    .filter((t) => roleLevel.value >= t.minRole)
-    .map((t) => ({ key: t.key, label: t.label })),
-);
+// 全権限で全タブを表示する（ゴミ箱は tabDefs で最後に定義済みのため右端に表示される）
+const availableTabs = computed(() => tabDefs.map((t) => ({ key: t.key, label: t.label })));
 
 const activeTab = ref<ScoutListType>('my')
 const selectedStatusCard = ref<StatusFilterKey>('all')
@@ -141,9 +127,10 @@ const currentUserNameLabel = computed(
   () => authStore.currentUserName || "ユーザー名",
 );
 
-const isSalesMyTab = computed(() => {
-  return authStore.currentUserRoleType === "sales" && activeTab.value === "my";
-});
+const currentUserNameTrimmed = computed(
+  () => authStore.currentUserName?.trim() || "",
+);
+const canUseCreatorFilter = computed(() => currentUserNameTrimmed.value.length > 0);
 
 function getRowUpdatedTimestamp(row: ScoutEntity): number | null {
   const source = (row as ScoutEntity & { updatedAt?: string }).updatedAt || row.createdAt
@@ -166,11 +153,7 @@ function isPriorityRow(row: ScoutEntity, nowMs: number): boolean {
   return nowMs - updatedAt >= threeDaysMs
 }
 
-function resolveInitialTab(role: RoleLevel): ScoutListType {
-  if (role >= 3) return "final_pending";
-  if (role >= 2) return "sales_pending";
-  return "my";
-}
+// 初期タブは常に `my`（全申請文書）とする
 
 async function loadRows() {
   loading.value = true;
@@ -192,7 +175,15 @@ const displayRows = computed(() => {
   let filteredRows = rows.value;
 
   if (activeTab.value === "trash") {
-    return filteredRows.filter((r: ScoutEntity) => !!r.deletedAt);
+    filteredRows = filteredRows.filter((r: ScoutEntity) => !!r.deletedAt);
+
+    if (creatorFilter.value === "mine") {
+      filteredRows = filteredRows.filter((r: ScoutEntity) => {
+        return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value;
+      });
+    }
+
+    return filteredRows;
   }
 
   filteredRows = filteredRows.filter((r: ScoutEntity) => !r.deletedAt);
@@ -230,10 +221,9 @@ const displayRows = computed(() => {
     );
   }
 
-  if (isSalesMyTab.value && creatorFilter.value === "mine") {
-    const currentUserName = authStore.currentUserName?.trim();
+  if (creatorFilter.value === "mine") {
     filteredRows = filteredRows.filter((r: ScoutEntity) => {
-      return Boolean(currentUserName) && r.creator.trim() === currentUserName;
+      return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value;
     });
   }
 
@@ -248,10 +238,9 @@ const priorityCandidateCount = computed(() => {
   const nowMs = Date.now()
   let candidateRows = rows.value.filter((r: ScoutEntity) => !r.deletedAt)
 
-  if (isSalesMyTab.value && creatorFilter.value === 'mine') {
-    const currentUserName = authStore.currentUserName?.trim()
+  if (creatorFilter.value === 'mine') {
     candidateRows = candidateRows.filter((r: ScoutEntity) => {
-      return Boolean(currentUserName) && r.creator.trim() === currentUserName
+      return canUseCreatorFilter.value && r.creator.trim() === currentUserNameTrimmed.value
     })
   }
 
@@ -394,7 +383,7 @@ watch(activeTab, () => {
 
 onMounted(() => {
   authStore.hydrateFromStorage();
-  activeTab.value = resolveInitialTab(roleLevel.value);
+  activeTab.value = 'my';
   loadRows();
 });
 </script>
