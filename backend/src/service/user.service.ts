@@ -93,10 +93,12 @@ export class UserService {
     const normalizedEmail = input.email.trim().toLowerCase();
     const user = await this.userRepository.findByEmail(normalizedEmail);
 
-    if (!user || user.password !== input.password) {
-      throw new UnauthorizedException(
-        "メールアドレスまたはパスワードが正しくありません",
-      );
+    if (!user) {
+      throw new UnauthorizedException("メールアドレスが登録されていません");
+    }
+
+    if (user.password !== input.password) {
+      throw new UnauthorizedException("パスワードが正しくありません");
     }
 
     return this.toUserResponse(user);
