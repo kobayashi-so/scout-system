@@ -167,6 +167,14 @@
           </button>
         </div>
       </div>
+
+      <div
+        v-if="showApprovalTextEffect"
+        class="approval-rainbow-overlay"
+        aria-hidden="true"
+      >
+        <p class="approval-rainbow-text">承認</p>
+      </div>
     </template>
   </section>
 </template>
@@ -210,6 +218,7 @@ const checkItems = ref<checkItem[]>([]);
 const selectedCheckIds = ref<string[]>([]);
 const remandComment = ref("");
 const showPreviousBody = ref(false);
+const showApprovalTextEffect = ref(false);
 
 const scoutId = computed(() => String(route.params.id || ""));
 
@@ -380,6 +389,8 @@ async function handleApprove() {
         scoutId: scout.value.id,
         userId: authStore.currentUserId,
       });
+
+      await playFinalApprovalEffects();
     }
 
     await router.push("/list");
@@ -389,6 +400,185 @@ async function handleApprove() {
   } finally {
     submitting.value = false;
   }
+}
+
+async function playFinalApprovalEffects() {
+  // テキスト演出と効果音を同時に開始。音声が使えない環境でも処理は継続する。
+  await Promise.allSettled([playApprovalTextEffect(), playApprovalSoundEffect()]);
+}
+
+async function playApprovalTextEffect() {
+  showApprovalTextEffect.value = true;
+  await wait(1200);
+  showApprovalTextEffect.value = false;
+}
+
+async function playApprovalSoundEffect() {
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+
+  if (!AudioContextCtor) {
+    return;
+  }
+
+  const context = new AudioContextCtor();
+
+  try {
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, context.currentTime);
+    master.connect(context.destination);
+
+    const start = context.currentTime + 0.01;
+    scheduleKyuinTone(context, master, {
+      start,
+      duration: 0.23,
+      fromHz: 480,
+      toHz: 1550,
+      gainPeak: 0.09,
+      detuneCents: -8,
+    });
+    scheduleKyuinTone(context, master, {
+      start: start + 0.16,
+      duration: 0.28,
+      fromHz: 400,
+      toHz: 1710,
+      gainPeak: 0.082,
+      detuneCents: 11,
+    });
+    scheduleKyuinTone(context, master, {
+      start: start + 0.31,
+      duration: 0.34,
+      fromHz: 350,
+      toHz: 1890,
+      gainPeak: 0.07,
+      detuneCents: -3,
+    });
+    scheduleImpactHit(context, master, start + 0.42);
+
+    await wait(980);
+  } catch (error) {
+    console.warn("Approval sound effect could not be played", error);
+  } finally {
+    await context.close().catch(() => undefined);
+  }
+}
+
+function scheduleKyuinTone(
+  context: AudioContext,
+  destination: GainNode,
+  options: {
+    start: number;
+    duration: number;
+    fromHz: number;
+    toHz: number;
+    gainPeak: number;
+    detuneCents: number;
+  },
+) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = "sawtooth";
+  oscillator.detune.setValueAtTime(options.detuneCents, options.start);
+  oscillator.frequency.setValueAtTime(options.fromHz, options.start);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    options.toHz,
+    options.start + options.duration,
+  );
+
+  gain.gain.setValueAtTime(0.0001, options.start);
+  gain.gain.exponentialRampToValueAtTime(
+    options.gainPeak,
+    options.start + 0.055,
+  );
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    options.start + options.duration,
+  );
+
+  oscillator.connect(gain);
+  gain.connect(destination);
+
+  oscillator.start(options.start);
+  oscillator.stop(options.start + options.duration + 0.03);
+}
+
+function confettiStyle(piece: number): { [key: string]: string } {
+  const angle = `${(piece * 31) % 360}deg`;
+  const distance = `${170 + (piece % 8) * 26}px`;
+  const hue = String((piece * 29) % 360);
+  const delay = `${(piece % 7) * 0.02}s`;
+  const duration = `${0.62 + (piece % 5) * 0.11}s`;
+
+  return {
+    "--piece-angle": angle,
+    "--piece-distance": distance,
+    "--piece-hue": hue,
+    animationDelay: delay,
+    animationDuration: duration,
+  };
+}
+
+function beamStyle(beam: number): { [key: string]: string } {
+  return {
+    "--beam-angle": `${(beam * 20) % 360}deg`,
+    "--beam-hue": String((beam * 23) % 360),
+    animationDelay: `${(beam % 6) * 0.035}s`,
+    animationDuration: `${0.5 + (beam % 4) * 0.09}s`,
+  };
+}
+
+function sparkStyle(spark: number): { [key: string]: string } {
+  return {
+    "--spark-angle": `${(spark * 53) % 360}deg`,
+    "--spark-distance": `${90 + (spark % 10) * 18}px`,
+    "--spark-hue": String((spark * 31 + 120) % 360),
+    animationDelay: `${(spark % 9) * 0.03}s`,
+    animationDuration: `${0.44 + (spark % 5) * 0.08}s`,
+  };
+}
+
+function scheduleImpactHit(
+  context: AudioContext,
+  destination: GainNode,
+  start: number,
+) {
+  const low = context.createOscillator();
+  const high = context.createOscillator();
+  const gain = context.createGain();
+
+  low.type = "triangle";
+  low.frequency.setValueAtTime(170, start);
+  low.frequency.exponentialRampToValueAtTime(54, start + 0.28);
+
+  high.type = "square";
+  high.frequency.setValueAtTime(960, start);
+  high.frequency.exponentialRampToValueAtTime(320, start + 0.18);
+
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(0.07, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.34);
+
+  low.connect(gain);
+  high.connect(gain);
+  gain.connect(destination);
+
+  low.start(start);
+  high.start(start);
+  low.stop(start + 0.36);
+  high.stop(start + 0.24);
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 async function handleRemand() {
@@ -440,11 +630,12 @@ onMounted(() => {
 
 <style scoped>
 .review-page {
+  max-width: 1120px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: 4px;
 }
 
 .review-grid {
@@ -703,6 +894,266 @@ onMounted(() => {
 
 .btn-approve:hover {
   background: #15803d;
+}
+
+.approval-rainbow-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%),
+    conic-gradient(
+      from 0deg,
+      rgba(239, 68, 68, 0.08),
+      rgba(245, 158, 11, 0.08),
+      rgba(34, 197, 94, 0.08),
+      rgba(59, 130, 246, 0.08),
+      rgba(236, 72, 153, 0.08),
+      rgba(239, 68, 68, 0.08)
+    ),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.12) 0%, rgba(2, 6, 23, 0.28) 100%);
+  animation: approval-strobe 0.19s steps(2, jump-none) 6;
+}
+
+.approval-flash {
+  position: absolute;
+  width: min(86vw, 780px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: screen;
+  animation: approval-flash 0.5s ease-out forwards;
+}
+
+.approval-rings {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.approval-ring {
+  position: absolute;
+  width: min(30vw, 300px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 5px solid rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  transform: scale(0.4);
+  animation: approval-ring-burst 0.88s ease-out forwards;
+}
+
+.approval-confetti {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.approval-beams {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.approval-beam {
+  --beam-angle: 0deg;
+  --beam-hue: 170;
+  position: absolute;
+  width: min(8vw, 54px);
+  height: min(45vh, 350px);
+  border-radius: 999px;
+  background: linear-gradient(
+    to top,
+    hsla(var(--beam-hue), 100%, 62%, 0),
+    hsla(var(--beam-hue), 100%, 70%, 0.88),
+    hsla(var(--beam-hue), 100%, 78%, 0)
+  );
+  mix-blend-mode: screen;
+  transform: rotate(var(--beam-angle)) translateY(30px) scaleY(0.4);
+  transform-origin: 50% 70%;
+  opacity: 0;
+  animation-name: approval-beam-burst;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.1, 0.72, 0.15, 1);
+}
+
+.approval-piece {
+  --piece-angle: 0deg;
+  --piece-distance: 200px;
+  --piece-hue: 180;
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  border-radius: 999px;
+  background: hsl(var(--piece-hue), 92%, 58%);
+  box-shadow: 0 0 12px hsla(var(--piece-hue), 100%, 70%, 0.85);
+  transform: rotate(var(--piece-angle)) translateX(0) scale(0.2);
+  opacity: 0;
+  animation-name: approval-piece-burst;
+  animation-timing-function: cubic-bezier(0.15, 0.78, 0.19, 1);
+  animation-fill-mode: forwards;
+}
+
+.approval-sparks {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.approval-spark {
+  --spark-angle: 0deg;
+  --spark-distance: 120px;
+  --spark-hue: 220;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: hsl(var(--spark-hue), 100%, 72%);
+  box-shadow:
+    0 0 12px hsla(var(--spark-hue), 100%, 70%, 0.95),
+    0 0 28px hsla(var(--spark-hue), 100%, 72%, 0.62);
+  opacity: 0;
+  transform: rotate(var(--spark-angle)) translateX(0) scale(0.25);
+  animation-name: approval-spark-burst;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.12, 0.88, 0.22, 1);
+}
+
+.approval-rainbow-text {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-size: clamp(88px, 22vw, 250px);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  background: linear-gradient(
+    90deg,
+    #ef4444 0%,
+    #f97316 16%,
+    #facc15 32%,
+    #22c55e 48%,
+    #06b6d4 64%,
+    #3b82f6 80%,
+    #ec4899 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.75);
+  text-shadow:
+    0 12px 44px rgba(16, 24, 40, 0.38),
+    0 0 22px rgba(255, 255, 255, 0.65);
+  animation: approval-rainbow-pop 1.2s cubic-bezier(0.12, 0.72, 0.2, 1) forwards;
+}
+
+@keyframes approval-strobe {
+  0% {
+    filter: hue-rotate(0deg) saturate(1.05);
+  }
+  100% {
+    filter: hue-rotate(40deg) saturate(1.3);
+  }
+}
+
+@keyframes approval-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes approval-ring-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  28% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes approval-piece-burst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--piece-angle)) translateX(0) scale(0.25);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--piece-angle) + 120deg)) translateX(var(--piece-distance)) scale(1);
+  }
+}
+
+@keyframes approval-beam-burst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--beam-angle)) translateY(26px) scaleY(0.3);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--beam-angle)) translateY(-32px) scaleY(1.24);
+  }
+}
+
+@keyframes approval-spark-burst {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateX(0) scale(0.2);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--spark-angle) + 90deg)) translateX(var(--spark-distance)) scale(1);
+  }
+}
+
+@keyframes approval-rainbow-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.45) rotate(-8deg) translateY(20px);
+    background-position: 0% 50%;
+    filter: saturate(1.35);
+  }
+  36% {
+    opacity: 1;
+    transform: scale(1.18) rotate(3deg) translateY(-2px);
+    background-position: 100% 50%;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.42) rotate(0deg) translateY(-14px);
+    background-position: 200% 50%;
+    filter: saturate(1.05);
+  }
 }
 
 .validation-text {

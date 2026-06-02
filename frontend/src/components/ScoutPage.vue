@@ -36,9 +36,7 @@
           <form @submit.prevent class="scrollable-form">
             <div class="form-group-row">
               <label class="form-label compact">
-                <span class="form-label-head"
-                  >求人タイトル<span class="required-soft">(必須)</span></span
-                >
+                求人タイトル
                 <input
                   v-model="form.title"
                   type="text"
@@ -51,9 +49,8 @@
             <hr class="separator" />
 
             <label class="form-label">
-              <span class="form-label-head"
-                >会社名 <span class="required-soft">(必須)</span></span
-              >
+              会社名
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.companyName"
                 type="text"
@@ -63,9 +60,8 @@
             </label>
 
             <label class="form-label">
-              <span class="form-label-head"
-                >職種 <span class="required-soft">(必須)</span></span
-              >
+              職種
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.jobCategory"
                 type="text"
@@ -75,9 +71,8 @@
             </label>
 
             <label class="form-label">
-              <span class="form-label-head"
-                >業務内容 <span class="required-soft">(必須)</span></span
-              >
+              業務内容
+              <span class="required-soft">(必須)</span>
               <textarea
                 v-model="form.requirement.jobDescription"
                 placeholder="要件定義〜設計・実装・運用まで担当"
@@ -114,9 +109,8 @@
             </label>
 
             <label class="form-label">
-              <span class="form-label-head"
-                >求人の魅力 <span class="required-soft">(必須)</span></span
-              >
+              求人の魅力
+              <span class="required-soft">(必須)</span>
               <input
                 v-model="form.requirement.jobAppeal"
                 type="text"
@@ -197,10 +191,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, reactive } from "vue";
-import { useRouter } from "vue-router";
-import { useScoutStore } from "../store/scoutStore";
-import { useAuthStore } from "../store/authStore";
+import { computed, onMounted, ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useScoutStore } from '../store/scoutStore'
+import { useAuthStore } from '../store/authStore'
 
 import { fetchCheckItems } from "../api/checkItemApi";
 import type { CreateScoutPayload } from "../type/scout";
@@ -213,13 +207,13 @@ type ScoutStatus =
   | "approved"
   | "remanded";
 
-const store = useScoutStore();
-const authStore = useAuthStore();
-const router = useRouter();
+const store = useScoutStore()
+const authStore = useAuthStore()
+const router = useRouter()
 
 const form = reactive<{
-  title: string;
-  status: ScoutStatus;
+  title: string
+  status: ScoutStatus
   requirement: {
     companyName: string;
     jobCategory: string;
@@ -233,8 +227,8 @@ const form = reactive<{
   promptText: string;
   body: string;
 }>({
-  title: "",
-  status: "draft" as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
+  title: '',
+  status: 'draft' as ScoutStatus, // 💡 コンポーネント内でリアクティブにステータス表示を切り替えるために追加
   requirement: {
     companyName: "",
     jobCategory: "",
@@ -273,6 +267,20 @@ const allCheckItemsDone = computed(() => {
   );
 });
 
+function isFormCompletelyEmpty(): boolean {
+  return [
+    form.title,
+    form.body,
+    form.requirement.companyName,
+    form.requirement.jobCategory,
+    form.requirement.jobDescription,
+    form.requirement.requiredSkills,
+    form.requirement.workLocation,
+    form.requirement.salaryInfo,
+    form.requirement.jobAppeal,
+  ].every((value) => !value.trim());
+}
+
 function goToDashboard() {
   router.push({ name: "scout-list" });
 }
@@ -298,6 +306,10 @@ function handleGeneratePrompt() {
   }
   generateError.value = "";
 
+  const requiredSkillsText = r.requiredSkills.trim();
+  const workLocationText = r.workLocation.trim();
+  const salaryInfoText = r.salaryInfo.trim();
+
   form.promptText = [
     "あなたは採用担当です。候補者向けのスカウト文を作成してください。",
     `会社名: ${r.companyName}`,
@@ -307,48 +319,81 @@ function handleGeneratePrompt() {
 
   let generatedBody = "";
   if (form.tone === "カジュアル") {
+    const detailParts = [
+      requiredSkillsText ? `スキルは${requiredSkillsText}` : "",
+      workLocationText ? `勤務地は${workLocationText}` : "",
+      salaryInfoText ? `給与は${salaryInfoText}` : "",
+    ].filter((part) => part);
+
     generatedBody = [
       `${r.companyName}の採用担当です！`,
       `今回は${r.jobCategory}を募集しています。${r.jobDescription}をお任せしたいです。`,
-      `スキルは${r.requiredSkills}、勤務地は${r.workLocation}、給与は${r.salaryInfo}です。`,
+      detailParts.length > 0 ? `${detailParts.join("、")}です。` : "",
       `魅力は「${r.jobAppeal}」。まずは気軽にお話しませんか？`,
-    ].join("\n");
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join("\n");
   } else if (form.tone === "熱意") {
+    const roleLine = requiredSkillsText
+      ? `${r.jobDescription}を中心に、${requiredSkillsText}を活かせる環境です。`
+      : `${r.jobDescription}を中心にご活躍いただける環境です。`;
+
+    const conditionParts = [
+      workLocationText ? `勤務地は${workLocationText}` : "",
+      salaryInfoText ? `給与は${salaryInfoText}` : "",
+    ].filter((part) => part);
+
     generatedBody = [
       `${r.companyName}の採用担当です。`,
       `あなたのご経験に強く惹かれ、${r.jobCategory}としてぜひご活躍いただきたいと考えています。`,
-      `${r.jobDescription}を中心に、${r.requiredSkills}を活かせる環境です。`,
-      `勤務地は${r.workLocation}、給与は${r.salaryInfo}。`,
+      roleLine,
+      conditionParts.length > 0 ? `${conditionParts.join("、")}。` : "",
       `「${r.jobAppeal}」など、当社ならではの魅力も多数。ご応募を心よりお待ちしています！`,
-    ].join("\n");
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join("\n");
   } else if (form.tone === "プロフェッショナル") {
+    const conditionParts = [
+      requiredSkillsText ? `必須スキル: ${requiredSkillsText}` : "",
+      workLocationText ? `勤務地: ${workLocationText}` : "",
+      salaryInfoText ? `給与: ${salaryInfoText}` : "",
+    ].filter((part) => part);
+
     generatedBody = [
       `${r.companyName} 採用担当です。`,
       `${r.jobCategory}ポジションにて、${r.jobDescription}を担っていただける方を募集しております。`,
-      `必須スキル: ${r.requiredSkills}／勤務地: ${r.workLocation}／給与: ${r.salaryInfo}`,
+      conditionParts.length > 0 ? conditionParts.join("／") : "",
       `当社の魅力: ${r.jobAppeal}`,
       `ご興味がございましたら、ぜひご連絡ください。`,
-    ].join("\n");
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join("\n");
   }
   form.body = generatedBody;
 }
 
 //未入力時の確認アラート
 async function handleSubmit(status: ScoutStatus) {
-  const creatorName = authStore.currentUserName?.trim();
+  const creatorName =
+    authStore.currentUserName?.trim() || authStore.currentUserEmail?.trim()
   if (!creatorName) {
-    generateError.value =
-      "作成者情報が取得できません。再ログインしてください。";
-    return;
+    generateError.value = '作成者情報が取得できません。再ログインしてください。'
+    return
   }
 
-  if (status !== "draft" && !allCheckItemsDone.value) {
+  if (status === 'waiting_leader' && !allCheckItemsDone.value) {
     generateError.value = "チェック項目をすべて確認してください。";
     return;
   }
-  if (!form.body) {
+
+  if (status === 'waiting_leader' && !form.body.trim()) {
     generateError.value = "本文が空欄です。";
     return;
+  }
+
+  if (status === 'draft' && isFormCompletelyEmpty()) {
+    generateError.value = '入力項目が空のため保存できません。'
+    return
   }
 
   //申請、一時保存の確認アラートを追加
@@ -385,20 +430,22 @@ async function handleSubmit(status: ScoutStatus) {
     form.status = status;
 
     // 入力項目をクリア
-    form.title = "";
-    form.requirement.companyName = "";
-    form.requirement.jobCategory = "";
-    form.requirement.jobDescription = "";
-    form.requirement.requiredSkills = "";
-    form.requirement.workLocation = "";
-    form.requirement.salaryInfo = "";
-    form.requirement.jobAppeal = "";
-    form.promptText = "";
-    form.body = "";
-    generateError.value = "";
-    checkedItemIds.value = [];
+    form.title = ''
+    form.requirement.companyName = ''
+    form.requirement.jobCategory = ''
+    form.requirement.jobDescription = ''
+    form.requirement.requiredSkills = ''
+    form.requirement.workLocation = ''
+    form.requirement.salaryInfo = ''
+    form.requirement.jobAppeal = ''
+    form.promptText = ''
+    form.body = ''
+    generateError.value = ''
+    checkedItemIds.value = []
 
-    await router.push({ name: "scout-list" });
+    if (status === 'waiting_leader') {
+      await router.push({ name: 'scout-list' })
+    }
   } catch (error) {
     generateError.value = "データの保存に失敗しました。";
     console.error(error);
@@ -406,9 +453,9 @@ async function handleSubmit(status: ScoutStatus) {
 }
 
 onMounted(async () => {
-  authStore.hydrateFromStorage();
-  await Promise.all([store.loadScouts(), loadCheckItems()]);
-});
+  authStore.hydrateFromStorage()
+  await Promise.all([store.loadScouts(), loadCheckItems()])
+})
 </script>
 
 <style scoped>
@@ -422,9 +469,7 @@ onMounted(async () => {
   overflow: hidden;
   box-sizing: border-box;
   padding: 16px 24px;
-  background:
-    radial-gradient(120% 120% at 100% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
-    linear-gradient(180deg, #f7faf9 0%, #f3f6f9 100%);
+  background-color: #ffffff;
 }
 
 .page-header {
@@ -452,10 +497,9 @@ onMounted(async () => {
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: 0.01em;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 /* 💡 動的ステータスバッジの汎用スタイル */
@@ -497,26 +541,24 @@ onMounted(async () => {
 
 .btn-secondary {
   background-color: #ffffff;
-  border: 1px solid #b7c4d6;
-  color: #334155;
+  border: 1px solid #cbd5e1;
+  color: #475569;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .btn-primary-green {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background-color: #00c77b;
   border: none;
   color: #ffffff;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.24);
 }
 
 .workspace {
@@ -528,15 +570,13 @@ onMounted(async () => {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid #dbe4ef;
-  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -544,10 +584,9 @@ onMounted(async () => {
 
 .card h2 {
   margin: 0 0 16px 0;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #065f46;
-  letter-spacing: 0.02em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #004d34;
   flex-shrink: 0;
 }
 
@@ -607,12 +646,6 @@ onMounted(async () => {
   flex: 1;
 }
 
-.form-label-head {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
 .separator {
   border: 0;
   border-top: 1px solid #e2e8f0;
@@ -625,8 +658,8 @@ select,
 textarea {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid #c4d0df;
-  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   font-size: 0.85rem;
   color: #1e293b;
   box-sizing: border-box;
@@ -637,8 +670,7 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #0ea5a4;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+  border-color: #00c77b;
 }
 
 .actions {
@@ -649,14 +681,13 @@ textarea:focus {
 .btn-ai {
   width: 100%;
   padding: 10px;
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  background-color: #004d34;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.24);
 }
 
 .card-header-row {
@@ -739,6 +770,6 @@ textarea:focus {
 .required-soft {
   color: #ef4444;
   font-size: 12px;
-  display: inline;
+  margin-left: 4px;
 }
 </style>
