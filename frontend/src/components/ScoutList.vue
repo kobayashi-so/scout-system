@@ -161,7 +161,8 @@ function isPriorityRow(row: ScoutEntity, nowMs: number): boolean {
   if (updatedAt === null) return false
 
   // 更新日時が3日以上前のものを優先とみなす（10秒にしたいときは threeDaysMs を 10 * 1000 に変更）
-  const threeDaysMs = 3 * 24 * 60 * 60 * 1000
+  //3 * 24 * 60 * 60 * 1000 = 3日をミリ秒に換算
+  const threeDaysMs = 20 * 1000
   return nowMs - updatedAt >= threeDaysMs
 }
 
