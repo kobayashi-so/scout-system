@@ -58,8 +58,10 @@
             <hr class="separator" />
 
             <label class="form-label">
-              会社名
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head">
+                会社名
+                <span class="required-soft">(必須)</span>
+              </span>
               <input
                 v-model="form.requirement.companyName"
                 type="text"
@@ -69,8 +71,10 @@
             </label>
 
             <label class="form-label">
-              職種
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head">
+                職種
+                <span class="required-soft">(必須)</span>
+              </span>
               <input
                 v-model="form.requirement.jobCategory"
                 type="text"
@@ -80,8 +84,10 @@
             </label>
 
             <label class="form-label">
-              業務内容
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head">
+                業務内容
+                <span class="required-soft">(必須)</span>
+              </span>
               <textarea
                 v-model="form.requirement.jobDescription"
                 placeholder="要件定義〜設計・実装・運用まで担当"
@@ -118,8 +124,10 @@
             </label>
 
             <label class="form-label">
-              求人の魅力
-              <span class="required-soft">(必須)</span>
+              <span class="form-label-head">
+                求人の魅力
+                <span class="required-soft">(必須)</span>
+              </span>
               <input
                 v-model="form.requirement.jobAppeal"
                 type="text"
@@ -160,9 +168,12 @@
             v-model="form.body"
             class="body-textarea"
             placeholder="左の「AIで生成」ボタンを押すか、直接ここに入力してください"
+            :maxlength="maxBodyLength"
             required
           />
-          <div class="char-count">文字数: {{ form.body.length }}文字</div>
+          <div class="char-count" :class="{ 'char-count-error': isBodyLengthInvalid }">
+            文字数: {{ bodyLength }}文字（{{ minBodyLength }}〜{{ maxBodyLength }}文字）
+          </div>
         </div>
       </section>
 
@@ -257,6 +268,13 @@ const checkItems = ref<checkItem[]>([]);
 const checkedItemIds = ref<string[]>([]);
 const checkItemsLoading = ref(false);
 const checkItemsError = ref("");
+const minBodyLength = 10;
+const maxBodyLength = 1000;
+
+const bodyLength = computed(() => form.body.trim().length);
+const isBodyLengthInvalid = computed(
+  () => bodyLength.value > 0 && (bodyLength.value < minBodyLength || bodyLength.value > maxBodyLength),
+);
 
 // 💡 提示いただいた関数ロジックを Vue の算出プロパティ（computed）として組み込み
 const currentStatusLabel = computed(() => {
@@ -395,8 +413,8 @@ async function handleSubmit(status: ScoutStatus) {
     return;
   }
 
-  if (status === 'waiting_leader' && !form.body.trim()) {
-    generateError.value = "本文が空欄です。";
+  if (bodyLength.value < minBodyLength || bodyLength.value > maxBodyLength) {
+    generateError.value = `本文は${minBodyLength}文字以上${maxBodyLength}文字以下で入力してください。`;
     return;
   }
 
@@ -692,6 +710,12 @@ onMounted(async () => {
   font-size: 0.82rem;
   font-weight: 600;
   color: #31564b;
+}
+
+.form-label-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .form-label.compact {
