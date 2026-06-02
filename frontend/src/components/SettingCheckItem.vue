@@ -11,14 +11,16 @@ import {
 const items = ref<checkItem[]>([]);
 const isLoading = ref(false);
 
+// --- フォームの入力値を管理する変数（is_requiredは削除済み） ---
 const inputCheckTitle = ref("");
-const selectedItemId = ref<string | null>(null);
+const selectedItemId = ref<string | null>(null); //「今どの項目を編集対象にしているか」を保持するための状態
 
 const resetForm = () => {
   inputCheckTitle.value = "";
   selectedItemId.value = null;
 };
 
+//「サーバーからチェック項目一覧を取得して、画面に表示するデータを更新する」ための関数
 const loadItems = async () => {
   isLoading.value = true;
   try {
@@ -28,7 +30,7 @@ const loadItems = async () => {
     alert("チェック項目の取得に失敗しました。");
   } finally {
     isLoading.value = false;
-  }
+  } //成功/失敗に関係なく必ず読み込み中を終了する
 };
 
 const onClickEdit = (item: checkItem) => {
@@ -36,6 +38,7 @@ const onClickEdit = (item: checkItem) => {
   inputCheckTitle.value = item.checkTitle;
 };
 
+//trim()で前後の空白を削除して、空文字だったらアラートを出すようにする
 const onClickSave = async () => {
   const trimmedTitle = inputCheckTitle.value.trim();
   if (!trimmedTitle) {
@@ -93,6 +96,8 @@ onMounted(async () => {
 
     <div class="content-layout">
       <div class="table-section">
+        <div class="action-bar"></div>
+
         <table class="item-table">
           <thead>
             <tr>
@@ -103,19 +108,19 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr v-if="isLoading">
-              <td colspan="3" class="state-row">読み込み中...</td>
+              <td colspan="3">読み込み中...</td>
             </tr>
             <tr v-else-if="items.length === 0">
-              <td colspan="3" class="state-row">チェック項目がありません。</td>
+              <td colspan="3">チェック項目がありません。</td>
             </tr>
             <tr v-for="item in items" :key="item.id">
-              <td class="order-cell">{{ item.display_order }}</td>
+              <td>{{ item.display_order }}</td>
               <td>{{ item.checkTitle }}</td>
               <td class="action-cell">
-                <button type="button" class="btn-row-edit" @click="onClickEdit(item)">
+                <button class="btn-row-edit" @click="onClickEdit(item)">
                   編集
                 </button>
-                <button type="button" class="btn-row-delete" @click="onClickDelete(item.id)">
+                <button class="btn-row-delete" @click="onClickDelete(item.id)">
                   削除
                 </button>
               </td>
@@ -132,13 +137,13 @@ onMounted(async () => {
         <div class="form-group">
           <label>チェック項目名</label>
           <input
-            v-model="inputCheckTitle"
             type="text"
+            v-model="inputCheckTitle"
             placeholder="項目名を入力（255文字以内）"
           />
         </div>
 
-        <button type="button" class="btn-save" @click="onClickSave">保存</button>
+        <button class="btn-save" @click="onClickSave">保存</button>
       </div>
     </div>
   </div>
@@ -146,55 +151,93 @@ onMounted(async () => {
 
 <style scoped>
 .management-container {
-  padding: 24px;
-  border: 1px solid #d8e4de;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(6, 34, 28, 0.07);
-}
-
-.management-container h2 {
-  margin: 0;
-  font-size: 1.24rem;
-  font-weight: 800;
-  color: #10342d;
+  padding: 20px;
+  font-family: sans-serif;
 }
 
 .content-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
-  gap: 20px;
-  margin-top: 18px;
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
 }
 
 .table-section {
-  border: 1px solid #d8e4de;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #ffffff;
+  flex: 2;
 }
 
 .form-section {
-  border: 1px solid #d8e4de;
+  flex: 1;
+  border: 1px solid #ccc;
   padding: 20px;
-  background-color: #f5faf7;
-  border-radius: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 }
 
 .add-title {
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-  color: #ffffff;
-  padding: 8px 10px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #02664a 0%, #039d88 100%); /* 緑四角 */
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
   display: inline-block;
 }
 
 .edit-title {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
-  color: #ffffff;
-  padding: 8px 10px;
-  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    #41ba73 0%,
+    #43b3a6 100%
+  ); /* 青緑四角 　編集用*/
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
   display: inline-block;
+}
+
+.action-bar {
+  margin-bottom: 10px;
+}
+
+/* 追加 */
+/* テックリーダー指定のボタン色 */
+.btn-add {
+  background: linear-gradient(135deg, #02664a 0%, #039d88 100%); /* 緑四角 */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-row-edit {
+  background: linear-gradient(
+    135deg,
+    #41ba73 0%,
+    #43b3a6 100%
+  ); /* 青水緑四角 */
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-row-delete {
+  background: linear-gradient(135deg, #8a2828 0%, #d10202 100%); /* 赤黒四角 */
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #02664a 0%, #039d88 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 10px;
 }
 
 .item-table {
@@ -204,96 +247,33 @@ onMounted(async () => {
 
 .item-table th,
 .item-table td {
-  border: 1px solid #e6efea;
-  padding: 10px 12px;
+  border: 1px solid #ddd;
+  padding: 8px;
   text-align: left;
 }
 
 .item-table th {
-  background-color: #f2f8f5;
-  color: #31564b;
-}
-
-.state-row {
-  text-align: center;
-  color: #567168;
-}
-
-.order-cell {
-  width: 80px;
-  color: #567168;
-  font-weight: 700;
+  background-color: #f2f2f2;
 }
 
 .action-cell {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-}
-
-.btn-row-edit {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  color: #ffffff;
-  border: none;
-  padding: 6px 11px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: 700;
-}
-
-.btn-row-delete {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: #ffffff;
-  border: none;
-  padding: 6px 11px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: 700;
 }
 
 .form-group {
-  margin: 14px 0 16px;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
-  font-weight: 700;
-  color: #31564b;
+  margin-bottom: 5px;
+  font-weight: bold;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #c8d8d1;
-  border-radius: 8px;
+  padding: 6px;
   box-sizing: border-box;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
-}
-
-.btn-save {
-  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-  color: #ffffff;
-  border: none;
-  padding: 10px 16px;
-  width: 100%;
-  cursor: pointer;
-  border-radius: 8px;
-  font-weight: 700;
-}
-
-@media (max-width: 1080px) {
-  .content-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .management-container {
-    padding: 18px;
-  }
 }
 </style>

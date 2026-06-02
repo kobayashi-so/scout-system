@@ -5,8 +5,21 @@
         <div class="brand-logo" aria-hidden="true">
           <svg viewBox="0 0 36 36" class="brand-logo-svg" role="img">
             <rect x="2" y="2" width="32" height="32" rx="10" fill="#14b8a6" />
-            <path d="M13 8.8V24.2H24" fill="none" stroke="#042f2e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M20.6 9.2L24.8 13.4" fill="none" stroke="#99f6e4" stroke-width="2.2" stroke-linecap="round" />
+            <path
+              d="M13 8.8V24.2H24"
+              fill="none"
+              stroke="#042f2e"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M20.6 9.2L24.8 13.4"
+              fill="none"
+              stroke="#99f6e4"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            />
             <circle cx="24.8" cy="13.4" r="1.2" fill="#ccfbf1" />
           </svg>
         </div>
@@ -16,18 +29,32 @@
         </div>
       </RouterLink>
 
-      <button type="button" class="collapse-toggle" @click="$emit('toggle-collapse')">
-        {{ collapsed ? '›' : '‹' }}
+      <button
+        type="button"
+        class="collapse-toggle"
+        @click="$emit('toggle-collapse')"
+      >
+        {{ collapsed ? "›" : "‹" }}
       </button>
     </div>
 
     <nav class="nav-list" aria-label="Main">
-      <RouterLink to="/list" class="nav-item" active-class="is-active" :title="collapsed ? 'ダッシュボード' : ''">
+      <RouterLink
+        to="/list"
+        class="nav-item"
+        active-class="is-active"
+        :title="collapsed ? 'ダッシュボード' : ''"
+      >
         <span class="nav-icon">▦</span>
         <span v-if="!collapsed" class="nav-label">ダッシュボード</span>
       </RouterLink>
 
-      <RouterLink to="/create" class="nav-item" active-class="is-active" :title="collapsed ? 'スカウト新規作成' : ''">
+      <RouterLink
+        to="/create"
+        class="nav-item"
+        active-class="is-active"
+        :title="collapsed ? 'スカウト新規作成' : ''"
+      >
         <span class="nav-icon">✎</span>
         <span v-if="!collapsed" class="nav-label">スカウト新規作成</span>
       </RouterLink>
@@ -43,12 +70,27 @@
           >
             <span class="nav-icon">✓</span>
             <span v-if="!collapsed" class="nav-label">承認</span>
-            <span v-if="!collapsed" class="caret" :class="{ open: isApprovalOpen }">⌄</span>
+            <span
+              v-if="!collapsed"
+              class="caret"
+              :class="{ open: isApprovalOpen }"
+              >⌄</span
+            >
           </button>
 
           <div v-show="isApprovalOpen && !collapsed" class="sub-list">
-            <RouterLink to="/approval/sales" class="sub-item" active-class="is-active-sub">営業承認</RouterLink>
-            <RouterLink to="/approval/final" class="sub-item" active-class="is-active-sub">管理者承認</RouterLink>
+            <RouterLink
+              to="/approval/sales"
+              class="sub-item"
+              active-class="is-active-sub"
+              >営業承認者承認</RouterLink
+            >
+            <RouterLink
+              to="/approval/final"
+              class="sub-item"
+              active-class="is-active-sub"
+              >管理者承認</RouterLink
+            >
           </div>
         </div>
       </template>
@@ -63,23 +105,48 @@
         >
           <span class="nav-icon">⚙</span>
           <span v-if="!collapsed" class="nav-label">設定</span>
-          <span v-if="!collapsed" class="caret" :class="{ open: isSettingsOpen }">⌄</span>
+          <span
+            v-if="!collapsed"
+            class="caret"
+            :class="{ open: isSettingsOpen }"
+            >⌄</span
+          >
         </button>
 
         <div v-show="isSettingsOpen && !collapsed" class="sub-list">
-          <RouterLink to="/settings/evaluations" class="sub-item" active-class="is-active-sub">評価基準・チェック項目管理</RouterLink>
-          <RouterLink to="/settings/profile" class="sub-item" active-class="is-active-sub">ユーザー情報編集</RouterLink>
+          <RouterLink
+            to="/settings/evaluations"
+            class="sub-item"
+            active-class="is-active-sub"
+            >評価基準・チェック項目管理</RouterLink
+          >
+          <RouterLink
+            to="/settings/profile"
+            class="sub-item"
+            active-class="is-active-sub"
+            >ユーザー情報編集</RouterLink
+          >
         </div>
       </div>
     </nav>
 
     <div class="sidebar-bottom">
-      <button type="button" class="logout-button" @click="$emit('logout')" :title="collapsed ? 'ログアウト' : ''">
+      <button
+        type="button"
+        class="logout-button"
+        @click="$emit('logout')"
+        :title="collapsed ? 'ログアウト' : ''"
+      >
         <span class="nav-icon">⇥</span>
         <span v-if="!collapsed">ログアウト</span>
       </button>
 
-      <button type="button" class="sidebar-user" @click="goToMyProfile" :title="collapsed ? userName : ''">
+      <button
+        type="button"
+        class="sidebar-user"
+        @click="goToMyProfile"
+        :title="collapsed ? userName : ''"
+      >
         <div class="sidebar-avatar">{{ userInitial }}</div>
         <div v-if="!collapsed" class="sidebar-user-meta">
           <p class="sidebar-user-name">{{ userName }}</p>
@@ -141,8 +208,15 @@ const userRole = computed(() => props.userRole);
   min-width: 276px;
   padding: 14px 14px 12px !important;
   border-right: 1px solid rgba(148, 163, 184, 0.16);
-  background: linear-gradient(170deg, #0f3d2e 0%, #0e2f25 52%, #0b231c 100%) !important;
-  transition: width 0.22s ease, min-width 0.22s ease;
+  background: linear-gradient(
+    170deg,
+    #0f3d2e 0%,
+    #0e2f25 52%,
+    #0b231c 100%
+  ) !important;
+  transition:
+    width 0.22s ease,
+    min-width 0.22s ease;
 }
 
 .app-sidebar.collapsed {
@@ -246,7 +320,11 @@ const userRole = computed(() => props.userRole);
 }
 
 .nav-item.is-active {
-  background: linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(13, 148, 136, 0.2));
+  background: linear-gradient(
+    90deg,
+    rgba(20, 184, 166, 0.35),
+    rgba(13, 148, 136, 0.2)
+  );
   color: #ffffff !important;
 }
 

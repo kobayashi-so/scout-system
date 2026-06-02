@@ -691,11 +691,11 @@ onMounted(() => {
 }
 
 .btn-remand {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #8a2828 0%, #d10202 100%); /* 赤黒四角 */
 }
 
 .btn-remand:hover {
-  background: #b91c1c;
+  background: linear-gradient(135deg, #ed3a04 0%, #ff0e06 100%);
 }
 
 .btn-approve {
