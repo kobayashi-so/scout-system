@@ -74,6 +74,9 @@ const onClickSave = async () => {
     alert("編集対象のユーザーを選択してください。");
     return;
   }
+  const editingSelf = selectedUserId.value === authStore.currentUserId;
+  const roleChangedBySelf =
+    editingSelf && selectedRoleType.value !== authStore.currentUserRoleType;
 
   try {
     await updateUserRole(
@@ -81,6 +84,13 @@ const onClickSave = async () => {
       selectedRoleType.value,
       authStore.currentUserRoleType as RoleType,
     );
+
+    if (roleChangedBySelf) {
+      authStore.logout();
+      await router.push("/login");
+      return;
+    }
+
     await loadUsers();
     resetForm();
   } catch (error) {
