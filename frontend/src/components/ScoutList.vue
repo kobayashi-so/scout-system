@@ -154,7 +154,7 @@ const router = useRouter();
 const tabDefs: { key: ScoutListType; label: string }[] = [
   { key: "my", label: "全申請文書" },
   { key: "sales_pending", label: "営業承認者承認待ち" },
-  { key: "final_pending", label: "最終承認待ち" },
+  { key: "final_pending", label: "管理者承認待ち" },
   { key: "trash", label: "ゴミ箱" },
 ];
 
