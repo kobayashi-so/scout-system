@@ -32,9 +32,9 @@
       <button
         type="button"
         class="collapse-toggle"
-        @click="$emit('toggle-collapse')"
+        @click="onClickCollapseToggle"
       >
-        {{ collapsed ? "›" : "‹" }}
+        {{ collapseToggleSymbol }}
       </button>
     </div>
 
@@ -135,9 +135,10 @@ const props = defineProps<{
   collapsed?: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "logout"): void;
   (e: "toggle-collapse"): void;
+  (e: "peek-open-change", value: boolean): void;
 }>();
 
 const route = useRoute();
@@ -159,6 +160,9 @@ const isPeekOpen = computed(
 );
 const showExpandedContent = computed(() => !collapsed.value || isPeekOpen.value);
 const isCompact = computed(() => collapsed.value && !isPeekOpen.value);
+const collapseToggleSymbol = computed(() =>
+  showExpandedContent.value ? "‹" : "›",
+);
 
 watchEffect(() => {
   if (collapsed.value) return;
@@ -172,6 +176,14 @@ watch(
     if (!isNowCollapsed) return;
     isApprovalOpen.value = false;
     isSettingsOpen.value = false;
+  },
+  { immediate: true },
+);
+
+watch(
+  isPeekOpen,
+  (value) => {
+    emit("peek-open-change", value);
   },
   { immediate: true },
 );
@@ -190,10 +202,23 @@ function toggleSettings() {
   }
 }
 
-function handleNavSelection() {
-  if (!collapsed.value) return;
+function closePeekMenus() {
   isApprovalOpen.value = false;
   isSettingsOpen.value = false;
+}
+
+function onClickCollapseToggle() {
+  if (collapsed.value && isPeekOpen.value) {
+    closePeekMenus();
+    return;
+  }
+
+  emit("toggle-collapse");
+}
+
+function handleNavSelection() {
+  if (!collapsed.value) return;
+  closePeekMenus();
 }
 
 function goToMyProfile() {
@@ -215,6 +240,7 @@ const userRole = computed(() => props.userRole);
   position: fixed;
   left: 0;
   top: 0;
+  z-index: 80;
   height: 100dvh;
   padding: 14px 14px 12px !important;
   border-right: 1px solid rgba(148, 163, 184, 0.16);

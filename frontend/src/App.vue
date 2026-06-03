@@ -7,6 +7,7 @@
           :user-email="userEmail"
           :user-role="userRole"
           :collapsed="isSidebarCollapsed"
+          @peek-open-change="isSidebarPeekOpen = $event"
           @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
           @logout="handleLogout"
         />
@@ -37,10 +38,13 @@ import AppSidebar from "./components/layout/AppSidebar.vue";
 const router = useRouter();
 const authStore = useAuthStore();
 const isSidebarCollapsed = ref(false);
+const isSidebarPeekOpen = ref(false);
 const suppressAuthTransitionOnce = ref(false);
 
 const mainStyle = computed(() => {
-  return { marginLeft: isSidebarCollapsed.value ? "84px" : "276px" };
+  const shouldUseExpandedWidth =
+    !isSidebarCollapsed.value || isSidebarPeekOpen.value;
+  return { marginLeft: shouldUseExpandedWidth ? "276px" : "84px" };
 });
 
 watch(
